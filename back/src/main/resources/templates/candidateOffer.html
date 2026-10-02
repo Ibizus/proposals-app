@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <style>
+    .container{
+        max-width: 640px;
+        margin: 0 auto;
+        background-color: #fff;}
+    body{
+        color: #000;
+        background-color: #D2D2D2;}
+    .message{
+        padding: 40px;
+    }
+    p, li, div , h4, h1{
+        margin:0cm;
+        font-family:"Calibri",sans-serif;}
+    p, li, div{            
+        font-size:11.0pt;}
+    a:link, a:visited {
+        color:#0056D2;}
+  </style>
+</head>
+<body>
+    <header class="container">
+        <img id="imgbanner" src=cid:banner.png alt="banner">
+        <!--src=cid:banner.png-->
+        <!--src="C:\Users\hector.lopezdiaz\devproject\erasmus\back\src\main\resources\static\img\banner.png"-->
+    </header>
+    <main class="container">
+        <section class="message">
+            <p th:text="${greeting}">Dear [Recipient's Name],</p>
+            <br>
+            <p th:utext="${introduction}">Introduction</p>
+            <br>
+            <p th:utext="${body}">Body of the email</p>
+        </section>
+    </main>
+</body>
+</html>

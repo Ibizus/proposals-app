@@ -1,0 +1,155 @@
+<div class="mt-24 px-10">
+  <h1 class="text-5xl font-bold mb-5">{{ 'DETAILED PROPOSAL' | translate }}</h1>
+  <div
+    class="w-full bg-[#F0F9FF] border border-[#CECECE] rounded-md p-8 mx-auto shadow h-[700px] overflow-y-auto relative">
+    <div class="absolute top-4 right-8 flex">
+      <app-new-mail 
+        class="inline-flex"
+        [proposalId]="proposal.id" 
+        (sendEmailClicked)="onSendEmailClicked($event)">
+      </app-new-mail>
+
+      <button pButton type="button" icon="pi pi-verified" 
+        class="bg-[#0056D2] py-2 px-4 mx-2 text-white hover:bg-[#200A58]"
+        pTooltip="{{ 'NOTIFY CANDIDATE' | translate }}"
+         (click)="showDialog()">
+      </button>
+
+      <p-dialog 
+        header="{{ 'NOTIFY CANDIDATE' | translate }}" 
+        #dialog 
+        [modal]="true" 
+        [(visible)]="visible" 
+        [style]="{ width: '50vm' }"
+        [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" 
+        >
+          <span class="p-text-secondary block mb-5">{{ 'DETAILED PROPOSAL DESCRIPTION' | translate}}</span>
+          <div class="flex align-items-center gap-3 mb-3">
+            
+            <p>Template email with the detailed proposal</p> 
+            
+          </div>
+          <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
+            <div class="grid-flow-col col-span-2">
+              <button class="send py-2 px-5 rounded-lg float-end"
+              (click)="sendTemplate(proposal.id)" >
+                {{'SUBMIT'|translate}}
+              </button>
+              <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+                (click)="this.closeDialog(dialog, $event)">
+                {{'CANCEL'|translate}}
+              </button>
+            </div>
+          </div>
+      </p-dialog>
+      
+      <button
+        class="p-button  py-2 px-4 rounded-md col-span-full"
+        (click)="downloadPdf()">
+        {{ 'DOWNLOAD PDF' | translate }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-16">
+      <div class="relative">
+        <h2 class="text-lg font-semibold mb-2">{{ 'CANDIDATE' | translate }}</h2>
+        <app-candidate-card [candidate]="proposal.candidate" />
+        <div class="relative mt-4">
+          <h2 class="text-lg font-semibold mb-2">{{ 'PROPOSAL' | translate }}</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white border border-[#CECECE] rounded-md p-4">
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'ROLE' | translate }}</label>
+              <span>{{proposal.role}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'OFFICE' | translate }}</label>
+              <span>{{proposal.office.name}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'DESCRIPTION' | translate }}</label>
+              <span>{{proposal.description}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'NJOYN' | translate }}</label>
+              <span>{{proposal.njoyn}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'CONTRACT LEVEL' | translate }}</label>
+              <span>{{proposal.contractLevel}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'CONTRACT TYPE' | translate }}</label>
+              <span>{{proposal.indefinite ? 'Indefinite' : 'Fixed-Term'}}</span>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'START DATE' | translate }}</label>
+              <span>{{proposal.startDate}}</span>
+            </div>
+            @if(!proposal.indefinite){
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'DUE DATE' | translate }}</label>
+              <span>{{proposal.startDate}}</span>
+            </div>
+          }
+          </div>
+        </div>
+        <div class="relative mt-4">
+          <h2 class="text-lg font-semibold mb-2">Status history</h2>
+          <div class="bg-white border border-[#CECECE] rounded-md">
+            <p-stepper class="w-fit">
+              @for (status of proposal.statuses; track $index) {
+                <p-stepperPanel>
+                  <ng-template pTemplate="content">
+                    <div>
+                      <p>Status: {{numberToStatus(status.status)}}</p>
+                      <p>Message: {{status.message}}</p>
+                      <p>Created at: {{status.createdAt}}</p>
+                      <p>Created by: {{status.createdBy}}</p>
+                    </div>
+                  </ng-template>
+                </p-stepperPanel>
+              }
+            </p-stepper>
+          </div>
+        </div>
+      </div>
+      <!-- Proposal Fields -->
+
+      <!-- Salary Fields -->
+      <div>
+        <h2 class="text-lg font-semibold mb-2">{{ 'SALARY' | translate }}</h2>
+        <div class="w-full bg-white rounded-md p-4 border border-[#CECECE]">
+          <h2 class="text-black text-2xl font-bold">{{ 'SALARY ESTIMATIONS' | translate }}</h2>
+          <div class="w-full bg-white mt-1 rounded-md p-4 grid grid-cols-2">
+            <div>
+              <h3 class="text-black text-2xl font-bold text-center">{{ 'MONTHLY' | translate }}</h3>
+              <!-- iterate through monthly map -->
+              @for (item of monthlyList; track $index) {
+              <h3 class="text-black text-md font-semibold mt-4">
+                {{item[0]}}:
+                <span>{{ item[1] | currency : "EUR" }}</span>
+              </h3>
+            }
+            </div>
+            <div>
+              <h2 class="text-black text-2xl font-bold text-center">{{ 'YEARLY' | translate }}</h2>
+              <!-- iterate through yearly map -->
+              @for (item of yearlyList; track $index) {
+              <h3 class="text-black text-md font-semibold mt-4">
+                {{item[0]}}:
+                <span>{{ item[1] | currency : "EUR" }}</span>
+              </h3>
+            }
+            </div>
+          </div>
+        </div>
+        <div class="mt-8 bg-white rounded-md p-4 border border-[#CECECE]">
+          <p><span class="font-semibold text-lg mr-2">{{"CREATED AT"|translate}}:</span> {{this.proposal.createdAt}}</p>
+          <p><span class="font-semibold text-lg mr-2">{{"CREATED BY"|translate}}:</span> {{this.proposal.createdBy}}</p>
+          <p><span class="font-semibold text-lg mr-2">{{"MODIFIED AT"|translate}}:</span> {{this.proposal.modifiedAt}}</p>
+          <p><span class="font-semibold text-lg mr-2">{{"MODIFIED BY"|translate}}:</span> {{this.proposal.modifiedBy}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

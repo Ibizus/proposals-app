@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+    <!-- <th:block th:insert="~{fragments/head.html :: headfiles}"/> -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+    <style>
+        .clearfix::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        .container{
+        max-width: 640px;
+        margin: 0 auto;
+        background-color: #fff;}
+        body{
+            color: #000;
+            background-color: #D2D2D2;}
+        .message{
+            padding: 40px;
+        }
+        p, li, div , h4, h1{
+            margin:0cm;
+            font-family:"Calibri",sans-serif;}
+        p, li, div{            
+            font-size:11.0pt;}
+        a:link, a:visited {
+            color:#0056D2;}
+        ol {
+            display: block;
+            list-style-type: decimal;
+            line-height: 140%;
+            margin-top: 1em;
+            margin-bottom: 1em;
+            margin-left: 0;
+            margin-right: 0;
+            padding-left: 40px;
+        }
+        .sublist {
+            list-style-type: lower-latin;
+            margin-bottom: 0.4em;
+        }
+    </style>
+</head>
+<body>
+    <header class="container">
+        <img id="imgbanner" src=cid:banner.png alt="banner">
+    </header>
+    <!-- <th:block th:insert="~{fragments/header.html :: headerfiles}"/> -->
+    
+    <main class="container">
+        <section class="message">
+            <p th:text="${#messages.msg('greeting', candidate)}">Dear [Recipient's Name],</p>
+            <br>
+            <p th:utext="${#messages.msg('intro', office)}">Introduction</p>
+            <ol>
+                <li th:text="${#messages.msg('contractType', contract)}">Contract</li>
+                <li th:text="${#messages.msg('startDate', date)}">Start date</li>
+                <li th:text="${#messages.msg('grossSalary', monthlyGross, yearlyGross)}">Salary</li>
+                    <ol class="sublist">
+                        <li th:text="${#messages.msg('monthlyBase', base)}">Base salary</li>
+                        <li th:text="${#messages.msg('monthlyIHT', iht)}">IHT</li>
+                    </ol>
+                <li th:text="${#messages.msg('foodAllowance', food)}">Food allowance</li>
+                <li th:text="${#messages.msg('socialBenefits')}">Social benefits</li>
+                    <ol class="sublist">
+                        <li th:text="${#messages.msg('healthInsurance')}">Health Insurance</li>
+                        <li th:text="${#messages.msg('lifeInsurance')}">Life Insurance</li>
+                    </ol>
+                <li th:text="${#messages.msg('carAllowance', carMonthly, carAnually)}">Car Allowance</li>
+                <li th:text="${#messages.msg('fuelAllowance', fuelAnually, fuelMonthly)}">Fuel Card</li>
+                <li th:text="${#messages.msg('phone')}">Phone</li>
+                <li th:text="${#messages.msg('laptop')}">Computer</li>
+                <li th:text="${#messages.msg('spp')}">SPP & PPP</li>
+                <li th:text="${#messages.msg('flex', yearlyFlex)}">Flex</li>
+            </ol>
+        </section>
+    </main>
+</body>
+</html>

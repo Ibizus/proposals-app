@@ -1,0 +1,279 @@
+<div class="mt-24 px-10">
+  <div class="relative">
+    <h1 class="font-bold text-5xl mb-5" i18n>{{'CANDIDATES'| translate}}</h1>
+    <app-new-candidate-button (candidateSaved)="onSaveCandidate()" />
+  </div>
+  <p-table #dt2 [value]="candidates" styleClass="p-datatable-striped p-datatable-sm" sortMode="multiple"
+    [scrollable]="true" scrollHeight="660px" [globalFilterFields]="['id', 'name', 'surname', 'phone','email']"
+    [loading]="isLoading">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name" class="header-cell" i18n>
+          <div class="header-content"> {{ 'CANDIDATE NAME' | translate }} <p-sortIcon field="name" /></div>
+        </th>
+        <th pSortableColumn="surname" class="header-cell" i18n>
+          <div class="header-content"> {{ 'SURNAME' | translate }} <p-sortIcon field="surname" /></div>
+        </th>
+        <th pSortableColumn="phone" class="header-cell" i18n>
+          <div class="header-content">
+            {{ 'TLF' | translate }} <p-sortIcon field="phone" /></div>
+        </th>
+        <th pSortableColumn="email" class="header-cell" i18n>
+          <div class="header-content">
+            {{ 'EMAIL' | translate }} <p-sortIcon field="email" /></div>
+        </th>
+        <th pSortableColumn="proposalsCount" class="header-cell" i18n>
+          <div class="header-content">
+            {{ 'COUNT' | translate }} <p-sortIcon field="proposalsCount" /></div>
+        </th>
+        <th [width]="100">
+          <div class="flex justify-center">
+            <p-iconField iconPosition="right" class="mr-0">
+              <p-inputIcon styleClass="pi pi-search" />
+              <input pInputText type="text" (input)="onInputChange($event)" placeholder="Search"
+                class="bg-slate-200 p-2 rounded" />
+            </p-iconField>
+          </div>
+        </th>
+      </tr>
+      <tr>
+        <div class="absolute tableGradient h-1 w-full col-span-full"></div>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="fields">
+      <tr>
+        <td>{{ rowData.name }}</td>
+        <td>{{ rowData.surname }}</td>
+        <td>{{ rowData.phone }}</td>
+        <td>{{ rowData.email }}</td>
+        <td>
+          <button pButton type="button" pTooltip="{{ 'PRESS TO SEE PROPOSALS' | translate }}"
+            class="p-button-square p-button-success" (click)="this.goToCandidateProposals(rowData.id)">
+            {{ rowData.proposalsCount }}
+          </button>
+        </td>
+        <td>
+          <div class="flex justify-center">
+            <button pButton type="button" icon="pi pi-search" pTooltip="{{ 'DETAILED CANDIDATE' | translate }}"
+              class="p-button-rounded p-button-success" (click)="this.goToCandidateDetail(rowData)"></button>
+            <button pButton type="button" icon="pi pi-pencil" pTooltip="{{ 'MODIFY CANDIDATE' | translate }}"
+              class="p-button-rounded p-button-success" (click)="this.goToModifyCandidate(rowData)"></button>
+            <button pButton type="button" icon="pi pi-trash" pTooltip="{{ 'DELETE CANDIDATE' | translate }}"
+              tooltipPosition="left" class="p-button-rounded p-button-success"
+              (click)="this.showDeleteDialog(rowData)"></button>
+            <button pButton type="button" icon="pi pi-file-edit"
+              pTooltip="{{ 'CREATE PROPOSAL FOR CANDIDATE' | translate }}" tooltipPosition="left"
+              class="p-button-rounded p-button-success" (click)="this.newProposalCandidate(rowData.id)"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator id="p-dropdown-paginator" (onPageChange)="paginate($event)" [first]="first" [rows]="rows"
+    [showCurrentPageReport]="true" [totalRecords]="totalRecords" [rowsPerPageOptions]="[5, 10, 20]"></p-paginator>
+
+  <p-dialog class="" [header]="newCandidateString" [(visible)]="visibleCandidateModal" [modal]="true"
+    [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false" (onHide)="resetForm()">
+
+    <!-- NEW CANDIDATE FORM: -->
+    <span class="p-text-secondary block mb-5">{{'MODAL NEW CANDIDATE HELP' | translate}}</span>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 ">
+      <!-- Name -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'NAME' | translate
+          }}<span class="mandatory">*</span></label>
+        <input type="text" [(ngModel)]="candidate.name" name="name" placeholder="" required
+          pattern="^[a-zA-ZáéíóúÁÉÍÓÚâêôÂÊÔãõÃÕàÀçÇ '-]*$" #name="ngModel">
+        @if( name.errors?.['pattern'] && (name.dirty || name.touched) ||name.invalid && (name.dirty || name.touched)){
+        <small>
+          <p class="text-red-500">{{'PLEASE ENTER A VALID NAME' | translate}}</p>
+        </small>
+        }
+        @else{
+        <small>
+          {{'NAME FIELD INFORMATION' | translate}}
+        </small>
+        }
+      </div>
+
+      <!-- Surname -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'SURNAME' | translate
+          }}<span class="mandatory">*</span></label>
+        <input type="text" [(ngModel)]="candidate.surname" name="surname" placeholder="" required
+          pattern="^[a-zA-ZáéíóúÁÉÍÓÚâêôÂÊÔãõÃÕàÀçÇ '-]*$" #surname="ngModel">
+        @if( surname.errors?.['pattern'] && (surname.dirty || surname.touched) ||surname.invalid && (surname.dirty ||
+        surname.touched)){
+        <small>
+          <p class="text-red-500">{{'PLEASE ENTER A VALID SURNAME' | translate}}</p>
+        </small>
+        }
+        @else{
+        <small>
+          {{'SURNAME FIELD INFORMATION' | translate}}
+        </small>
+        }
+      </div>
+
+      <!-- ID Number -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'NATIONAL ID NUMBER' | translate
+          }}<span class="mandatory">*</span></label>
+        <input type="text" [(ngModel)]="candidate.idNumber" name="idNumber" placeholder="" required
+          pattern="^[a-zA-Z0-9-]+$" #idNumber="ngModel">
+        @if( idNumber.errors?.['pattern'] && (idNumber.dirty || idNumber.touched) || idNumber.invalid && (idNumber.dirty
+        || idNumber.touched)){
+        <small>
+          <p class="text-red-500">{{'NATIONAL ID NUMBER IS REQUIRED' | translate}}</p>
+        </small>
+        }@else{
+        <small>
+          {{ 'ID NUMBER FIELD INFORMATION' | translate }}
+        </small>
+        }
+      </div>
+
+      <!-- Phone number -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'PHONE NUMBER' | translate
+          }}<span class="mandatory">*</span></label>
+        <input type="text" [(ngModel)]="candidate.phone" name="phone" placeholder="" required pattern="[+()-0-9]+"
+          #phone="ngModel">
+        @if( phone.errors?.['pattern'] && (phone.dirty || phone.touched) ||phone.invalid && (phone.dirty ||
+        phone.touched)){
+        <small>
+          <p class="text-red-500">{{'PLEASE ENTER A VALID PHONE NUMBER' | translate}}</p>
+        </small>
+        }
+        @else{
+        <small>
+          {{'PHONE NUMBER FIELD INFORMATION' | translate}}
+        </small>
+        }
+      </div>
+
+      <!-- Email -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'EMAIL' | translate
+          }}<span class="mandatory">*</span></label>
+        <input type="text" [(ngModel)]="candidate.email" name="email" placeholder="" required
+          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" #email="ngModel">
+        @if(email.errors?.['pattern'] && (email.dirty || email.touched) || email.invalid && (email.dirty ||
+        email.touched)){
+        <small>
+          <p class="text-red-500"> {{'PLEASE ENTER A VALID EMAIL' | translate}} </p>
+        </small>
+        }
+        @else{
+        <small>
+          {{ 'EMAIL ADDRESS FIELD INFORMATION' | translate }}
+        </small>
+        }
+      </div>
+
+      <!-- Worker ID -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'CANDIDATE WORKER ID' | translate
+          }}</label>
+        <input type="text" [(ngModel)]="candidate.workerId" name="workerId" placeholder="">
+        <small>
+          {{ 'WORKER ID FIELD INFORMATION' | translate }}
+        </small>
+      </div>
+
+      <!-- Marital status -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'MARITAL STATUS' | translate
+          }}</label>
+        <!-- Dropdown menu: This should be a dropdown with 3 options: Not Married, Married 1 working, Married 2 working -->
+        <p-dropdown styleClass="dropDown" [options]="maritalStatusOptions" [(ngModel)]="candidate.maritalStatus"
+          placeholder="" name="maritalStatus" [required]="true">
+        </p-dropdown>
+        <small>
+          {{ 'MARITAL STATUS FIELD INFORMATION' | translate }}
+        </small>
+      </div>
+
+      <!-- Number of dependents -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{
+          'NUMBER OF DEPENDENTS' | translate
+          }}</label>
+        <input [(ngModel)]="candidate.dependentsNumber" name="dependentsNumber" placeholder="0" min="0" type="number"
+          onkeypress="return (event.charCode == 8 || event.charCode == 0) ? null : event.charCode >= 48 && event.charCode <= 57" />
+        <small>
+          {{ 'NUMBER OF DEPENDENTS FIELD INFORMATION' | translate }}
+        </small>
+      </div>
+
+      <button class="bg-[#0056D2] text-white py-2 px-4 rounded-md mx-auto block mt-6 col-span-full" type="submit"
+        (click)="onModifyCandidate()"> <span>{{ 'SAVE CANDIDATE' | translate }}</span>
+      </button>
+      @if(errorMessage){
+      <small class="text-red-500 mx-auto block col-span-full">
+        {{ 'INVALID FORM' | translate}}
+      </small>
+      }
+    </div>
+
+
+  </p-dialog>
+  <p-dialog header="{{'DELETE CANDIDATE'|translate}}" [modal]="true" [(visible)]="visibleDelete"
+    [style]="{ width: '25rem' }" #dialog>
+    <span>{{'ARE YOU SURE'|translate}}</span>
+    <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
+      <div class="grid-flow-col col-span-2">
+        <button class="send py-2 px-5 rounded-lg float-end" (click)="this.deleteCandidate()">
+          {{'DELETE'|translate}}
+        </button>
+        <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+          (click)="this.closeDeleteDialog(dialog, $event)">
+          {{'CANCEL'|translate}}
+        </button>
+      </div>
+    </div>
+  </p-dialog>
+  <div class="h-12"></div>
+  <p-toast position="bottom-center" key="bc"></p-toast>
+
+  <p-dialog header="Candidate Details" [(visible)]="visibleCandidateDetails" [modal]="true" [style]="{width: '50vw'}">
+    @if (selectedCandidate){
+    <div class="details-container">
+      <div class="detail"><span class="label">{{ 'NAME' | translate }}:</span><span class="value">{{
+          selectedCandidate.name }}</span></div>
+      <div class="detail"><span class="label">{{ 'SURNAME' | translate }}:</span><span class="value">{{
+          selectedCandidate.surname }}</span></div>
+      <div class="detail"><span class="label">{{ 'NATIONAL ID NUMBER' | translate }}:</span><span class="value">{{
+          selectedCandidate.idNumber }}</span></div>
+      <div class="detail"><span class="label">{{ 'PHONE NUMBER' | translate }}:</span><span class="value">{{
+          selectedCandidate.phone }}</span></div>
+      <div class="detail"><span class="label">{{ 'EMAIL' | translate }}:</span><span class="value">{{
+          selectedCandidate.email }}</span></div>
+      <div class="detail"><span class="label">{{ 'CANDIDATE WORKER ID' | translate }}:</span><span class="value">{{
+          selectedCandidate.workerId }}</span></div>
+      @if(selectedCandidate.maritalStatus == 0){
+      <div class="detail"><span class="label">{{ 'MARITAL STATUS' | translate }}:</span><span class="value">{{ 'SINGLE'
+          | translate }}</span></div>
+      }@else if (selectedCandidate.maritalStatus == 1) {
+      <div class="detail"><span class="label">{{ 'MARITAL STATUS' | translate }}:</span><span class="value">{{ 'MARRIED,
+          ONE INCOME' | translate }}</span></div>
+      }@else if (selectedCandidate.maritalStatus == 2) {
+      <div class="detail"><span class="label">{{ 'MARITAL STATUS' | translate }}:</span><span class="value">{{ 'MARRIED,
+          TWO INCOME' | translate }}</span></div>
+      }
+      <div class="detail"><span class="label">{{ 'NUMBER OF DEPENDENTS' | translate }}:</span><span class="value">{{
+          selectedCandidate.dependentsNumber }}</span></div>
+    </div>
+    }
+    <button class="close-button" type="button" (click)="closeCandidateModal()">Close</button>
+  </p-dialog>
+
+</div>

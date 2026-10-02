@@ -1,0 +1,81 @@
+:host ::ng-deep {
+    .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+        background-color: #F0F9FF;
+    }
+
+  .tableGradient {
+    background: #0056D2;
+    background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+  }
+    
+    .p-datatable .p-datatable-tbody>tr>td{ // Experiment to make the rows a bit thinner to fit more information
+        @apply py-0
+    }
+
+    .p-dropdown-panel {
+      @apply absolute -top-48
+    }
+
+        input {
+          width: 100%;
+          padding: 0.8rem 1rem;
+          font-size: 1rem;
+          border: 2px solid#F0F9FF;
+          border-radius: 0.375rem;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+          transition: border-color 0.3s, box-shadow 0.3s;
+        }
+    
+        input:hover {
+          border-color: #EBFBF3;
+        }
+    
+        input:focus {
+          outline: none;
+          border-color: #0056b3;
+          box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.5);
+        }
+    
+    .p-tag.p-tag-warning {
+        background-color: #F1A425;
+        color: #000000;
+    }
+
+    .p-tag.p-tag-success {
+        background-color: #1AB977;
+        color: #000000;
+    }
+
+    .p-tag.p-tag-danger {
+        background-color: #B00020;
+        color: #ffffff;
+    }
+
+    .newProposal.p-button {
+        background-color: #0056D2;
+         color: white;
+         border: none;
+        border-radius: 20px; 
+        padding: 10px 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+        
+    .newProposal.p-button:hover {
+        background-color: darken(#0056D2, 10%);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px); 
+    }
+        
+    .newProposal .p-button:active {
+        background-color: #462C9C;
+        opacity: 0.9;
+        transform: translateY(1px); 
+    }
+        
+    .newProposal .p-button:focus {
+        outline: none; 
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 0 4px #0056D2;
+    }
+      
+}

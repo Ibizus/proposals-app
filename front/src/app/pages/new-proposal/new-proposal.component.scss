@@ -1,0 +1,135 @@
+:host ::ng-deep {
+  .p-stepper .p-stepper-header.p-highlight .p-stepper-number {
+      background: #F0F9FF;
+      color: #0056D2;
+    }
+  
+    .p-stepper .p-stepper-header:has(~ .p-highlight) .p-stepper-separator {
+      background-color: #0056D2;
+    }
+
+    .p-datepicker table td > span.p-highlight {
+      color: #0056D2;
+      background: #F0F9FF;
+    }
+
+    .p-checkbox .p-checkbox-box.p-highlight {
+      border-color: #0056D2;
+      background: #0056D2;
+    }
+
+    .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight {
+      color: #0056D2;
+      background: #F0F9FF;
+    }
+
+    .p-multiselect-panel .p-multiselect-items .p-multiselect-item:not(.p-highlight):not(.p-disabled).p-focus {
+      color: #0056D2;
+      background: #F0F9FF;
+    }
+
+    .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+      color: #0056D2;
+      background: #F0F9FF;
+    }
+
+    .p-datepicker table td.p-datepicker-today > span.p-highlight {
+      color: #0056D2;
+      background: #F0F9FF;
+    }
+
+    .p-checkbox.p-checkbox-box.p-highlight:hover {
+      border-color: #0056D2;
+      background: #0056D2;
+    }
+
+    .p-togglebutton.p-button.p-highlight:hover {
+      background: #0056D2;
+      border-color: #0056D2;
+      color: #ffffff;
+    }
+
+    .p-button:not(:disabled) {
+      color: #0056D2;
+    }
+
+    .p-togglebutton.p-button.p-highlight {
+      border-color: #0056D2;
+      color: #ffffff;
+      background: #0056D2;
+    }
+
+    .p-button:not(:disabled):hover {
+      background: #ffffff;
+      color: #0056D2;
+      border-color: #ffffff f;
+    }
+
+    .p-inputtext {
+      width: 100%;
+      padding: 13px;
+      border: gray 1px solid;
+    }
+
+    .p-calendar {
+      width: 100%;
+    }
+
+    .p-calendar button {
+      color: #0056D2;
+      background: white;
+    }
+
+    .p-calendar input {
+      padding: 13px;
+    }
+
+    .p-multiselect {
+      width: 100%;
+      height: 50px;
+      border: gray 1px solid;
+    }
+
+    .p-multiselect-label {
+      padding: 12px;
+    }
+
+    .p-placeholder{
+      padding: 12px;
+    }
+
+    .p-multiselect-token.ng-star-inserted {
+      padding-block: 0px;
+    }
+
+    .p-dropdown {
+      width: 100%
+    }
+
+    .p-autocomplete button {
+      color: #81a1c1;
+      background: white;
+    }
+
+    .p-autocomplete input {
+      padding: 13px;
+    }
+
+    .p-autocomplete {
+      width: 100%;
+    }
+
+    .p-togglebutton {
+      width: 100%;
+      height: 50px;
+      border: #0056D2 1px solid;
+    }
+
+    .p-datepicker-month {
+      padding-right: 4px;
+    }
+
+    .p-datepicker-year {
+      padding-left: 4px;
+    }
+}

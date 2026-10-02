@@ -1,0 +1,62 @@
+:host ::ng-deep {
+    .p-tabmenu {
+        justify-content: center;
+        align-self: center;
+        
+    }
+
+    .header-cell .header-content {
+        display: flex;
+        align-items: center;
+
+   }
+
+   .p-datatable-tbody{
+    max-height: 5px;
+    }
+
+    span.mandatory {
+        color: #ba066c !important;
+    }
+
+    button.send, button.cancel{
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: background-color 0.3s, box-shadow 0.3s;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        outline: none;
+      } 
+
+      button.send{
+        background-color: white ; 
+        color:#0056D2;
+        color:#AEEBCC;
+        color:#45C5C7;
+        color:#F0F9FF;
+        color:#EBFBF3;
+        border: #0056D2 solid 1px;
+      }
+      
+      button.send:hover {
+        background-color: white; 
+        box-shadow: 0 4px 4px #45C5C7;
+        border: #0056D2 solid 1px;
+      }
+
+      button.cancel {
+        background-color: white;
+        color: #45C5C7;
+        border: #45C5C7 solid 1px;
+      }
+      
+      button.cancel:hover, button.cancel:focus {
+        background-color: white;
+        box-shadow: 0 4px 4px #EBFBF3;
+      }
+}
+
+

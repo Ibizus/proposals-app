@@ -1,0 +1,48 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: proposals_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: user
+      MYSQL_DATABASE: proposals_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./back
+    container_name: proposals_backend
+    depends_on:
+      mysql:
+        condition: service_healthy # Espera activamente a que MySQL acepte conexiones
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/proposals_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: user
+
+  jsreport:
+    image: jsreport/jsreport:4.3.1
+    container_name: proposals_jsreport
+    ports:
+      - "5488:5488"
+
+  frontend:
+    build: ./front
+    container_name: proposals_frontend
+    depends_on:
+      - backend
+      - jsreport
+    ports:
+      - "4200:4200"
+
+volumes:
+  mysql_data:

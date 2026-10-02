@@ -1,0 +1,59 @@
+:host ::ng-deep{
+    .p-datatable .p-datatable-tbody > tr:nth-child(even){
+        background-color: #F0F9FF;
+    }
+
+    .tableGradient {
+      background: #0056D2;
+      background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+    }
+
+    .p-datatable .p-datatable-tbody>tr>td{ 
+        @apply py-0
+    }
+    
+    .p-dropdown-panel{
+        @apply absolute -top-48
+    }
+
+    button.send, button.cancel{
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: background-color 0.3s, box-shadow 0.3s;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        outline: none;
+      } 
+
+      button.send{
+        background-color: white ; 
+        color:#0056D2;
+        border: #0056D2 solid 1px;
+      }
+      
+      button.send:hover {
+        background-color: white; 
+        box-shadow: 0 4px 4px #45C5C7;
+        border: #0056D2 solid 1px;
+      }
+
+      button.cancel {
+        background-color: white; /* Rojo suave */
+        color: #45C5C7;
+        border: #45C5C7 solid 1px;
+      }
+      
+      button.cancel:hover, button.cancel:focus {
+        background-color: white; /* Rojo un poco más oscuro para el efecto hover */
+        box-shadow: 0 4px 4px #EBFBF3;
+      }
+
+
+}
+
+
+
+

@@ -1,0 +1,290 @@
+:host ::ng-deep {
+
+  .tableGradient {
+    background: #0056D2;
+    background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+  }
+
+  .p-inputtext {
+    width: 100%;
+    padding: 13px;
+  }
+
+  .p-calendar {
+    width: 100%;
+  }
+
+  .p-calendar button {
+    color: #81a1c1;
+    background: white;
+  }
+
+  .p-calendar input {
+    padding: 13px;
+  }
+
+  .p-multiselect {
+    width: 100%;
+    height: 50px;
+  }
+
+  .p-multiselect-label {
+    padding: 12px;
+  }
+
+  .p-placeholder{
+    padding: 12px;
+  }
+
+  .p-multiselect-token.ng-star-inserted {
+    padding-block: 0px;
+  }
+
+  .p-dropdown {
+    width: 100%
+  }
+
+  .p-autocomplete button {
+    color: #81a1c1;
+    background: white;
+  }
+
+  .p-autocomplete input {
+    padding: 13px;
+  }
+
+  .p-autocomplete {
+    width: 100%;
+  }
+
+  .p-togglebutton {
+    width: 100%;
+    height: 50px;
+  }
+
+  .p-datepicker-month {
+    padding-right: 4px;
+  }
+
+  .p-datepicker-year {
+    padding-left: 4px;
+  }
+
+  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background-color: #F0F9FF;
+  }
+
+  .p-datatable .p-datatable-tbody>tr>td {
+      // Experiment to make the rows a bit thinner to fit more information
+      @apply py-0
+  }
+  
+  .p-dropdown-panel {
+      @apply absolute -top-48
+  }
+
+  
+  label {
+    display: block;
+    color: #333;
+    font-size: 1rem;
+    font-weight: medium;
+    margin-bottom: 0.5rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    border: 2px solid#F0F9FF;
+    border-radius: 0.375rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  input:hover {
+    border-color: #EBFBF3;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.5);
+  }
+
+  .dropDown {
+    width: 100%;
+    border-radius: 5px !important;
+    border: 2px solid#F0F9FF;
+    transition: border-color 0.2s ease-in-out !important;
+  }
+
+  .mandatory {
+    padding: 1px;
+  }
+
+  //CANDIDATE DETAILS APPEARENCE
+  .details-container, .proposals-section, .audit-info {
+    font-family: 'Arial', sans-serif;
+    padding: 15px;
+    background-color:#FBFCFC;
+    border: 1px solid #F0F9FF; 
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+  }
+
+  .detail{
+    background-color: #F0F9FF;
+    padding: 6px 10px;
+    border-radius: 4px;
+    box-shadow: none;
+    margin-bottom: 8px;
+  }
+  
+  .audit-info div {
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+   }
+
+  .detail input, .detail select{
+    width: 100%;
+    padding: 3px;
+    border: 1px solid#F0F9FF;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  .value {
+    display: inline-block; /* Mantiene el texto alineado correctamente */
+    color: #333; /* Texto oscuro para mejor legibilidad */
+  }
+  
+  .close-button {
+    background-color: #0056D2; /* Adjust the color to match your theme */
+    color: white;
+    border: none !important;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    display: block;
+    margin: auto;
+    width: fit-content;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  
+  .close-button:hover {
+    background-color: darken(#0056D2, 10%);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px); 
+  }
+
+  //Proposals section
+  .proposals-section div{
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .proposalTable table {
+    width: 100%;
+    border-collapse: collapse;
+    max-height: 150px !important;
+    overflow-y: auto;
+    scroll-behavior: auto;
+    width: 100%;
+  }
+
+  .proposalTable thead,
+  .proposalTable tbody tr {
+    display: table;
+    width: 100%;
+  }
+
+  .proposalTable th, .proposalTable td {
+    font-size: 14px;
+    padding: 8px;
+    text-align: left;
+  }
+
+  .proposalTable thead th {
+    position: sticky;
+    top: 0;
+    font-weight: bold; 
+    text-align: left;
+    padding: 10px;
+    background-color: #F0F9FF; 
+    border-bottom: 1px solid #ddd; 
+  }
+
+  .proposalTable tbody{
+    display: block;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .proposalTable tr{
+    display: table;
+    width: 100%;
+    table-layout: fixed !important;
+  }
+
+  //Scrollbar appearence
+  .proposalTable tbody::-webkit-scrollbar {
+    width: 15px; /* Ajusta el ancho de la barra de desplazamiento */
+  }
+
+  .proposalTable tbody::-webkit-scrollbar-track {
+    background: #F0F9FF; 
+  }
+
+  .proposalTable tbody::-webkit-scrollbar-thumb {
+    background: #888; 
+  }
+
+  .proposalTable tbody::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+  }
+
+  //Auditable information card
+  .audit-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #F0F9FF;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .audit-info div {
+    flex-basis: 50%;
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+  }
+  
+  .audit-info p {
+    margin: 0;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .audit-info i {
+    color: #555;
+    margin-right: 5px;
+  }
+
+  .detail-label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  
+}
+
+  

@@ -1,0 +1,97 @@
+ <div class="mt-24 px-10">
+   <div class="relative">
+    <h1 class="font-bold text-5xl mb-5">{{ 'PROPOSALS' | translate }}</h1>
+     <button pButton icon="pi pi-plus" [label]="newProposalButton | translate"
+        class="newProposal bg-[#0056D2] text-white mb-3 px-4 p-1 w-46 h-14 rounded-full  absolute top-0 right-0" (click)="newProposal()">
+     </button>
+ </div>
+  <p-table 
+    #dt2
+    styleClass="p-datatable-striped p-datatable-sm" 
+    [value]="proposals" 
+    sortMode="multiple" 
+    [scrollable]="true"
+    scrollHeight="660px" 
+    [globalFilterFields]="['role','candidate.name','candidate.surname','candidate.email']"
+    [loading]="isLoading"
+    >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="role" class="header-cell">
+          <div class="header-content">
+          {{ 'ROLE' | translate }} <p-sortIcon field="role"/></div>
+        </th>
+        <th pSortableColumn="startDate" class="header-cell">
+          <div class="header-content">{{ 'STARTING DATE' | translate }} <p-sortIcon field="startDate"/></div>
+        </th>
+        <th pSortableColumn="status" class="header-cell">
+          <div class="header-content"> {{ 'STATUS' | translate }} <p-sortIcon field="status"/></div>
+        </th>
+        <th pSortableColumn="candidate.name" class="header-cell">
+          <div class="header-content"> {{ 'CANDIDATE' | translate }} <p-sortIcon field="candidate.name"/></div>
+        </th>
+        <th [width]="100">
+          <div class="flex justify-center float-right">
+            <p-iconField iconPosition="right" class="mr-0">
+              <p-inputIcon styleClass="pi pi-search" class=""/>
+              
+              <input 
+                  pInputText 
+                  type="text" 
+                  (input)="onInputChange($event)"
+                  placeholder="Search" 
+                  class="bg-slate-200 p-2 rounded"
+              />
+            </p-iconField>
+          </div>
+        </th>
+      </tr>
+      <tr>
+        <div class="absolute tableGradient h-1 w-full col-span-full"></div>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="fields">
+      <tr>
+        <td>{{ rowData.role }}</td>
+        <td>{{ rowData.startDate }}</td>
+        <td>
+          <p-tag [value]="numberToStatus(rowData)" [rounded]="true"
+            [severity]="getSeverity(numberToStatus(rowData))">
+          </p-tag>
+        </td>
+        <td>{{ rowData.candidate.name }}</td>
+        <td [width]="100">
+          <div class="flex justify-center">
+            <button pButton type="button" icon="pi pi-search" pTooltip="{{ 'DETAILED PROPOSAL' | translate }}"
+              class="p-button-rounded p-button-success" (click)="this.goToProposalDetail(rowData.id)"></button>
+
+            <button pButton type="button" icon="pi pi-clone" pTooltip="{{ 'DUPLICATE PROPOSAL' | translate }}"
+              class="p-button-rounded p-button-success" (click)="this.duplicateProposal(rowData)"></button>
+
+            <button pButton type="button" icon="pi pi-pencil" pTooltip="{{ 'MODIFY PROPOSAL' | translate }}"
+              class="p-button-rounded p-button-success" (click)="this.goToModifyProposal(rowData.id)"></button>
+
+            <button pButton type="button" icon="pi pi-trash" pTooltip="{{ 'DELETE PROPOSAL' | translate }}"
+              class="p-button-rounded p-button-success" (click)="showDialog(rowData)"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+  <p-paginator class="relative" (onPageChange)="paginate($event)" [first]="first" [rows]="rows"
+  [showCurrentPageReport]="true" [totalRecords]="totalRecords" [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+  <p-dialog header="{{'DELETE PROPOSAL'|translate}}" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }" #dialog>
+    <span>{{'ARE YOU SURE'|translate}}</span>
+    <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
+      <div class="grid-flow-col col-span-2">
+        <button class="send py-2 px-5 rounded-lg float-end" (click)="this.deleteProposal()">
+          {{'DELETE'|translate}}
+        </button>
+        <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2" (click)="this.closeDialog(dialog, $event)">
+          {{'CANCEL'|translate}}
+        </button>
+      </div>
+    </div>
+  </p-dialog>
+  <p-toast position="bottom-center" key="bc"></p-toast>
+</div>

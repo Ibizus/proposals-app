@@ -1,0 +1,22 @@
+:host ::ng-deep {
+    .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+        background-color: #F0F9FF;
+    }
+
+  .tableGradient {
+    background: #0056D2;
+    background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+  }
+
+    .p-datatable .p-datatable-tbody>tr>td{ // Experiment to make the rows a bit thinner to fit more information
+        @apply py-0
+    }
+
+    .p-dropdown {
+      @apply w-64
+    }
+}
+
+.p-datatable-tbody{
+    max-height: 5px;
+}

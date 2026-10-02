@@ -1,0 +1,26 @@
+:host ::ng-deep {
+
+    input {
+        --tw-bg-opacity: 1;
+        background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        width: 60%;
+    }
+
+    .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+        background-color: #F0F9FF;
+    }
+  .tableGradient {
+    background: #0056D2;
+    background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+  }
+    
+    .p-datatable .p-datatable-tbody>tr>td{ // Experiment to make the rows a bit thinner to fit more information
+        @apply py-0
+    }
+
+    .p-dropdown-panel {
+      @apply absolute -top-48
+    }
+}
