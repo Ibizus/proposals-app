@@ -20,6 +20,7 @@ import org.propflow.back.service.TaxesService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
@@ -29,7 +30,9 @@ public class BackApplication {
     SpringApplication.run(BackApplication.class, args);
   }
 
+  // Seeds demo data on startup; tests set app.seed-demo-data=false to skip it.
   @Bean
+  @ConditionalOnProperty(name = "app.seed-demo-data", havingValue = "true", matchIfMissing = true)
   public CommandLineRunner run(OfficeService officeService, ProposalService proposalService,
       CandidateService candidateService, ReportService reportService,
       SalaryService salaryService, ExtraService extraService, ExtraTemplateService extraTemplateService,
