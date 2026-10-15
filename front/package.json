@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCI",
     "start:es": "ng serve --configuration=es",
     "start:de": "ng serve --configuration=de",
     "start:pt": "ng serve --configuration=pt",

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideTestDefaults } from '../../../testing/test-providers';
 
 import { TaxesComponent } from './taxes.component';
 
@@ -8,7 +9,8 @@ describe('TaxesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TaxesComponent]
+      imports: [TaxesComponent],
+      providers: provideTestDefaults(),
     })
     .compileComponents();
     

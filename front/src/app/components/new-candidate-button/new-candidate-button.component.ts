@@ -242,7 +242,7 @@ import { forkJoin } from 'rxjs';
                 [options]="maritalStatusOptions"
                 [(ngModel)]="candidate.maritalStatus"
                 placeholder=""
-                name=""
+                name="maritalStatus"
                 [required]="true"
               >
               </p-dropdown>
@@ -439,7 +439,7 @@ export class NewCandidateButtonComponent implements OnInit {
   }
 
   resetForm() {
-    this.form.reset();
+    this.form?.reset();
     this.errorMessage = false;
     this.candidate = {
       '@id': 0,
