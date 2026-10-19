@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,11 +29,9 @@ import org.springframework.data.domain.Sort;
 @ExtendWith(MockitoExtension.class)
 class OfficeServiceTest {
 
-  @Mock
-  private OfficeRepository officeRepository;
+  @Mock private OfficeRepository officeRepository;
 
-  @InjectMocks
-  private OfficeService officeService;
+  @InjectMocks private OfficeService officeService;
 
   private static Office office(long id, String name, String code) {
     return new Office(id, name, code, new HashSet<>());
@@ -62,14 +59,16 @@ class OfficeServiceTest {
   void filterSearchesNameAndCodeWithFirstPageSortedByName() {
     Office malaga = office(2, "Malaga", "ESP-MAL");
     when(officeRepository.findOfficesByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
-        eq("mal"), eq("mal"), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(malaga)));
+            eq("mal"), eq("mal"), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(malaga)));
 
     Page<Office> result = officeService.filter(Optional.of("mal"));
 
     assertThat(result.getContent()).containsExactly(malaga);
     ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-    verify(officeRepository).findOfficesByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
-        eq("mal"), eq("mal"), pageable.capture());
+    verify(officeRepository)
+        .findOfficesByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
+            eq("mal"), eq("mal"), pageable.capture());
     assertThat(pageable.getValue().getPageNumber()).isZero();
     assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
     assertThat(pageable.getValue().getSort()).isEqualTo(Sort.by(Sort.Direction.ASC, "name"));

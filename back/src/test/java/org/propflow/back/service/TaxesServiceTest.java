@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,11 +23,9 @@ import org.propflow.back.repository.TaxesRepository;
 @ExtendWith(MockitoExtension.class)
 class TaxesServiceTest {
 
-  @Mock
-  private TaxesRepository taxesRepository;
+  @Mock private TaxesRepository taxesRepository;
 
-  @InjectMocks
-  private TaxesService taxesService;
+  @InjectMocks private TaxesService taxesService;
 
   private static Taxes bracket() {
     Taxes taxes = new Taxes();
@@ -46,15 +43,17 @@ class TaxesServiceTest {
   }
 
   @ParameterizedTest(name = "{0} dependants -> {1}% IRS")
-  @CsvSource({ "-1, 10", "0, 10", "1, 9", "2, 8", "3, 7", "4, 6", "5, 5", "9, 5" })
+  @CsvSource({"-1, 10", "0, 10", "1, 9", "2, 8", "3, 7", "4, 6", "5, 5", "9, 5"})
   void irsRateDependsOnNumberOfDependants(int dependants, double expectedIrs) {
-    assertThat(taxesService.getIrsByNumberOfDependants(bracket(), dependants)).isEqualTo(expectedIrs);
+    assertThat(taxesService.getIrsByNumberOfDependants(bracket(), dependants))
+        .isEqualTo(expectedIrs);
   }
 
   @Test
   void findBySalaryAndMaritalStatusDelegatesToBracketQuery() {
     Taxes taxes = bracket();
-    when(taxesRepository.findFirstBySalaryMaxGreaterThanEqualAndMaritalStatusOrderBySalaryMaxAsc(950d, 0))
+    when(taxesRepository.findFirstBySalaryMaxGreaterThanEqualAndMaritalStatusOrderBySalaryMaxAsc(
+            950d, 0))
         .thenReturn(taxes);
 
     assertThat(taxesService.findBySalaryAndMaritalStatus(950d, 0)).isSameAs(taxes);

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,15 +26,11 @@ class SalaryServiceTest {
 
   private static final Offset<Double> CENT = within(0.001);
 
-  @Mock
-  private SalaryRepository salaryRepository;
-  @Mock
-  private ParameterService parameterService;
-  @Mock
-  private TaxesService taxesService;
+  @Mock private SalaryRepository salaryRepository;
+  @Mock private ParameterService parameterService;
+  @Mock private TaxesService taxesService;
 
-  @InjectMocks
-  private SalaryService salaryService;
+  @InjectMocks private SalaryService salaryService;
 
   private Taxes bracket;
 
@@ -63,8 +58,14 @@ class SalaryServiceTest {
     return proposal;
   }
 
-  private static Extra extra(String name, double amount, boolean percentage, boolean ssTaxable,
-      boolean irsTaxable, int multiplyYearly, int multiplyMonthly) {
+  private static Extra extra(
+      String name,
+      double amount,
+      boolean percentage,
+      boolean ssTaxable,
+      boolean irsTaxable,
+      int multiplyYearly,
+      int multiplyMonthly) {
     Extra extra = new Extra();
     extra.setName(name);
     extra.setAmount(amount);
@@ -81,7 +82,8 @@ class SalaryServiceTest {
   void computesMonthlyAndYearlyBaseComponents() {
     when(taxesService.getIrsByNumberOfDependants(bracket, 1)).thenCallRealMethod();
 
-    Map<String, Map<String, Double>> result = salaryService.salaryCalculations(proposal(1000, 1), null, null);
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, 1), null, null);
     Map<String, Double> monthly = result.get("monthly");
     Map<String, Double> yearly = result.get("yearly");
 
@@ -101,7 +103,8 @@ class SalaryServiceTest {
 
   @Test
   void forcedIrsRateOverridesBracket() {
-    Map<String, Map<String, Double>> result = salaryService.salaryCalculations(proposal(1000, 1), 5.0, null);
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, 1), 5.0, null);
 
     // 1000 - (11% SS + 5% forced IRS)
     assertThat(result.get("monthly").get("Estimated Net Salary")).isCloseTo(840, CENT);
@@ -113,7 +116,8 @@ class SalaryServiceTest {
     // 15/day for 21 days, 11 months a year, IRS-taxable only
     Extra food = extra("Food Allowance", 15, false, false, true, 11, 21);
 
-    Map<String, Map<String, Double>> result = salaryService.salaryCalculations(proposal(1000, 0, food), null, null);
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, 0, food), null, null);
 
     // 315 - 12% IRS
     assertThat(result.get("monthly").get("Food Allowance")).isCloseTo(277.2, CENT);
@@ -126,7 +130,8 @@ class SalaryServiceTest {
     // 4% of salary, paid 12 times a year, SS-taxable only, not monthly (-1)
     Extra flex = extra("Flex", 4, true, true, false, 12, -1);
 
-    Map<String, Map<String, Double>> result = salaryService.salaryCalculations(proposal(1000, 0, flex), null, null);
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, 0, flex), null, null);
 
     assertThat(result.get("monthly")).doesNotContainKey("Flex");
     // 40 * 12 = 480, minus 11% SS
@@ -138,7 +143,8 @@ class SalaryServiceTest {
     when(parameterService.getCalculationsParameters()).thenReturn(Map.of());
     when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
 
-    Map<String, Double> monthly = salaryService.salaryCalculations(proposal(1000, 0), null, null).get("monthly");
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1000, 0), null, null).get("monthly");
 
     assertThat(monthly.get("Base Salary")).isCloseTo(0, CENT);
     assertThat(monthly.get("IHT")).isCloseTo(0, CENT);

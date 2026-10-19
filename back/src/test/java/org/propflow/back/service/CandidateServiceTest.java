@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,11 +24,9 @@ import org.springframework.data.domain.Sort;
 @ExtendWith(MockitoExtension.class)
 class CandidateServiceTest {
 
-  @Mock
-  private CandidateRepository candidateRepository;
+  @Mock private CandidateRepository candidateRepository;
 
-  @InjectMocks
-  private CandidateService candidateService;
+  @InjectMocks private CandidateService candidateService;
 
   private static Candidate candidate(long id, String name, String idNumber) {
     Candidate candidate = new Candidate();
@@ -63,7 +60,8 @@ class CandidateServiceTest {
   void paginatedListExposesPageMetadata() {
     List<Candidate> content = List.of(candidate(4, "D", "ID-4"), candidate(5, "E", "ID-5"));
     Pageable request = PageRequest.of(1, 3, Sort.by("id").ascending());
-    when(candidateRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(content, request, 5));
+    when(candidateRepository.findAll(any(Pageable.class)))
+        .thenReturn(new PageImpl<>(content, request, 5));
 
     Map<String, Object> response = candidateService.all(1, 3);
 
@@ -80,8 +78,14 @@ class CandidateServiceTest {
   @Test
   void filterAppliesSameTermToEverySearchableField() {
     when(candidateRepository
-        .findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(
-            eq("ann"), eq("ann"), eq("ann"), eq("ann"), eq("ann"), eq("ann"), any(Pageable.class)))
+            .findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(
+                eq("ann"),
+                eq("ann"),
+                eq("ann"),
+                eq("ann"),
+                eq("ann"),
+                eq("ann"),
+                any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(candidate(1, "Ann", "ID-1"))));
 
     Map<String, Object> response = candidateService.findByFilter(0, 10, "ann");

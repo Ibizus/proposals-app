@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.junit.jupiter.api.Test;
 import org.propflow.back.dto.ProposalDTO;
 import org.propflow.back.model.Candidate;

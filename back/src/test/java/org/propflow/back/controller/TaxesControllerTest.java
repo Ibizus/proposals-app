@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.propflow.back.config.SecurityConfig;
 import org.propflow.back.model.Taxes;
@@ -21,11 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(SecurityConfig.class)
 class TaxesControllerTest {
 
-  @Autowired
-  private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-  @MockBean
-  private TaxesService taxesService;
+  @MockBean private TaxesService taxesService;
 
   private static Taxes bracket(long id, double salaryMax, int maritalStatus) {
     Taxes taxes = new Taxes();
@@ -39,7 +36,8 @@ class TaxesControllerTest {
   void withoutParamsListsAllBrackets() throws Exception {
     when(taxesService.all()).thenReturn(List.of(bracket(1, 1000, 0), bracket(2, 1000, 1)));
 
-    mockMvc.perform(get("/v1/api/taxes"))
+    mockMvc
+        .perform(get("/v1/api/taxes"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(2));
   }
@@ -48,16 +46,19 @@ class TaxesControllerTest {
   void salaryParamFindsBracket() throws Exception {
     when(taxesService.findBySalary(950d)).thenReturn(bracket(1, 1000, 0));
 
-    mockMvc.perform(get("/v1/api/taxes").param("salary", "950"))
+    mockMvc
+        .perform(get("/v1/api/taxes").param("salary", "950"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.salaryMax").value(1000.0));
   }
 
   @Test
   void maritalStatusParamListsBrackets() throws Exception {
-    when(taxesService.findByMaritalStatus(1)).thenReturn(List.of(bracket(2, 1000, 1), bracket(3, 2000, 1)));
+    when(taxesService.findByMaritalStatus(1))
+        .thenReturn(List.of(bracket(2, 1000, 1), bracket(3, 2000, 1)));
 
-    mockMvc.perform(get("/v1/api/taxes").param("maritalStatus", "1"))
+    mockMvc
+        .perform(get("/v1/api/taxes").param("maritalStatus", "1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[1].salaryMax").value(2000.0));
   }
@@ -66,7 +67,8 @@ class TaxesControllerTest {
   void salaryAndMaritalStatusFindBracket() throws Exception {
     when(taxesService.findBySalaryAndMaritalStatus(1500d, 1)).thenReturn(bracket(3, 2000, 1));
 
-    mockMvc.perform(get("/v1/api/taxes").param("salary", "1500").param("maritalStatus", "1"))
+    mockMvc
+        .perform(get("/v1/api/taxes").param("salary", "1500").param("maritalStatus", "1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(3))
         .andExpect(jsonPath("$.maritalStatus").value(1));

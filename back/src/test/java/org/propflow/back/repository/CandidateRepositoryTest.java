@@ -3,7 +3,6 @@ package org.propflow.back.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashSet;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.propflow.back.model.Candidate;
@@ -19,12 +18,23 @@ import org.springframework.data.domain.Sort;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CandidateRepositoryTest {
 
-  @Autowired
-  private CandidateRepository candidateRepository;
+  @Autowired private CandidateRepository candidateRepository;
 
-  private static Candidate candidate(String name, String surname, String idNumber, String email, String workerId) {
-    return new Candidate(0, name, surname, idNumber, "600000000", email, workerId, 0, 0, 0,
-        new HashSet<>(), new HashSet<>());
+  private static Candidate candidate(
+      String name, String surname, String idNumber, String email, String workerId) {
+    return new Candidate(
+        0,
+        name,
+        surname,
+        idNumber,
+        "600000000",
+        email,
+        workerId,
+        0,
+        0,
+        0,
+        new HashSet<>(),
+        new HashSet<>());
   }
 
   @BeforeEach
@@ -48,8 +58,12 @@ class CandidateRepositoryTest {
 
   @Test
   void filterMatchesAnyFieldIgnoringCase() {
-    assertThat(search("ANN").getContent()).extracting(Candidate::getName).containsExactly("Ann", "Bob");
-    assertThat(search("id-300").getContent()).extracting(Candidate::getName).containsExactly("Carl");
+    assertThat(search("ANN").getContent())
+        .extracting(Candidate::getName)
+        .containsExactly("Ann", "Bob");
+    assertThat(search("id-300").getContent())
+        .extracting(Candidate::getName)
+        .containsExactly("Carl");
     assertThat(search("w-2").getContent()).extracting(Candidate::getName).containsExactly("Bob");
     assertThat(search("nobody").getContent()).isEmpty();
   }

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,13 +29,10 @@ class ProposalServiceTest {
 
   private static final LocalDateTime T0 = LocalDateTime.of(2024, 4, 1, 9, 0);
 
-  @Mock
-  private ProposalRepository proposalRepository;
-  @Mock
-  private CandidateRepository candidateRepository;
+  @Mock private ProposalRepository proposalRepository;
+  @Mock private CandidateRepository candidateRepository;
 
-  @InjectMocks
-  private ProposalService proposalService;
+  @InjectMocks private ProposalService proposalService;
 
   private static long nextStatusId = 1;
 
@@ -63,31 +59,29 @@ class ProposalServiceTest {
 
   @Test
   void proposalsByStatusCountsOnlyTheLatestStatus() {
-    List<Proposal> proposals = List.of(
-        // draft -> confirmed -> sent: latest is "sent"
-        proposal(1, status(0, T0), status(2, T0.plusHours(2)), status(1, T0.plusHours(1))),
-        proposal(2, status(2, T0)),
-        proposal(3, status(5, T0)),
-        proposal(4, status(42, T0)));
+    List<Proposal> proposals =
+        List.of(
+            // draft -> confirmed -> sent: latest is "sent"
+            proposal(1, status(0, T0), status(2, T0.plusHours(2)), status(1, T0.plusHours(1))),
+            proposal(2, status(2, T0)),
+            proposal(3, status(5, T0)),
+            proposal(4, status(42, T0)));
     when(proposalRepository.findAll()).thenReturn(proposals);
 
     assertThat(proposalService.getProposalsByStatus())
-        .containsOnly(
-            Map.entry("sent", 2L),
-            Map.entry("approved", 1L),
-            Map.entry("UNKNOWN", 1L));
+        .containsOnly(Map.entry("sent", 2L), Map.entry("approved", 1L), Map.entry("UNKNOWN", 1L));
   }
 
   @Test
   void proposalsByCreatedAtFillsMissingDaysWithZero() {
-    when(proposalRepository.findAll()).thenReturn(List.of(
-        createdOn(1, T0),
-        createdOn(2, T0.plusHours(3)),
-        createdOn(3, T0.plusDays(3))));
+    when(proposalRepository.findAll())
+        .thenReturn(
+            List.of(createdOn(1, T0), createdOn(2, T0.plusHours(3)), createdOn(3, T0.plusDays(3))));
 
     Map<String, Integer> byDay = proposalService.getProposalsByCreatedAt();
 
-    assertThat(byDay.keySet()).containsExactly("2024-04-01", "2024-04-02", "2024-04-03", "2024-04-04");
+    assertThat(byDay.keySet())
+        .containsExactly("2024-04-01", "2024-04-02", "2024-04-03", "2024-04-04");
     assertThat(byDay.values()).containsExactly(2, 0, 0, 1);
   }
 
@@ -137,6 +131,7 @@ class ProposalServiceTest {
   void deleteRejectsUnknownProposal() {
     when(proposalRepository.findById(9L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> proposalService.delete(9L)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> proposalService.delete(9L))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

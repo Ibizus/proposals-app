@@ -11,8 +11,7 @@ import org.springframework.context.ApplicationContext;
 @SpringBootTest
 class BackApplicationTests {
 
-  @Autowired
-  private ApplicationContext context;
+  @Autowired private ApplicationContext context;
 
   @Test
   void contextLoadsWithoutSeedingDemoData() {
