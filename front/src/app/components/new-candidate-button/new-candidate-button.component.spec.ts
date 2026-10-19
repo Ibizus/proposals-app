@@ -11,9 +11,8 @@ describe('NewCandidateButtonComponent', () => {
     await TestBed.configureTestingModule({
       imports: [NewCandidateButtonComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NewCandidateButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

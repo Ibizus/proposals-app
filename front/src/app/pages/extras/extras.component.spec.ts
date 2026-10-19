@@ -11,9 +11,8 @@ describe('ExtrasComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ExtrasComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(ExtrasComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

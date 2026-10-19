@@ -11,9 +11,8 @@ describe('ProposalsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ProposalsComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(ProposalsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

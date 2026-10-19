@@ -52,9 +52,7 @@ describe('SalaryService', () => {
         salary: { id: 1, base: 1000, extras: [makeExtra()] },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(
-        proposal, monthly, yearly, 500, 7000, 1000
-      );
+      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000);
 
       // 100 - (10% SS + 20% IRS) = 70 per month, 11 months a year
       expect(monthly.get('Meal allowance')).toBeCloseTo(70, 6);
@@ -67,9 +65,7 @@ describe('SalaryService', () => {
         salary: { id: 1, base: 1000, extras: [makeExtra({ addToSalary: true })] },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(
-        proposal, monthly, yearly, 500, 7000, 1000
-      );
+      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000);
 
       expect(m).toBeCloseTo(570, 6);
       expect(y).toBeCloseTo(7770, 6);

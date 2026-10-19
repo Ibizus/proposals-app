@@ -11,9 +11,8 @@ describe('NewMailComponent', () => {
     await TestBed.configureTestingModule({
       imports: [NewMailComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NewMailComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

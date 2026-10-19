@@ -24,7 +24,7 @@ describe('NewProposalButtonComponent', () => {
     const router = (component as unknown as { router: Router }).router;
     const navigate = spyOn(router, 'navigate').and.resolveTo(true);
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')!.click();
+    ((fixture.nativeElement as HTMLElement).querySelector('button') as HTMLButtonElement).click();
 
     expect(navigate).toHaveBeenCalledWith(['/new-proposal']);
   });

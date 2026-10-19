@@ -8,6 +8,7 @@ import { DashboardService } from './dashboard.service';
 import { MailService } from './mail.service';
 import { OfficeService } from './office.service';
 import { ParameterService } from './parameter.service';
+import { Parameter } from '../utils/types';
 import { ToastService } from './toast.service';
 
 const API = environment.API_ENDPOINT;
@@ -47,7 +48,7 @@ describe('HTTP services', () => {
   describe('ParameterService', () => {
     it('lists, modifies and deletes parameters', () => {
       const service = TestBed.inject(ParameterService);
-      const parameter = { id: 3, name: 'iht', value: 10 } as any;
+      const parameter = { id: 3, name: 'iht', value: 10 } as Parameter;
       service.getParameters().subscribe();
       service.modifyParameter(parameter).subscribe();
       service.deleteParameter(parameter).subscribe();

@@ -11,9 +11,8 @@ describe('TaxesComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TaxesComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(TaxesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

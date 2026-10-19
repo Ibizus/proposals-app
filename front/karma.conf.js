@@ -1,6 +1,6 @@
-// Karma configuration file, see link for more information
-// https://karma-runner.github.io/1.0/config/configuration-file.html
-
+// Karma configuration. `npm test` runs in a visible Chrome for local work;
+// `npm run test:ci` uses the ChromeHeadlessCI launcher and writes coverage
+// to coverage/front (coverage-summary.json is read by the CI workflow).
 module.exports = function (config) {
   config.set({
     basePath: '',
@@ -10,38 +10,29 @@ module.exports = function (config) {
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage'),
-      require('@angular-devkit/build-angular/plugins/karma')
+      require('@angular-devkit/build-angular/plugins/karma'),
     ],
     client: {
-      jasmine: {
-        // you can add configuration options for Jasmine here
-        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
-        // for example, you can disable the random execution with `random: false`
-        // or set a specific seed with `seed: 4321`
-      },
-      clearContext: false, // leave Jasmine Spec Runner output visible in browser
-      captureConsole: false // the app logs heavily; keep test output readable
+      jasmine: {},
+      clearContext: false,
+      captureConsole: false, // the app logs heavily; keep test output readable
     },
     jasmineHtmlReporter: {
-      suppressAll: true // removes the duplicated traces
+      suppressAll: true,
     },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/front'),
       subdir: '.',
-      reporters: [
-        { type: 'html' },
-        { type: 'text-summary' }
-      ]
+      reporters: [{ type: 'html' }, { type: 'text-summary' }, { type: 'json-summary' }],
     },
     reporters: ['progress', 'kjhtml'],
     browsers: ['Chrome'],
     customLaunchers: {
-      // Headless Chrome for CI containers, where the Chrome sandbox is unavailable.
       ChromeHeadlessCI: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox']
-      }
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+      },
     },
-    restartOnFileChange: true
+    restartOnFileChange: true,
   });
 };

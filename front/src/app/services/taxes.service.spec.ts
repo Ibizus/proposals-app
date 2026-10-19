@@ -26,7 +26,11 @@ describe('TaxesService', () => {
 
     http
       .expectOne(TAXES_URL)
-      .flush([makeTaxes({ salaryMax: 3000 }), makeTaxes({ salaryMax: 1000 }), makeTaxes({ salaryMax: 2000 })]);
+      .flush([
+        makeTaxes({ salaryMax: 3000 }),
+        makeTaxes({ salaryMax: 1000 }),
+        makeTaxes({ salaryMax: 2000 }),
+      ]);
 
     expect(result).toEqual([1000, 2000, 3000]);
   });
@@ -49,7 +53,7 @@ describe('TaxesService', () => {
   ];
   bracketCases.forEach(([dependents, expectedIrs]) => {
     it(`picks IRS ${expectedIrs}% for ${dependents} dependents`, () => {
-      let bracket: any;
+      let bracket: { irs: number; ss: number } | undefined;
       service.getTaxBracket(1500, 0, dependents).subscribe((b) => (bracket = b));
 
       http.expectOne(TAXES_URL + '?salary=1500&maritalStatus=0').flush(makeTaxes());

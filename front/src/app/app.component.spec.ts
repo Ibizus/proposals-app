@@ -37,12 +37,7 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const app = fixture.componentInstance;
-    expect(app.items.map((i) => i.label)).toEqual([
-      'Proposals',
-      'Candidates',
-      'Extras',
-      'Taxes',
-    ]);
+    expect(app.items.map((i) => i.label)).toEqual(['Proposals', 'Candidates', 'Extras', 'Taxes']);
     expect(app.activeItem).toBe(app.items[0]);
   });
 });

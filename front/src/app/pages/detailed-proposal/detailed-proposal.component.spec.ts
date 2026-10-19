@@ -41,10 +41,26 @@ describe('DetailedProposalComponent', () => {
     http.expectOne(API + 'proposals/7').flush(
       makeProposal({
         statuses: [
-          { id: 2, status: 1, message: 'second', createdAt: new Date('2024-03-01'), createdBy: '', modifiedAt: new Date('2024-03-01'), modifiedBy: '' },
-          { id: 1, status: 0, message: 'first', createdAt: new Date('2024-01-01'), createdBy: '', modifiedAt: new Date('2024-01-01'), modifiedBy: '' },
+          {
+            id: 2,
+            status: 1,
+            message: 'second',
+            createdAt: new Date('2024-03-01'),
+            createdBy: '',
+            modifiedAt: new Date('2024-03-01'),
+            modifiedBy: '',
+          },
+          {
+            id: 1,
+            status: 0,
+            message: 'first',
+            createdAt: new Date('2024-01-01'),
+            createdBy: '',
+            modifiedAt: new Date('2024-01-01'),
+            modifiedBy: '',
+          },
         ],
-      })
+      }),
     );
     http.expectOne(TAXES_URL).flush([makeTaxes()]);
     http.expectOne(TAXES_URL + '?salary=1000&maritalStatus=0').flush(makeTaxes());

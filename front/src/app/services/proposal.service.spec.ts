@@ -45,7 +45,7 @@ describe('ProposalService', () => {
         ['iht', 10],
         ['spp', 5],
         ['scr', 1.5],
-      ])
+      ]),
     );
   });
 
@@ -61,20 +61,18 @@ describe('ProposalService', () => {
 
   describe('salaryCalculations', () => {
     function run(irs?: number, ss?: number) {
-      let result: Map<string, Map<string, number>> | undefined;
-      service
-        .salaryCalculations(makeProposal(), irs, ss)
-        .subscribe((r) => (result = r));
+      let result = new Map<string, Map<string, number>>();
+      service.salaryCalculations(makeProposal(), irs, ss).subscribe((r) => (result = r));
 
       // Tax bracket first, then parameters.
       http.expectOne(TAXES_URL + '?salary=1000&maritalStatus=0').flush(makeTaxes());
       expectGet(API + 'parameters').flush(PARAMETERS);
 
-      return result!;
+      return result;
     }
 
     it('computes monthly and yearly breakdowns from taxes and parameters', () => {
-      const monthly = run().get('monthly')!;
+      const monthly = run().get('monthly') as Map<string, number>;
 
       expect(monthly.get('Gross Salary')).toBe(1000);
       expect(monthly.get('Base Salary')).toBeCloseTo(1350, 6);
@@ -86,7 +84,7 @@ describe('ProposalService', () => {
     });
 
     it('lets callers override IRS and SS rates', () => {
-      const monthly = run(30, 10).get('monthly')!;
+      const monthly = run(30, 10).get('monthly') as Map<string, number>;
       expect(monthly.get('Estimated Net Salary')).toBeCloseTo(600, 6);
     });
   });

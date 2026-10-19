@@ -11,7 +11,17 @@ const API = environment.API_ENDPOINT;
 
 function param(id: number, name: string, value: number): Parameter {
   const at = new Date('2024-01-01T00:00:00Z');
-  return { id, name, value, validFrom: at, validUntil: at, createdAt: at, createdBy: '', modifiedAt: at, modifiedBy: '' };
+  return {
+    id,
+    name,
+    value,
+    validFrom: at,
+    validUntil: at,
+    createdAt: at,
+    createdBy: '',
+    modifiedAt: at,
+    modifiedBy: '',
+  };
 }
 
 describe('ParametersComponent', () => {

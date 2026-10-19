@@ -11,9 +11,8 @@ describe('NewProposalComponent', () => {
     await TestBed.configureTestingModule({
       imports: [NewProposalComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NewProposalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -11,9 +11,8 @@ describe('NewExtraButtonComponent', () => {
     await TestBed.configureTestingModule({
       imports: [NewExtraButtonComponent],
       providers: provideTestDefaults(),
-    })
-    .compileComponents();
-    
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NewExtraButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -19,7 +19,10 @@ describe('CandidateCardComponent', () => {
   });
 
   function render(maritalStatus: number) {
-    fixture.componentRef.setInput('candidate', makeCandidate({ maritalStatus, dependentsNumber: 2 }));
+    fixture.componentRef.setInput(
+      'candidate',
+      makeCandidate({ maritalStatus, dependentsNumber: 2 }),
+    );
     fixture.detectChanges();
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
   }

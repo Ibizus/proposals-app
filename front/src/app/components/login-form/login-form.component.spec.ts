@@ -38,7 +38,9 @@ describe('LoginFormComponent', () => {
   });
 
   it('toggles password visibility and its icon', () => {
-    const icon = (fixture.nativeElement as HTMLElement).querySelector('#togglePasswordIcon')!;
+    const icon = (fixture.nativeElement as HTMLElement).querySelector(
+      '#togglePasswordIcon',
+    ) as HTMLElement;
 
     component.togglePassword();
     expect(component.showPassword).toBeTrue();
