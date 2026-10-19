@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  Practical lint rules: likely bugs and sloppy code only. Layout and
+  whitespace belong to Spotless (google-java-format, which also drops
+  unused imports in the files it checks); there are no
+  complexity or length gates.
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <module name="TreeWalker">
+    <module name="RedundantImport"/>
+    <module name="IllegalImport"/>
+    <module name="EqualsHashCode"/>
+    <module name="EmptyStatement"/>
+    <module name="StringLiteralEquality"/>
+    <module name="FallThrough"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="OneStatementPerLine"/>
+    <module name="MultipleVariableDeclarations"/>
+    <module name="EmptyCatchBlock"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="OuterTypeFilename"/>
+  </module>
+</module>
