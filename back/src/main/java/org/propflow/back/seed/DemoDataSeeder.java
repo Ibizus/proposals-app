@@ -1,0 +1,347 @@
+package org.propflow.back.seed;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import lombok.extern.slf4j.Slf4j;
+import net.datafaker.Faker;
+import org.propflow.back.model.AuditableSuperclass;
+import org.propflow.back.model.Candidate;
+import org.propflow.back.model.Extra;
+import org.propflow.back.model.ExtraTemplate;
+import org.propflow.back.model.Office;
+import org.propflow.back.model.Parameter;
+import org.propflow.back.model.Proposal;
+import org.propflow.back.model.Salary;
+import org.propflow.back.model.Status;
+import org.propflow.back.model.Taxes;
+import org.propflow.back.repository.CandidateRepository;
+import org.propflow.back.repository.ExtraRepository;
+import org.propflow.back.repository.ExtraTemplateRepository;
+import org.propflow.back.repository.OfficeRepository;
+import org.propflow.back.repository.ParameterRepository;
+import org.propflow.back.repository.ProposalRepository;
+import org.propflow.back.repository.StatusRepository;
+import org.propflow.back.repository.TaxesRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Fills an empty development database with fictitious demo data.
+ *
+ * <p>Runs only when {@code app.seed-demo-data=true} (set by the {@code dev} profile) and only fills
+ * tables that are still empty, so restarting the app never duplicates rows. Datafaker uses a fixed
+ * seed and all dates are fixed, so every fresh database gets exactly the same data.
+ */
+@Slf4j
+@Component
+@ConditionalOnProperty(name = "app.seed-demo-data", havingValue = "true")
+public class DemoDataSeeder implements CommandLineRunner {
+
+  static final int PROPOSAL_COUNT = 30;
+  static final int CANDIDATE_COUNT = 24;
+
+  private static final long FAKER_SEED = 20260101L;
+  private static final LocalDateTime FIRST_PROPOSAL_AT = LocalDateTime.of(2026, 5, 4, 9, 0);
+
+  private static final String[][] OFFICES = {
+    {"Lisbon Oriente", "ORI-LIS"},
+    {"Porto", "PRT-OPO"},
+    {"Braga", "PRT-BRG"},
+    {"Malaga", "ESP-MAL"},
+    {"Madrid", "ESP-MAD"},
+    {"Munich", "DEU-MUC"}
+  };
+  private static final String[] ROLES = {
+    "Java Backend Developer",
+    "Angular Frontend Developer",
+    "Full Stack Developer",
+    "DevOps Engineer",
+    "QA Automation Engineer",
+    "Data Engineer",
+    "Scrum Master",
+    "Business Analyst",
+    "UX/UI Designer",
+    "Cloud Architect",
+    "Android Developer",
+    "Site Reliability Engineer"
+  };
+  private static final String[] CONTRACT_LEVELS = {"L1", "L2", "L3", "L4", "L5", "L6", "L7"};
+  private static final String[] WORK_MODELS = {
+    "Hybrid: 2 days per week on site.",
+    "Hybrid: 3 days per week on site.",
+    "Fully remote, with a monthly team day at the office.",
+    "On site, flexible working hours.",
+    "Remote first, occasional travel to the client (up to 10%)."
+  };
+
+  // Status codes as shown in the frontend: 0 Draft, 1 Confirmed, 2 Sent, 3 Declined,
+  // 4 Cancelled, 5 Approved. Each history ends in the proposal's current status.
+  private static final int[][] STATUS_HISTORIES = {
+    {0}, {0, 1}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2, 5}, {0, 1, 2, 5}, {0, 1, 2, 3}, {0, 4}, {0, 1, 4}
+  };
+  private static final String[] STATUS_MESSAGES = {
+    "Draft created",
+    "Confirmed by the hiring manager",
+    "Offer sent to the candidate",
+    "Candidate declined the offer",
+    "Proposal cancelled",
+    "Candidate accepted the offer"
+  };
+
+  private final OfficeRepository officeRepository;
+  private final CandidateRepository candidateRepository;
+  private final ProposalRepository proposalRepository;
+  private final StatusRepository statusRepository;
+  private final ExtraRepository extraRepository;
+  private final ExtraTemplateRepository extraTemplateRepository;
+  private final TaxesRepository taxesRepository;
+  private final ParameterRepository parameterRepository;
+
+  public DemoDataSeeder(
+      OfficeRepository officeRepository,
+      CandidateRepository candidateRepository,
+      ProposalRepository proposalRepository,
+      StatusRepository statusRepository,
+      ExtraRepository extraRepository,
+      ExtraTemplateRepository extraTemplateRepository,
+      TaxesRepository taxesRepository,
+      ParameterRepository parameterRepository) {
+    this.officeRepository = officeRepository;
+    this.candidateRepository = candidateRepository;
+    this.proposalRepository = proposalRepository;
+    this.statusRepository = statusRepository;
+    this.extraRepository = extraRepository;
+    this.extraTemplateRepository = extraTemplateRepository;
+    this.taxesRepository = taxesRepository;
+    this.parameterRepository = parameterRepository;
+  }
+
+  @Override
+  @Transactional
+  public void run(String... args) {
+    seed();
+  }
+
+  /** Seeds every group of tables that is still empty. */
+  public void seed() {
+    seedIfEmpty("extra templates", extraTemplateRepository, this::seedExtraTemplates);
+    seedIfEmpty("tax brackets", taxesRepository, this::seedTaxes);
+    seedIfEmpty("salary parameters", parameterRepository, this::seedParameters);
+    if (officeRepository.count() == 0
+        && candidateRepository.count() == 0
+        && proposalRepository.count() == 0) {
+      seedProposals();
+      log.info(
+          "Seeded demo data: {} offices, {} candidates, {} proposals",
+          OFFICES.length,
+          CANDIDATE_COUNT,
+          PROPOSAL_COUNT);
+    } else {
+      log.info("Offices, candidates or proposals already exist; skipping demo proposals");
+    }
+  }
+
+  private void seedIfEmpty(String label, JpaRepository<?, Long> repository, Runnable seeder) {
+    if (repository.count() == 0) {
+      seeder.run();
+      log.info("Seeded {} {}", repository.count(), label);
+    } else {
+      log.info("Table for {} is not empty; skipping", label);
+    }
+  }
+
+  private void seedExtraTemplates() {
+    extraTemplateRepository.saveAll(
+        List.of(
+            new ExtraTemplate(0, "Flex", 4d, 11d, 21d, true, false, false, false, false, 12, -1),
+            new ExtraTemplate(
+                0, "Car Allowance", 250d, 11d, 21d, false, true, true, false, true, 12, 1),
+            new ExtraTemplate(0, "Car", 350d, 11d, 21d, false, false, false, false, false, 12, 1),
+            new ExtraTemplate(
+                0, "Fuel Allowance", 100d, 11d, 21d, false, false, false, false, true, 12, 1),
+            // Amount per working day
+            new ExtraTemplate(
+                0, "Food Allowance", 15d, 11d, 21d, false, false, false, false, true, 11, 21),
+            new ExtraTemplate(0, "Phone", 0d, 11d, 21d, false, false, false, true, false, 12, 1),
+            new ExtraTemplate(0, "Computer", 0d, 11d, 21d, false, false, false, true, false, 12, 1),
+            new ExtraTemplate(
+                0, "Health Insurance", 0d, 11d, 21d, false, true, false, false, false, 12, 1),
+            new ExtraTemplate(
+                0, "Life Insurance", 0d, 11d, 21d, false, true, false, false, false, 12, 1)));
+  }
+
+  /** Loads the illustrative withholding tables from {@code seed/taxes.csv}. */
+  private void seedTaxes() {
+    LocalDate validFrom = LocalDate.of(2024, 1, 1);
+    LocalDate validUntil = LocalDate.of(2024, 12, 31);
+    List<Taxes> taxes = new ArrayList<>();
+    try (BufferedReader reader =
+        new BufferedReader(
+            new InputStreamReader(
+                new ClassPathResource("seed/taxes.csv").getInputStream(),
+                StandardCharsets.UTF_8))) {
+      reader
+          .lines()
+          .filter(line -> !line.isBlank() && !line.startsWith("#") && !line.startsWith("marital"))
+          .map(line -> line.split(","))
+          .forEach(
+              c ->
+                  taxes.add(
+                      new Taxes(
+                          0,
+                          Double.valueOf(c[1]),
+                          11d,
+                          23.75,
+                          validFrom,
+                          validUntil,
+                          Integer.valueOf(c[0]),
+                          Double.valueOf(c[2]),
+                          Double.valueOf(c[3]),
+                          Double.valueOf(c[4]),
+                          Double.valueOf(c[5]),
+                          Double.valueOf(c[6]),
+                          Double.valueOf(c[7]))));
+    } catch (IOException e) {
+      throw new UncheckedIOException("Could not read seed/taxes.csv", e);
+    }
+    taxesRepository.saveAll(taxes);
+  }
+
+  private void seedParameters() {
+    parameterRepository.saveAll(
+        List.of(
+            new Parameter(0, "iht", 20.0, null, null),
+            new Parameter(0, "spp", 3.0, null, null),
+            new Parameter(0, "scr", 0.9235, null, null)));
+  }
+
+  private void seedProposals() {
+    Faker faker = new Faker(Locale.ENGLISH, new Random(FAKER_SEED));
+    List<ExtraTemplate> templates = extraTemplateRepository.findAll();
+
+    List<Office> offices = new ArrayList<>();
+    for (String[] office : OFFICES) {
+      offices.add(officeRepository.save(new Office(0, office[0], office[1], new HashSet<>())));
+    }
+    List<Candidate> candidates = new ArrayList<>();
+    for (int i = 0; i < CANDIDATE_COUNT; i++) {
+      candidates.add(candidateRepository.save(fakeCandidate(faker)));
+    }
+
+    LocalDateTime createdAt = FIRST_PROPOSAL_AT;
+    for (int i = 0; i < PROPOSAL_COUNT; i++) {
+      // Every candidate gets one proposal; the last few get a second one.
+      Candidate candidate =
+          i < CANDIDATE_COUNT ? candidates.get(i) : candidates.get(faker.random().nextInt(10));
+      Office office = offices.get(faker.random().nextInt(offices.size()));
+      createdAt = createdAt.plusDays(faker.random().nextInt(1, 5)).withHour(9 + i % 8);
+      // Entities compare by id, so each one is saved before it goes into a set.
+      Proposal proposal =
+          proposalRepository.save(fakeProposal(faker, i, createdAt, office, candidate));
+      office.getProposals().add(proposal);
+      candidate.getProposals().add(proposal);
+      candidate.getNJoynSet().add(proposal.getNjoyn());
+      candidate.setProposalsCount(candidate.getProposals().size());
+      addStatuses(faker, proposal, createdAt);
+      addExtras(faker, proposal.getSalary(), templates, proposal.getNjoyn());
+    }
+  }
+
+  private Candidate fakeCandidate(Faker faker) {
+    String name = faker.name().firstName();
+    String surname = faker.name().lastName();
+    String email =
+        (name + "." + surname).toLowerCase(Locale.ROOT).replaceAll("[^a-z.]", "") + "@example.com";
+    return new Candidate(
+        0,
+        name,
+        surname,
+        faker.numerify("#########"),
+        faker.options().option("91", "92", "93", "96") + faker.numerify("#######"),
+        email,
+        "W-" + faker.numerify("####"),
+        faker.random().nextInt(3),
+        faker.options().option(0, 0, 1, 1, 2, 3),
+        0,
+        new HashSet<>(),
+        new HashSet<>());
+  }
+
+  private Proposal fakeProposal(
+      Faker faker, int index, LocalDateTime createdAt, Office office, Candidate candidate) {
+    String role = faker.options().option(ROLES);
+    int level = faker.random().nextInt(CONTRACT_LEVELS.length);
+    boolean indefinite = faker.random().nextInt(10) < 7;
+    LocalDate startDate = createdAt.toLocalDate().plusDays(faker.random().nextInt(14, 60));
+    LocalDate dueDate =
+        indefinite ? null : startDate.plusMonths(faker.options().option(6, 12, 24)).minusDays(1);
+
+    Salary salary = new Salary(0, 1000d + level * 350 + faker.random().nextInt(7) * 50, null, null);
+    salary.setExtras(new HashSet<>());
+    Proposal proposal =
+        new Proposal(
+            0,
+            "NJ-" + (260100 + index * 7 + faker.random().nextInt(7)),
+            role + " for " + faker.company().name() + " (" + faker.company().industry() + ")",
+            role,
+            indefinite,
+            CONTRACT_LEVELS[level],
+            startDate,
+            dueDate,
+            faker.options().option(WORK_MODELS),
+            office,
+            salary,
+            candidate,
+            new HashSet<>());
+    salary.setProposal(proposal);
+    stamp(proposal, createdAt);
+    return proposal;
+  }
+
+  /** Adds a status history a few days apart; the latest status is the current one. */
+  private void addStatuses(Faker faker, Proposal proposal, LocalDateTime createdAt) {
+    LocalDateTime statusAt = createdAt;
+    for (int code : STATUS_HISTORIES[faker.random().nextInt(STATUS_HISTORIES.length)]) {
+      Status status = new Status(0, code, STATUS_MESSAGES[code], proposal);
+      stamp(status, statusAt);
+      proposal.getStatuses().add(statusRepository.save(status));
+      statusAt =
+          statusAt.plusDays(faker.random().nextInt(1, 6)).plusHours(faker.random().nextInt(8));
+    }
+  }
+
+  /** Food allowance is always included; other benefits are picked at random. */
+  private void addExtras(Faker faker, Salary salary, List<ExtraTemplate> templates, String njoyn) {
+    for (ExtraTemplate template : templates) {
+      if (!"Food Allowance".equals(template.getName()) && faker.random().nextInt(100) >= 35) {
+        continue;
+      }
+      Extra extra = new Extra(template);
+      extra.setDescription(template.getName() + " included in proposal " + njoyn);
+      extra.setIsDefault(template.getIsDefault());
+      extra.setAddToSalary(template.getAddToSalary());
+      extra.setTemplateId(template.getId());
+      extra.setSalary(salary);
+      salary.getExtras().add(extraRepository.save(extra));
+    }
+  }
+
+  private static void stamp(AuditableSuperclass entity, LocalDateTime at) {
+    entity.setCreatedAt(at);
+    entity.setModifiedAt(at);
+  }
+}

@@ -76,6 +76,12 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Deterministic fictitious demo data for the dev profile (see DemoDataSeeder) -->
+		<dependency>
+			<groupId>net.datafaker</groupId>
+			<artifactId>datafaker</artifactId>
+			<version>2.5.4</version>
+		</dependency>
 		<!--Default Access:  http://localhost:8080/swagger-ui/index.html -->
 		<!--Access: http://localhost:8080/openapi -->
         <dependency>

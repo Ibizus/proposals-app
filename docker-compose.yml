@@ -11,7 +11,9 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      # TCP (not the socket) so the temporary server MySQL runs while initializing a
+      # fresh volume, which has networking disabled, does not count as healthy.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -28,6 +30,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/proposals_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: user
+      SPRING_PROFILES_ACTIVE: dev
 
   jsreport:
     image: jsreport/jsreport:4.3.1
