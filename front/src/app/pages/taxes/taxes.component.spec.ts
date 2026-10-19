@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideTestDefaults } from '../../../testing/test-providers';
 
 import { TaxesComponent } from './taxes.component';
 
@@ -8,10 +9,10 @@ describe('TaxesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TaxesComponent]
-    })
-    .compileComponents();
-    
+      imports: [TaxesComponent],
+      providers: provideTestDefaults(),
+    }).compileComponents();
+
     fixture = TestBed.createComponent(TaxesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -1,0 +1,137 @@
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { MessageService } from 'primeng/api';
+import { environment } from '../../environments/environment';
+import { makeProposal } from '../../testing/fixtures';
+import { DashboardService } from './dashboard.service';
+import { MailService } from './mail.service';
+import { OfficeService } from './office.service';
+import { ParameterService } from './parameter.service';
+import { Parameter } from '../utils/types';
+import { ToastService } from './toast.service';
+
+const API = environment.API_ENDPOINT;
+
+describe('HTTP services', () => {
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    http = TestBed.inject(HttpTestingController);
+    spyOn(console, 'log');
+  });
+
+  afterEach(() => http.verify());
+
+  function expectGet(url: string) {
+    const req = http.expectOne(url);
+    expect(req.request.method).toBe('GET');
+    return req;
+  }
+
+  describe('DashboardService', () => {
+    it('hits the dashboard endpoints', () => {
+      const service = TestBed.inject(DashboardService);
+      service.getSumary().subscribe();
+      service.getProposalsByStatus().subscribe();
+      service.getProposalsByDate().subscribe();
+
+      expectGet(API + 'dashboard/summary').flush({});
+      expectGet(API + 'dashboard/proposals/status').flush({});
+      expectGet(API + 'dashboard/proposals/createdat').flush({});
+    });
+  });
+
+  describe('ParameterService', () => {
+    it('lists, modifies and deletes parameters', () => {
+      const service = TestBed.inject(ParameterService);
+      const parameter = { id: 3, name: 'iht', value: 10 } as Parameter;
+      service.getParameters().subscribe();
+      service.modifyParameter(parameter).subscribe();
+      service.deleteParameter(parameter).subscribe();
+
+      expectGet(API + 'parameters').flush([]);
+      expect(http.match(API + 'parameters/3').map((r) => r.request.method)).toEqual([
+        'PUT',
+        'DELETE',
+      ]);
+    });
+  });
+
+  describe('OfficeService', () => {
+    it('passes the autocomplete query as a filter and sorts results', () => {
+      const service = TestBed.inject(OfficeService);
+      let offices: unknown;
+      service.getOffices({ query: 'lis' }).subscribe((o) => (offices = o));
+
+      const req = http.expectOne((r) => r.url === API + 'offices/');
+      expect(req.request.params.get('filter')).toBe('lis');
+      req.flush(['Porto', 'Lisbon']);
+
+      expect(offices).toEqual(['Lisbon', 'Porto']);
+    });
+  });
+
+  describe('MailService', () => {
+    it('builds the PDF body from a proposal and its calculations', () => {
+      const service = TestBed.inject(MailService);
+      const proposal = makeProposal();
+      const monthly: [string, number][] = [['Gross Salary', 1000]];
+      const yearly: [string, number][] = [['Gross Salary', 14000]];
+
+      expect(service.createPDFDataBody(proposal, monthly, yearly)).toEqual({
+        proposal,
+        monthly,
+        yearly,
+      });
+    });
+
+    it('posts the candidate notification with the file name', () => {
+      const service = TestBed.inject(MailService);
+      const proposal = makeProposal();
+      let completed = false;
+      service.notifyByEmail(proposal, 'p7.pdf').subscribe({ complete: () => (completed = true) });
+
+      const req = http.expectOne(API + 'send/candidate/?filename=p7.pdf');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(proposal);
+      req.flush({});
+      expect(completed).toBeTrue();
+    });
+  });
+});
+
+describe('ToastService', () => {
+  let messages: jasmine.SpyObj<MessageService>;
+  let service: ToastService;
+
+  beforeEach(() => {
+    messages = jasmine.createSpyObj<MessageService>('MessageService', ['add']);
+    TestBed.configureTestingModule({
+      providers: [{ provide: MessageService, useValue: messages }],
+    });
+    service = TestBed.inject(ToastService);
+    spyOn(console, 'log');
+  });
+
+  const cases: [keyof ToastService, string, string][] = [
+    ['success', 'success', 'Success'],
+    ['info', 'info', 'Info'],
+    ['warn', 'warn', 'Warn'],
+    ['error', 'error', 'Error'],
+  ];
+  cases.forEach(([method, severity, summary]) => {
+    it(`shows a ${severity} toast on the bottom-center channel`, () => {
+      (service[method] as (m: string) => void)('hello');
+      expect(messages.add).toHaveBeenCalledOnceWith({
+        key: 'bc',
+        severity,
+        summary,
+        detail: 'hello',
+      });
+    });
+  });
+});

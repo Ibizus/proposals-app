@@ -1,23 +1,49 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { provideTestDefaults } from '../../../testing/test-providers';
+import { environment } from '../../../environments/environment';
 
 import { DashboardComponent } from './dashboard.component';
+
+const API = environment.API_ENDPOINT;
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
+  let http: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardComponent]
-    })
-    .compileComponents();
-    
+      imports: [DashboardComponent],
+      providers: provideTestDefaults(),
+    }).compileComponents();
+
+    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+
+    http.expectOne(API + 'dashboard/summary').flush({ totalProposals: 12, totalCandidates: 5 });
+    http.expectOne(API + 'dashboard/proposals/status').flush({ DRAFT: 3, SENT: 9 });
+    http.expectOne(API + 'dashboard/proposals/createdat').flush({ '2024-01': 4, '2024-02': 8 });
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => http.verify());
+
+  it('renders the summary totals', () => {
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('12');
+    expect(text).toContain('5');
+  });
+
+  it('builds the proposals-by-status chart from the API response', () => {
+    expect(component.proposalsByStatusChartData.labels).toEqual(['DRAFT', 'SENT']);
+    expect(component.proposalsByStatusChartData.datasets[0].data).toEqual([3, 9]);
+  });
+
+  it('builds the proposals-by-date chart from the API response', () => {
+    expect(component.proposalsByDateChartData.labels).toEqual(['2024-01', '2024-02']);
+    expect(component.proposalsByDateChartData.datasets[0].data).toEqual([4, 8]);
   });
 });

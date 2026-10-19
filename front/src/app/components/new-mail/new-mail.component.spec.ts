@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideTestDefaults } from '../../../testing/test-providers';
 
 import { NewMailComponent } from './new-mail.component';
 
@@ -8,10 +9,10 @@ describe('NewMailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NewMailComponent]
-    })
-    .compileComponents();
-    
+      imports: [NewMailComponent],
+      providers: provideTestDefaults(),
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NewMailComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

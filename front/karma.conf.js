@@ -15,6 +15,7 @@ module.exports = function (config) {
     client: {
       jasmine: {},
       clearContext: false,
+      captureConsole: false, // the app logs heavily; keep test output readable
     },
     jasmineHtmlReporter: {
       suppressAll: true,
