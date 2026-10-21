@@ -2,28 +2,31 @@ package org.propflow.back.exception;
 
 import java.net.URI;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
  * Turns every exception that escapes a controller into an RFC 7807 {@link ProblemDetail} response,
  * so error bodies share one shape across the API.
  */
+@Slf4j
 @ControllerAdvice
-public class GeneralControllerAdvice {
+public class GeneralControllerAdvice extends ResponseEntityExceptionHandler {
 
   private static final URI ENTITY_NOT_FOUND = URI.create("urn:propflow:problem:entity-not-found");
   private static final URI COUPLING_ID_MISMATCH =
       URI.create("urn:propflow:problem:coupling-id-mismatch");
   private static final URI VALIDATION_FAILED = URI.create("urn:propflow:problem:validation-failed");
-  private static final URI MALFORMED_REQUEST = URI.create("urn:propflow:problem:malformed-request");
   private static final URI INTERNAL_ERROR = URI.create("urn:propflow:problem:internal-error");
 
   @ExceptionHandler(EntityNotFoundException.class)
@@ -44,37 +47,29 @@ public class GeneralControllerAdvice {
     return problemResponse(HttpStatus.CONFLICT, problem);
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ProblemDetail> handleValidation(MethodArgumentNotValidException exception) {
+  @Override
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(
+      MethodArgumentNotValidException exception,
+      HttpHeaders headers,
+      HttpStatusCode status,
+      WebRequest request) {
     List<FieldError> errors =
         exception.getBindingResult().getFieldErrors().stream()
             .map(
                 fieldError -> new FieldError(fieldError.getField(), fieldError.getDefaultMessage()))
             .toList();
 
-    ProblemDetail problem =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request validation failed");
+    ProblemDetail problem = exception.getBody();
+    problem.setDetail("Request validation failed");
     problem.setTitle("Validation failed");
     problem.setType(VALIDATION_FAILED);
     problem.setProperty("errors", errors);
-    return problemResponse(HttpStatus.BAD_REQUEST, problem);
-  }
-
-  @ExceptionHandler({
-    HttpMessageNotReadableException.class,
-    MethodArgumentTypeMismatchException.class
-  })
-  public ResponseEntity<ProblemDetail> handleMalformedRequest(Exception exception) {
-    ProblemDetail problem =
-        ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, "The request body or parameters are malformed");
-    problem.setTitle("Malformed request");
-    problem.setType(MALFORMED_REQUEST);
-    return problemResponse(HttpStatus.BAD_REQUEST, problem);
+    return handleExceptionInternal(exception, problem, headers, status, request);
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleUnexpected(Exception exception) {
+    log.error("Unhandled exception", exception);
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(
             HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");

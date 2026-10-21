@@ -3,8 +3,10 @@ package org.propflow.back.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -129,5 +131,35 @@ class CandidateControllerTest {
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.errors.length()").value(1))
         .andExpect(jsonPath("$.errors[0].field").value("name"));
+  }
+
+  @Test
+  void unsupportedMethodIsReportedAsMethodNotAllowedProblem() throws Exception {
+    mockMvc
+        .perform(delete("/v1/api/candidates"))
+        .andExpect(status().isMethodNotAllowed())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(405));
+  }
+
+  @Test
+  void malformedBodyIsReportedAsBadRequestProblem() throws Exception {
+    mockMvc
+        .perform(
+            post("/v1/api/candidates").contentType(MediaType.APPLICATION_JSON).content("{not json"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(400));
+  }
+
+  @Test
+  void unexpectedFailureIsReportedAsInternalErrorProblem() throws Exception {
+    when(candidateService.one(1L)).thenThrow(new IllegalStateException("boom"));
+
+    mockMvc
+        .perform(get("/v1/api/candidates/1"))
+        .andExpect(status().isInternalServerError())
+        .andExpect(jsonPath("$.type").value("urn:propflow:problem:internal-error"))
+        .andExpect(jsonPath("$.detail").value("An unexpected error occurred"));
   }
 }
