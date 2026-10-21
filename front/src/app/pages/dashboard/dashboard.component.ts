@@ -30,8 +30,8 @@ interface DashboardChartData {
 export class DashboardComponent implements OnInit {
   // Dashboard variables
   summary = signal<{ totalProposals?: number; totalCandidates?: number }>({});
-  totalProposals = computed(() => this.summary().totalProposals ?? 0);
-  totalCandidates = computed(() => this.summary().totalCandidates ?? 0);
+  totalProposals = computed(() => this.summary().totalProposals);
+  totalCandidates = computed(() => this.summary().totalCandidates);
   proposalsByStatusChartData!: DashboardChartData;
   proposalsByDateChartData!: DashboardChartData;
   barOptions: unknown;

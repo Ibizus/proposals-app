@@ -93,6 +93,7 @@ export class ExtrasComponent implements OnInit {
   }
 
   getExtras(page: number, size: number) {
+    this.isLoading.set(true);
     this.extraService.getExtras(page, size).subscribe({
       next: (data) => {
         this.extras.set(data.extras);
