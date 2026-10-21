@@ -40,7 +40,7 @@ describe('ParametersComponent', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ParametersComponent);
     component = fixture.componentInstance;
-    // ToastService is provided by the component itself.
+    // ToastService is provided at the root; resolve the shared instance here.
     toast = fixture.debugElement.injector.get(ToastService);
     fixture.detectChanges();
 
@@ -51,24 +51,24 @@ describe('ParametersComponent', () => {
   afterEach(() => http.verify());
 
   it('loads parameters on init', () => {
-    expect(component.parameters.map((p) => p.name)).toEqual(['iht', 'spp']);
-    expect(component.isLoading).toBeFalse();
+    expect(component.parameters().map((p) => p.name)).toEqual(['iht', 'spp']);
+    expect(component.isLoading()).toBeFalse();
   });
 
   it('removes a parameter locally once the API deletes it', fakeAsync(() => {
     const success = spyOn(toast, 'success');
 
-    component.deleteParameter(component.parameters[0]);
+    component.deleteParameter(component.parameters()[0]);
     const req = http.expectOne(API + 'parameters/1');
     expect(req.request.method).toBe('DELETE');
     req.flush({});
 
-    expect(component.parameters.map((p) => p.id)).toEqual([2]);
+    expect(component.parameters().map((p) => p.id)).toEqual([2]);
     tick(500);
     expect(success).toHaveBeenCalledWith('Parameter deleted successfully');
   }));
 
-  it('reports a failed modification through the toast service', () => {
+  it('leaves parameters unchanged when modification fails', () => {
     const error = spyOn(toast, 'error');
 
     component.modifyParameter(param(2, 'spp', 6));
@@ -76,6 +76,7 @@ describe('ParametersComponent', () => {
     expect(req.request.method).toBe('PUT');
     req.flush('nope', { status: 400, statusText: 'Bad Request' });
 
-    expect(error).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    expect(component.parameters().map((p) => p.name)).toEqual(['iht', 'spp']);
   });
 });

@@ -1,23 +1,61 @@
 <div class="mt-24 px-10">
   <div class="relative">
-    <h1 class="font-bold text-5xl mb-5">{{ 'DASHBOARD' | translate }}</h1>  
+    <h1 class="font-bold text-5xl mb-5">{{ 'DASHBOARD' | translate }}</h1>
   </div>
-  <div class="grid grid-rows-2 grid-cols-2 gap-8 w-full bg-[#F0F9FF] border border-[#CECECE] rounded-md p-8 mx-auto shadow h-[700px] overflow-y-auto">
-    <div class="bg-white border border-[#CECECE] rounded-md p-4 grid grid-cols-2 gap-4">
-      <div><p class="font-bold text-xl mb-12">{{"TOTAL PROPOSALS"|translate}}</p> <span class="font-bold text-5xl md:text-7xl lg:text-9xl lg:p-8">{{ summary.totalProposals }}</span></div>
-      <div><p class="font-bold text-xl mb-12">{{"TOTAL CANDIDATES"|translate}}</p> <span class="font-bold text-5xl md:text-7xl lg:text-9xl lg:p-8">{{ summary.totalCandidates }}</span></div>
-    </div>
-    <div class="bg-white border border-[#CECECE] rounded-md p-4">
-      <p class="pb-4 font-bold text-xl mb-8">{{ 'PROPOSALS BY STATUS' | translate }}</p>
-      <div class="chart-container">
-        <p-chart type="bar" [data]="proposalsByStatusChartData" [options]="barOptions"></p-chart>
+  <div
+    class="grid grid-rows-2 grid-cols-2 gap-8 w-full bg-[#F0F9FF] border border-[#CECECE] rounded-md p-8 mx-auto shadow h-[700px] overflow-y-auto"
+  >
+    @if (isLoading()) {
+      <div class="bg-white border border-[#CECECE] rounded-md p-4 grid grid-cols-2 gap-4">
+        <div>
+          <p-skeleton width="70%" height="1.5rem" class="mb-12"></p-skeleton>
+          <p-skeleton width="40%" height="4rem"></p-skeleton>
+        </div>
+        <div>
+          <p-skeleton width="70%" height="1.5rem" class="mb-12"></p-skeleton>
+          <p-skeleton width="40%" height="4rem"></p-skeleton>
+        </div>
       </div>
-    </div>
-    <div class="bg-white border border-[#CECECE] rounded-md p-4 col-span-2">
-      <p class="font-bold text-xl mb-12">{{ 'PROPOSALS BY DATE' | translate }}</p>
-      <div class="chart-container">
-        <p-chart class="h-full" type="line" [data]="proposalsByDateChartData" [options]="lineOptions"></p-chart>
+      <div class="bg-white border border-[#CECECE] rounded-md p-4">
+        <p-skeleton width="40%" height="1.5rem" class="mb-8"></p-skeleton>
+        <p-skeleton width="100%" height="16rem"></p-skeleton>
       </div>
-    </div>
+      <div class="bg-white border border-[#CECECE] rounded-md p-4 col-span-2">
+        <p-skeleton width="30%" height="1.5rem" class="mb-12"></p-skeleton>
+        <p-skeleton width="100%" height="16rem"></p-skeleton>
+      </div>
+    } @else {
+      <div class="bg-white border border-[#CECECE] rounded-md p-4 grid grid-cols-2 gap-4">
+        <div>
+          <p class="font-bold text-xl mb-12">{{ 'TOTAL PROPOSALS' | translate }}</p>
+          <span class="font-bold text-5xl md:text-7xl lg:text-9xl lg:p-8">{{
+            totalProposals()
+          }}</span>
+        </div>
+        <div>
+          <p class="font-bold text-xl mb-12">{{ 'TOTAL CANDIDATES' | translate }}</p>
+          <span class="font-bold text-5xl md:text-7xl lg:text-9xl lg:p-8">{{
+            totalCandidates()
+          }}</span>
+        </div>
+      </div>
+      <div class="bg-white border border-[#CECECE] rounded-md p-4">
+        <p class="pb-4 font-bold text-xl mb-8">{{ 'PROPOSALS BY STATUS' | translate }}</p>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="proposalsByStatusChartData" [options]="barOptions"></p-chart>
+        </div>
+      </div>
+      <div class="bg-white border border-[#CECECE] rounded-md p-4 col-span-2">
+        <p class="font-bold text-xl mb-12">{{ 'PROPOSALS BY DATE' | translate }}</p>
+        <div class="chart-container">
+          <p-chart
+            class="h-full"
+            type="line"
+            [data]="proposalsByDateChartData"
+            [options]="lineOptions"
+          ></p-chart>
+        </div>
+      </div>
+    }
   </div>
 </div>

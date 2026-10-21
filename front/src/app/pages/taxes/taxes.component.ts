@@ -1,18 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { Taxes, Column } from '../../utils/types';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaxesService } from '../../services/taxes.service';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { ToastService } from '../../services/toast.service';
 import { DialogModule, Dialog } from 'primeng/dialog';
@@ -24,11 +17,9 @@ import { sleep } from '../../utils/functions';
   selector: 'app-taxes',
   standalone: true,
   imports: [
-    NgFor,
     TableModule,
     ButtonModule,
     FormsModule,
-    ToastModule,
     TooltipModule,
     TranslateModule,
     DialogModule,
@@ -37,16 +28,16 @@ import { sleep } from '../../utils/functions';
   ],
   templateUrl: './taxes.component.html',
   styleUrl: './taxes.component.scss',
-  providers: [MessageService, TranslateService, TranslateStore, ToastService],
+  providers: [TranslateService, TranslateStore],
 })
-export class TaxesComponent {
+export class TaxesComponent implements OnInit {
   taxesTable!: Taxes[];
-  clonedTaxes: { [s: number]: Taxes } = {};
+  clonedTaxes = new Map<number, Taxes>();
   cols!: Column[];
-  selectedRow: any;
-  moneySign: string = '€';
-  visible: boolean = false;
-  taxId: number = -1;
+  isLoading = signal(true);
+  moneySign = '€';
+  visible = false;
+  taxId = -1;
   maritalStatus!: string[];
   numberOfDependents: string[] = ['0', '1', '2', '3', '4', '5+'];
   maritalPlaceholder!: string;
@@ -59,7 +50,7 @@ export class TaxesComponent {
   constructor(
     private taxesService: TaxesService,
     private toastService: ToastService,
-    private t: TranslateService
+    private t: TranslateService,
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
 
@@ -143,7 +134,7 @@ export class TaxesComponent {
           //   header: taxPercentageCompany,
           // },
         ];
-      }
+      },
     );
   }
 
@@ -152,24 +143,24 @@ export class TaxesComponent {
   }
 
   getTaxes() {
+    this.isLoading.set(true);
     this.taxesService.getTaxes().subscribe((data) => {
       this.taxesTable = data;
+      this.isLoading.set(false);
     });
   }
 
   getTaxesForMaritalStatus(maritalStatus: number) {
-    this.taxesService
-      .getTaxesForMaritalStatus(maritalStatus)
-      .subscribe((data) => {
-        this.taxesTable = data;
-      });
+    this.isLoading.set(true);
+    this.taxesService.getTaxesForMaritalStatus(maritalStatus).subscribe((data) => {
+      this.taxesTable = data;
+      this.isLoading.set(false);
+    });
   }
 
   updateTaxes(modifiedTaxes: Taxes) {
-    let taxesCopy = { ...modifiedTaxes };
-    this.taxesService
-      .modifyTaxes(taxesCopy)
-      .subscribe((data) => Object.assign(taxesCopy, data));
+    const taxesCopy = { ...modifiedTaxes };
+    this.taxesService.modifyTaxes(taxesCopy).subscribe((data) => Object.assign(taxesCopy, data));
   }
 
   deleteTaxes(): void {
@@ -181,9 +172,7 @@ export class TaxesComponent {
             this.toastService.success('Taxes deleted succesfully');
           });
         },
-        error: (error) => {
-          this.toastService.error(error);
-        },
+        error: () => undefined,
       });
     }
 
@@ -191,17 +180,17 @@ export class TaxesComponent {
     this.visible = false;
   }
 
-  closeDialog(dialog: Dialog, event: any) {
+  closeDialog(dialog: Dialog, event: Event) {
     this.taxId = -1;
     dialog.close(event);
   }
 
-  showDialog(rowData: any) {
+  showDialog(rowData: Taxes) {
     this.taxId = rowData.id;
     this.visible = true;
   }
 
-  onMaritalStatusChange($event: any) {
+  onMaritalStatusChange($event: { value: string }) {
     const value = $event.value;
     const index = this.maritalStatus.findIndex((status) => status === value);
     this.getTaxesForMaritalStatus(index);
@@ -209,13 +198,13 @@ export class TaxesComponent {
 
   // HTML BUTTON METHODS:
   onRowEditInit(taxes: Taxes) {
-    this.clonedTaxes[taxes.id as number] = { ...taxes };
+    this.clonedTaxes.set(taxes.id, { ...taxes });
   }
 
   onRowEditSave(taxes: Taxes) {
     if (taxes.salaryMax > 0 && taxes.taxPercentageCompany > 0) {
       this.updateTaxes(taxes);
-      delete this.clonedTaxes[taxes.id as number];
+      this.clonedTaxes.delete(taxes.id);
       sleep(500).then(() => {
         this.toastService.success('Taxes saved correctly');
       });
@@ -225,11 +214,11 @@ export class TaxesComponent {
   }
 
   onRowEditCancel(taxes: Taxes, index: number) {
-    this.taxesTable[index] = this.clonedTaxes[taxes.id as number];
-    delete this.clonedTaxes[taxes.id as number];
+    this.taxesTable[index] = this.clonedTaxes.get(taxes.id) ?? taxes;
+    this.clonedTaxes.delete(taxes.id);
   }
 
-  onRowDelete(taxes: Taxes) {
+  onRowDelete() {
     this.deleteTaxes();
   }
 }

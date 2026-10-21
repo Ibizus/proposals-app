@@ -1,40 +1,63 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ChartModule } from 'primeng/chart';
+import { SkeletonModule } from 'primeng/skeleton';
 import { DashboardService } from '../../services/dashboard.service';
+
+interface DashboardChartDataset {
+  label?: string | null;
+  data: number[];
+  backgroundColor?: string[];
+  borderColor?: string | string[];
+  borderWidth?: number;
+  fill?: boolean;
+  tension?: number;
+}
+
+interface DashboardChartData {
+  labels: string[];
+  datasets: DashboardChartDataset[];
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [TranslateModule, ChartModule],
+  imports: [TranslateModule, ChartModule, SkeletonModule],
   providers: [TranslateService, TranslateStore],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
   // Dashboard variables
-  summary: any = {};
-  proposalsByStatusChartData: any;
-  proposalsByDateChartData: any;
-  barOptions: any;
-  lineOptions: any;
-  statuses: any;
+  summary = signal<{ totalProposals?: number; totalCandidates?: number }>({});
+  totalProposals = computed(() => this.summary().totalProposals ?? 0);
+  totalCandidates = computed(() => this.summary().totalCandidates ?? 0);
+  proposalsByStatusChartData!: DashboardChartData;
+  proposalsByDateChartData!: DashboardChartData;
+  barOptions: unknown;
+  lineOptions: unknown;
+  statuses: Record<string, number> = {};
+  isLoading = signal(true);
+
+  private pendingLoads = 0;
+  private readonly totalLoads = 3;
+
+  private markLoaded(): void {
+    this.pendingLoads += 1;
+    if (this.pendingLoads === this.totalLoads) {
+      this.isLoading.set(false);
+    }
+  }
 
   constructor(
     private dashboardService: DashboardService,
-    private t: TranslateService
+    private t: TranslateService,
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
     const documentStyle = getComputedStyle(document.documentElement);
-    const textColorSecondary = documentStyle.getPropertyValue(
-      '--text-color-secondary'
-    );
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
     const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-    
+
     // Chart options setup. Cehck chartjs documentation for details
     // https://www.chartjs.org/docs/latest/configuration/legend.html
     this.barOptions = {
@@ -103,10 +126,12 @@ export class DashboardComponent implements OnInit {
     // Look at DashboardController.java to see how the data is fetched
     this.dashboardService.getSumary().subscribe({
       next: (data) => {
-        this.summary = data;
+        this.summary.set(data);
+        this.markLoaded();
       },
       error: (error) => {
         console.error('Error while fetching summary:', error);
+        this.markLoaded();
       },
     });
 
@@ -139,9 +164,11 @@ export class DashboardComponent implements OnInit {
             },
           ],
         };
+        this.markLoaded();
       },
       error: (error) => {
         console.error('Error while fetching proposals by status:', error);
+        this.markLoaded();
       },
     });
 
@@ -159,9 +186,11 @@ export class DashboardComponent implements OnInit {
             },
           ],
         };
+        this.markLoaded();
       },
       error: (error) => {
         console.error('Error while fetching proposals by date:', error);
+        this.markLoaded();
       },
     });
   }

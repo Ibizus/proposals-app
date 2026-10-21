@@ -1,143 +1,117 @@
 <div class="mt-24 px-10 relative">
-  <h2 class="text-5xl font-bold mb-5">{{'PORTUGAL TAXES'|translate}}</h2>
+  <h2 class="text-5xl font-bold mb-5">{{ 'PORTUGAL TAXES' | translate }}</h2>
   <div class="absolute right-10 top-0">
     <p-floatLabel>
-      <p-dropdown [options]="maritalStatus" inputId="float-label1" [placeholder]="maritalPlaceholder" (onChange)="onMaritalStatusChange($event)" />      
-      <label for="float-label1">{{'SELECT MARITAL STATUS' | translate}}</label>
+      <p-dropdown
+        [options]="maritalStatus"
+        inputId="float-label1"
+        [placeholder]="maritalPlaceholder"
+        (onChange)="onMaritalStatusChange($event)"
+      />
+      <label for="float-label1">{{ 'SELECT MARITAL STATUS' | translate }}</label>
     </p-floatLabel>
   </div>
- 
+
   <p-table
     [columns]="cols"
     styleClass="p-datatable-striped p-datatable-sm"
     [value]="taxesTable"
-    [scrollable]="true" 
+    [scrollable]="true"
     scrollHeight="666px"
     dataKey="id"
     editMode="row"
+    [loading]="isLoading()"
     [tableStyle]="{ 'min-width': '50rem' }"
   >
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th *ngFor="let col of columns" style="width: fit-content;">
-          {{ col.header }}
-        </th>
+        @for (col of columns; track col.field) {
+          <th style="width: fit-content">
+            {{ col.header }}
+          </th>
+        }
         <th></th>
       </tr>
       <tr>
         <div class="absolute tableGradient h-1 w-full col-span-full"></div>
       </tr>
     </ng-template>
-    <ng-template
-      pTemplate="body"
-      let-taxes
-      let-rowData
-      let-editing="editing"
-      let-ri="rowIndex"
-    >
+    <ng-template pTemplate="body" let-taxes let-rowData let-editing="editing" let-ri="rowIndex">
       <tr [pEditableRow]="taxes">
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="number"
-                [(ngModel)]="taxes.salaryMax"
-                required
-              />
+              <input pInputText type="number" [(ngModel)]="taxes.salaryMax" required />
             </ng-template>
             <ng-template pTemplate="output">
-              @if(taxes.salaryMax <=
-              taxesTable[(taxesTable.length)-2].salaryMax){
-              {{ taxes.salaryMax }}{{moneySign}} }@else{ >
-              {{ taxesTable[taxesTable.length - 2].salaryMax }}{{moneySign}} }
+              @if (taxes.salaryMax <= taxesTable[taxesTable.length - 2].salaryMax) {
+                {{ taxes.salaryMax }}{{ moneySign }}
+              } @else {
+                > {{ taxesTable[taxesTable.length - 2].salaryMax }}{{ moneySign }}
+              }
             </ng-template>
           </p-cellEditor>
         </td>
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="number"
-                [(ngModel)]="taxes.socialSecurityTax"
-                required
-              />
+              <input pInputText type="number" [(ngModel)]="taxes.socialSecurityTax" required />
             </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.socialSecurityTax }} %
-            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.socialSecurityTax }} % </ng-template>
           </p-cellEditor>
         </td>
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="number"
-                [(ngModel)]="taxes.zero"
-                required
-              />
+              <input pInputText type="number" [(ngModel)]="taxes.zero" required />
             </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.zero }} %
-            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.zero }} % </ng-template>
           </p-cellEditor>
-        </td><td>
+        </td>
+        <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
               <input pInputText type="number" [(ngModel)]="taxes.one" required />
             </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.one }} %
-            </ng-template>
-          </p-cellEditor>
-        </td><td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.two" required />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.two }} %
-            </ng-template>
-          </p-cellEditor>
-        </td><td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.three" required />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.three }} %
-            </ng-template>
-          </p-cellEditor>
-        </td><td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.four" required />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.four }} %
-            </ng-template>
-          </p-cellEditor>
-        </td><td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.five" required />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ taxes.five }} %
-            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.one }} % </ng-template>
           </p-cellEditor>
         </td>
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="date"
-                [(ngModel)]="taxes.validFrom"
-                required
-              />
+              <input pInputText type="number" [(ngModel)]="taxes.two" required />
+            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.two }} % </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="number" [(ngModel)]="taxes.three" required />
+            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.three }} % </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="number" [(ngModel)]="taxes.four" required />
+            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.four }} % </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="number" [(ngModel)]="taxes.five" required />
+            </ng-template>
+            <ng-template pTemplate="output"> {{ taxes.five }} % </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="date" [(ngModel)]="taxes.validFrom" required />
             </ng-template>
             <ng-template pTemplate="output">
               {{ taxes.validFrom }}
@@ -147,12 +121,7 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="date"
-                [(ngModel)]="taxes.validUntil"
-                required
-              />
+              <input pInputText type="date" [(ngModel)]="taxes.validUntil" required />
             </ng-template>
             <ng-template pTemplate="output">
               {{ taxes.validUntil }}
@@ -161,70 +130,75 @@
         </td>
         <td>
           <div class="flex align-items-center justify-content-center gap-2">
-            @if(!editing){
-            <button
-              pButton
-              pRipple
-              type="button"
-              pInitEditableRow
-              icon="pi pi-pencil"
-              [pTooltip]=editTaxesTooltip
-              (click)="onRowEditInit(taxes)"
-              class="p-button-rounded p-button-text"
-            ></button>
-            <button
-              pButton
-              pRipple
-              type="button"
-              pDeleteEditableRow
-              icon="pi pi-trash"
-              [pTooltip]=deleteTaxesTooltip
-              (click)="showDialog(rowData)"
-              class="p-button-rounded p-button-text"
-            ></button>
-            }@else{
-            <button
-              pButton
-              pRipple
-              type="button"
-              pSaveEditableRow
-              icon="pi pi-check"
-              [pTooltip]=saveTaxesTooltip
-              (click)="onRowEditSave(taxes)"
-              class="p-button-rounded p-button-text p-button-success mr-2"
-            ></button>
-            <button
-              pButton
-              pRipple
-              type="button"
-              pCancelEditableRow
-              icon="pi pi-times"
-              [pTooltip]=cancelTaxesTooltip
-              (click)="onRowEditCancel(taxes, ri)"
-              class="p-button-rounded p-button-text p-button-danger"
-            ></button>
+            @if (!editing) {
+              <button
+                pButton
+                pRipple
+                type="button"
+                pInitEditableRow
+                icon="pi pi-pencil"
+                [pTooltip]="editTaxesTooltip"
+                (click)="onRowEditInit(taxes)"
+                class="p-button-rounded p-button-text"
+              ></button>
+              <button
+                pButton
+                pRipple
+                type="button"
+                pDeleteEditableRow
+                icon="pi pi-trash"
+                [pTooltip]="deleteTaxesTooltip"
+                (click)="showDialog(rowData)"
+                class="p-button-rounded p-button-text"
+              ></button>
+            } @else {
+              <button
+                pButton
+                pRipple
+                type="button"
+                pSaveEditableRow
+                icon="pi pi-check"
+                [pTooltip]="saveTaxesTooltip"
+                (click)="onRowEditSave(taxes)"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+              ></button>
+              <button
+                pButton
+                pRipple
+                type="button"
+                pCancelEditableRow
+                icon="pi pi-times"
+                [pTooltip]="cancelTaxesTooltip"
+                (click)="onRowEditCancel(taxes, ri)"
+                class="p-button-rounded p-button-text p-button-danger"
+              ></button>
             }
           </div>
         </td>
       </tr>
     </ng-template>
   </p-table>
-  <p-dialog header="{{'DELETE TAXES'|translate}}" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }"
-    #dialog>
-    <span>{{'ARE YOU SURE'|translate}}</span>
+  <p-dialog
+    header="{{ 'DELETE TAXES' | translate }}"
+    [modal]="true"
+    [(visible)]="visible"
+    [style]="{ width: '25rem' }"
+    #dialog
+  >
+    <span>{{ 'ARE YOU SURE' | translate }}</span>
     <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
       <div class="grid-flow-col col-span-2">
-        <button class="send py-2 px-5 rounded-lg float-end"
-          (click)="this.deleteTaxes()">
-          {{'DELETE'|translate}}
+        <button class="send py-2 px-5 rounded-lg float-end" (click)="this.deleteTaxes()">
+          {{ 'DELETE' | translate }}
         </button>
-        <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
-          (click)="this.closeDialog(dialog, $event)">
-          {{'CANCEL'|translate}}
+        <button
+          class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+          (click)="this.closeDialog(dialog, $event)"
+        >
+          {{ 'CANCEL' | translate }}
         </button>
       </div>
     </div>
   </p-dialog>
-  <p-toast position="bottom-center" key="bc"></p-toast>
   <div class="h-20"></div>
 </div>

@@ -1,28 +1,22 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Candidate, EmptyProposalForm, Proposal } from '../../utils/types';
+import { Component, OnInit, ViewChild, signal } from '@angular/core';
+import { Candidate, EmptyProposalForm, Proposal, Status } from '../../utils/types';
 import { NewProposalButtonComponent } from '../../components/new-proposal-button/new-proposal-button.component';
-import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { TableModule, Table } from 'primeng/table';
-import { PaginatorModule } from 'primeng/paginator';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ProposalService } from '../../services/proposal.service';
 import { CandidateService } from '../../services/candidate.service';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast.service';
 import { Dialog, DialogModule } from 'primeng/dialog';
 import { sleep } from '../../utils/functions';
-import { Subscription, filter } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-proposals',
@@ -34,44 +28,36 @@ import { Subscription, filter } from 'rxjs';
     ButtonModule,
     ConfirmPopupModule,
     TagModule,
-    ToastModule,
     IconFieldModule,
     InputIconModule,
     TooltipModule,
     TranslateModule,
     DialogModule,
   ],
-  providers: [MessageService, TranslateService, TranslateStore, ToastService],
+  providers: [TranslateService, TranslateStore],
   templateUrl: './proposals.component.html',
   styleUrl: './proposals.component.scss',
 })
 export class ProposalsComponent implements OnInit {
-  displayedColumns: string[] = [
-    'role',
-    'dueDate',
-    'status',
-    'candidate',
-    'actions',
-  ];
-  selectedRow: any;
-  isLoading: boolean = true;
-  proposals: Proposal[] = [];
+  displayedColumns: string[] = ['role', 'dueDate', 'status', 'candidate', 'actions'];
+  isLoading = signal(true);
+  proposals = signal<Proposal[]>([]);
   private router: Router = new Router();
-  selectedCandidate!: Candidate | null;
+  selectedCandidate = signal<Candidate | null>(null);
 
   // Pagination variables with default values:
-  first: number = 0;
-  rows: number = 10;
-  currentPage: number = 20;
-  demandedPage: number = 0;
-  totalPages: number = 20;
-  totalRecords: number = 200;
+  first = 0;
+  rows = 10;
+  currentPage = 20;
+  demandedPage = 0;
+  totalPages = 20;
+  totalRecords = 200;
 
   @ViewChild('dt2') dataTable!: Table;
-  filter: string = '';
+  filter = '';
   newProposalButton: string = this.t.instant('NEW PROPOSAL');
-  visible: boolean = false;
-  proposalId: number = -1;
+  visible = false;
+  proposalId = -1;
 
   routerSubscription!: Subscription;
 
@@ -79,14 +65,14 @@ export class ProposalsComponent implements OnInit {
     private proposalService: ProposalService,
     private candidateService: CandidateService,
     private toastService: ToastService,
-    private t: TranslateService
+    private t: TranslateService,
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
 
     // This function fetches a candidate from the service and subscribes to it
     // in order to filter the results
     this.candidateService.currentCandidate.subscribe((candidate) => {
-      this.selectedCandidate = candidate;
+      this.selectedCandidate.set(candidate);
       // console.log('Receiving candidate from other table', candidate);
     });
   }
@@ -94,8 +80,7 @@ export class ProposalsComponent implements OnInit {
   numberToStatus(p: Proposal): string {
     // Get all the statuses of the proposals and sort them by ascending date
     const statuses = p.statuses.sort(
-      (a: any, b: any) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      (a: Status, b: Status) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
     // Get the most recent status
     const lastStatus = statuses[statuses.length - 1];
@@ -129,23 +114,19 @@ export class ProposalsComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (!!this.selectedCandidate) {
-      this.getProposals(
-        this.demandedPage,
-        this.rows,
-        this.selectedCandidate.email
-      );
+    if (this.selectedCandidate()) {
+      this.getProposals(this.demandedPage, this.rows, this.selectedCandidate()?.email ?? '');
       this.candidateService.changeCandidate(null);
     } else {
       this.getProposals(this.demandedPage, this.rows, '');
     }
   }
 
-  paginate(event: any) {
-    this.first = event.page * event.rows;
-    this.rows = event.rows;
-    this.demandedPage = event.page; //Index of the new page
-    this.isLoading = true;
+  paginate(event: PaginatorState) {
+    this.first = (event.page ?? 0) * (event.rows ?? this.rows);
+    this.rows = event.rows ?? this.rows;
+    this.demandedPage = event.page ?? 0; //Index of the new page
+    this.isLoading.set(true);
     this.getProposals(this.demandedPage, this.rows, this.filter);
   }
 
@@ -164,12 +145,12 @@ export class ProposalsComponent implements OnInit {
   getProposals(page: number, size: number, filter: string) {
     this.proposalService.getProposals(page, size, filter).subscribe({
       next: (data) => {
-        this.proposals = data.proposals;
+        this.proposals.set(data.proposals);
         this.first = page * size + 1; // Calculate index of first item shown
         this.rows = size; // Update size input from the request
         this.currentPage = data.currentPage + 1; // In back first pago is index 0
         this.totalRecords = data.totalItems;
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
   }
@@ -184,7 +165,7 @@ export class ProposalsComponent implements OnInit {
         console.log(proposal);
         return proposal;
       },
-      error: (error) => {
+      error: () => {
         this.toastService.warn('Warning');
       },
     });
@@ -198,9 +179,7 @@ export class ProposalsComponent implements OnInit {
         this.proposalService.changeProposal(proposal);
         this.router.navigate(['/new-proposal']);
       },
-      error: (error) => {
-        this.toastService.error(error);
-      },
+      error: () => undefined,
     });
   }
 
@@ -210,14 +189,10 @@ export class ProposalsComponent implements OnInit {
         next: () => {
           this.ngOnInit();
           sleep(200).then(() => {
-            this.toastService.success(
-              'The proposal has been deleted successfully'
-            );
+            this.toastService.success('The proposal has been deleted successfully');
           });
         },
-        error: (error) => {
-          this.toastService.error(error);
-        },
+        error: () => undefined,
       });
     } else {
       this.toastService.error('proposalId is not set');
@@ -246,18 +221,18 @@ export class ProposalsComponent implements OnInit {
     }
   }
 
-  closeDialog(dialog: Dialog, event: any) {
+  closeDialog(dialog: Dialog, event: Event) {
     this.proposalId = -1;
     dialog.close(event);
   }
 
-  showDialog(rowData: any) {
+  showDialog(rowData: Proposal) {
     this.proposalId = rowData.id;
     this.visible = true;
   }
 
   duplicateProposal(existingProposal: Proposal) {
-    let newProposal: any = EmptyProposalForm();
+    const newProposal: Proposal = EmptyProposalForm() as unknown as Proposal;
 
     Object.assign(newProposal, {
       id: 0,
@@ -299,14 +274,11 @@ export class ProposalsComponent implements OnInit {
     });
 
     this.proposalService.createProposal(newProposal).subscribe({
-      next: (response) => {
+      next: () => {
         this.ngOnInit();
         this.toastService.success('Extra duplicated correctly');
       },
-      error: (error) => {
-        console.error('Error duplicating proposal:', error);
-        this.toastService.error('Failed to duplicate extra');
-      },
+      error: () => undefined,
     });
   }
 }
