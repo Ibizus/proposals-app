@@ -40,6 +40,20 @@ describe('ExtrasComponent', () => {
     expect(component.isLoading()).toBeFalse();
   });
 
+  it('shows the loading overlay while a new page is requested', () => {
+    http
+      .expectOne(API + 'extratemplates/?page=0&size=10')
+      .flush({ extras: [makeExtra()], currentPage: 0, totalItems: 20 });
+
+    component.paginate({ page: 1, rows: 10 });
+
+    expect(component.isLoading()).toBeTrue();
+    http
+      .expectOne(API + 'extratemplates/?page=1&size=10')
+      .flush({ extras: [makeExtra()], currentPage: 1, totalItems: 20 });
+    expect(component.isLoading()).toBeFalse();
+  });
+
   it('stops the loading overlay when the list request fails', () => {
     http
       .expectOne(API + 'extratemplates/?page=0&size=10')
