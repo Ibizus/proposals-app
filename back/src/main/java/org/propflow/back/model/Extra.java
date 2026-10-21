@@ -28,9 +28,20 @@ public class Extra {
   private Boolean isSSTaxable;
   private Boolean isIRSTaxable;
   private Boolean isDefault;
+
+  @Schema(description = "Whether the extra amount is added to the net salary totals.")
   private Boolean addToSalary;
+
+  @Schema(description = "Number of times the extra is paid per year.", example = "11")
   private int multiplyYearly;
+
+  @Schema(
+      description =
+          "Number of times the extra is paid per month (for example working days), or -1 if it is"
+              + " only paid yearly.",
+      example = "22")
   private int multiplyMonthly;
+
   private long templateId;
 
   @JsonBackReference

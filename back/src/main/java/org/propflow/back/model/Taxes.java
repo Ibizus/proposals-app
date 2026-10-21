@@ -27,13 +27,27 @@ public class Taxes extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
+  @Schema(
+      description =
+          "Upper bound (inclusive) of the monthly gross salary covered by this bracket; a salary"
+              + " uses the bracket with the smallest salaryMax that is not below it.",
+      example = "1000")
   private Double salaryMax;
+
   private Double socialSecurityTax;
   // private Double taxPercentageIRS;
   private Double taxPercentageCompany;
   private LocalDate validFrom;
   private LocalDate validUntil;
+
+  @Schema(
+      description =
+          "Marital status the bracket applies to: 0 = single, 1 = married with one income, 2 ="
+              + " married with two incomes.",
+      allowableValues = {"0", "1", "2"},
+      example = "0")
   private Integer maritalStatus;
+
   // attributes for the IRS tax for each number of dependents
   private Double zero;
   private Double one;

@@ -1,5 +1,7 @@
 package org.propflow.back;
 
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +32,19 @@ class ObservabilityEndpointsTest {
         .perform(get("/v3/api-docs"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.info.title").value("Proposals API"));
+  }
+
+  @Test
+  void openApiDocsDescribeNonObviousSchemaFields() throws Exception {
+    mockMvc
+        .perform(get("/v3/api-docs"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.components.schemas.Status.properties.status.enum")
+                .value(contains(0, 1, 2, 3, 4, 5)))
+        .andExpect(
+            jsonPath("$.components.schemas.Status.properties.status.description")
+                .value(containsString("2 = sent")));
   }
 
   @Test

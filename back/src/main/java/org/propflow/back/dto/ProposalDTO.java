@@ -25,13 +25,27 @@ public class ProposalDTO {
   private Boolean indefinite;
   private LocalDate startDate;
   private LocalDate dueDate;
+
+  @Schema(description = "Not populated; the current status is the most recent entry in statuses.")
   private Integer status;
+
+  @Schema(
+      description = "Link to further details about the proposal.",
+      example = "https://example.com/proposal-details")
   private String knowMore;
+
+  @Schema(description = "Office the proposal belongs to.")
   private OfficeDTO office;
+
   private Salary salary;
   private Candidate candidate;
+
+  @Schema(description = "Status history of the proposal; the latest entry is the current status.")
   private Set<Status> statuses;
+
+  @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")
   private String njoyn;
+
   private LocalDateTime createdAt = LocalDateTime.now();
   private String createdBy;
   private LocalDateTime modifiedAt = this.createdAt;

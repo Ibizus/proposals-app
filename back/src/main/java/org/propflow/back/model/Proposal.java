@@ -24,7 +24,9 @@ public class Proposal extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
+  @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")
   private String njoyn;
+
   private String description;
   private String role;
   private Boolean indefinite;

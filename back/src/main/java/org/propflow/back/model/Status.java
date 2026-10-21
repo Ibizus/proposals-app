@@ -18,7 +18,14 @@ public class Status extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
+  @Schema(
+      description =
+          "Status code: 0 = draft, 1 = confirmed, 2 = sent, 3 = declined, 4 = canceled, 5 ="
+              + " approved.",
+      allowableValues = {"0", "1", "2", "3", "4", "5"},
+      example = "0")
   private int status;
+
   private String message;
 
   // private LocalDateTime date;

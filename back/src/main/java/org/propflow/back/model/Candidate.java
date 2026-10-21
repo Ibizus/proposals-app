@@ -28,7 +28,15 @@ public class Candidate extends AuditableSuperclass {
   private String phone;
   private String email;
   private String workerId;
+
+  @Schema(
+      description =
+          "Marital status used to pick the tax bracket: 0 = single, 1 = married with one income, 2"
+              + " = married with two incomes.",
+      allowableValues = {"0", "1", "2"},
+      example = "0")
   private Integer maritalStatus;
+
   private Integer dependentsNumber;
   private Integer proposalsCount = 0;
 

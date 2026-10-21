@@ -16,6 +16,8 @@ public class OfficeDTO {
   private long id;
   private String name;
   private String code;
+
+  @Schema(description = "Ids of the proposals that belong to this office.")
   private Set<Long> proposals;
 
   public long getId() {
