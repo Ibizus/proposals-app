@@ -4,6 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { TranslateModule } from '@ngx-translate/core';
+import { MessageService } from 'primeng/api';
 
 /**
  * Providers shared by every component spec:
@@ -19,5 +20,6 @@ export function provideTestDefaults(): (Provider | EnvironmentProviders)[] {
     provideRouter([]),
     provideNoopAnimations(),
     importProvidersFrom(TranslateModule.forRoot()),
+    MessageService,
   ];
 }

@@ -1,89 +1,78 @@
 <div class="mt-24 px-10">
   <div class="relative">
     <h1 class="font-bold text-5xl mb-5">{{ 'EXTRAS' | translate }}</h1>
-    <app-new-extra-button (extraSaved)="onSaveExtra()"/>
+    <app-new-extra-button (extraSaved)="onSaveExtra()" />
   </div>
   <p-table
-    [value]="extras"
+    [value]="extras()"
     styleClass="p-datatable-striped p-datatable-sm"
     sortMode="multiple"
     [scrollable]="true"
     scrollHeight="660px"
     dataKey="id"
     editMode="row"
+    [loading]="isLoading()"
   >
     <ng-template pTemplate="header">
-      <tr style="width: fit-content;">
+      <tr style="width: fit-content">
         <th pSortableColumn="name" class="header-cell">
-          <div class="header-content"> 
-            {{ 'NAME' | translate }} <p-sortIcon field="name"/>
-          </div>
+          <div class="header-content">{{ 'NAME' | translate }} <p-sortIcon field="name" /></div>
         </th>
         <th pSortableColumn="amount" class="header-cell">
-          <div class="header-content">
-            {{ 'AMOUNT' | translate }} <p-sortIcon field="amount"/>
-          </div>
+          <div class="header-content">{{ 'AMOUNT' | translate }} <p-sortIcon field="amount" /></div>
         </th>
         <th pSortableColumn="isPercentage" class="header-cell">
           <div class="header-content">
-            {{ 'QTY' | translate }} <p-sortIcon field="isPercentage"/>
+            {{ 'QTY' | translate }} <p-sortIcon field="isPercentage" />
           </div>
         </th>
         <th pSortableColumn="ssTaxrate" class="header-cell">
           <div class="header-content">
-            {{ 'SS TAXRATE' | translate }} <p-sortIcon field="ssTaxrate"/>
+            {{ 'SS TAXRATE' | translate }} <p-sortIcon field="ssTaxrate" />
           </div>
         </th>
         <th pSortableColumn="irsTaxrate" class="header-cell">
           <div class="header-content">
-            {{ 'IRS TAXRATE' | translate }} <p-sortIcon field="irsTaxrate"/>
+            {{ 'IRS TAXRATE' | translate }} <p-sortIcon field="irsTaxrate" />
           </div>
         </th>
         <th pSortableColumn="isSSTaxable" class="header-cell">
           <div class="header-content">
-            {{ 'SS TAX' | translate }} <p-sortIcon field="isSSTaxable"/>
+            {{ 'SS TAX' | translate }} <p-sortIcon field="isSSTaxable" />
           </div>
         </th>
         <th pSortableColumn="isIRSTaxable" class="header-cell">
           <div class="header-content">
-            {{ 'IRS TAX' | translate }} <p-sortIcon field="isIRSTaxable"/>
+            {{ 'IRS TAX' | translate }} <p-sortIcon field="isIRSTaxable" />
           </div>
         </th>
         <th pSortableColumn="isDefault" class="header-cell">
           <div class="header-content">
-            {{ 'DEFAULT' | translate }} <p-sortIcon field="isDefault"/>
+            {{ 'DEFAULT' | translate }} <p-sortIcon field="isDefault" />
           </div>
         </th>
         <th pSortableColumn="addToSalary" class="header-cell">
           <div class="header-content">
-            {{ 'ADD TO SALARY' | translate }} <p-sortIcon field="addToSalary"/>
+            {{ 'ADD TO SALARY' | translate }} <p-sortIcon field="addToSalary" />
           </div>
         </th>
         <th pSortableColumn="multiplyMonthly" class="header-cell">
           <div class="header-content">
-            {{ 'QTY MONTHLY' | translate }} <p-sortIcon field="multiplyMonthly"/>
+            {{ 'QTY MONTHLY' | translate }} <p-sortIcon field="multiplyMonthly" />
           </div>
         </th>
         <th pSortableColumn="multiplyYearly" class="header-cell">
           <div class="header-content">
-            {{ 'QTY YEARLY' | translate }} <p-sortIcon field="multiplyYearly"/>
+            {{ 'QTY YEARLY' | translate }} <p-sortIcon field="multiplyYearly" />
           </div>
         </th>
-        <th [width]="100">
-          
-        </th>
+        <th [width]="100"></th>
       </tr>
       <tr>
         <div class="absolute tableGradient h-1 w-full col-span-full"></div>
       </tr>
     </ng-template>
-    <ng-template
-      pTemplate="body"
-      let-rowData
-      let-extra
-      let-editing="editing"
-      let-ri="rowIndex"
-    >
+    <ng-template pTemplate="body" let-rowData let-extra let-editing="editing" let-ri="rowIndex">
       <tr [pEditableRow]="extra">
         <td>
           <p-cellEditor>
@@ -98,12 +87,7 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputNumber
-                type="number"
-                [(ngModel)]="extra.amount"
-                required
-              />
+              <input pInputNumber type="number" [(ngModel)]="extra.amount" required />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.amount }}
@@ -114,12 +98,7 @@
           <p-cellEditor>
             <ng-template pTemplate="input">
               <span>{{ 'IS IT A PERCENTAGE' | translate }}</span> <br />
-              <input
-                pInputText
-                type="checkbox"
-                checked="true"
-                [(ngModel)]="extra.isPercentage"
-              />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isPercentage" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.isPercentage ? percentage : amount }}
@@ -129,11 +108,7 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="number"
-                [(ngModel)]="extra.ssTaxrate"
-              />
+              <input pInputText type="number" [(ngModel)]="extra.ssTaxrate" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.ssTaxrate }}
@@ -143,11 +118,7 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input
-                pInputText
-                type="number"
-                [(ngModel)]="extra.irsTaxrate"
-              />
+              <input pInputText type="number" [(ngModel)]="extra.irsTaxrate" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.irsTaxrate }}
@@ -157,29 +128,19 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <span>{{ 'IS IT TAXABLE BY SOCIAL SECURITY' | translate }}</span> <br/>
-              <input
-                pInputText
-                type="checkbox"
-                checked="true"
-                [(ngModel)]="extra.isSSTaxable"
-              />
+              <span>{{ 'IS IT TAXABLE BY SOCIAL SECURITY' | translate }}</span> <br />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isSSTaxable" />
             </ng-template>
             <ng-template pTemplate="output">
-              {{ extra.isSSTaxable ? yes : no}}
+              {{ extra.isSSTaxable ? yes : no }}
             </ng-template>
           </p-cellEditor>
         </td>
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <span>{{ 'IS IT TAXABLE BY IRS' | translate }}</span> <br/>
-              <input
-                pInputText
-                type="checkbox"
-                checked="true"
-                [(ngModel)]="extra.isIRSTaxable"
-              />
+              <span>{{ 'IS IT TAXABLE BY IRS' | translate }}</span> <br />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isIRSTaxable" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.isIRSTaxable ? yes : no }}
@@ -189,13 +150,8 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <span>{{ 'IS DEFAULT' | translate }}</span> <br/>
-              <input
-                pInputText
-                type="checkbox"
-                checked="true"
-                [(ngModel)]="extra.isDefault"
-              />
+              <span>{{ 'IS DEFAULT' | translate }}</span> <br />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isDefault" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.isDefault ? yes : no }}
@@ -205,13 +161,8 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <span>{{ 'ADDED TO SALARY' | translate }}</span> <br/>
-              <input
-                pInputText
-                type="checkbox"
-                checked="true"
-                [(ngModel)]="extra.addToSalary"
-              />
+              <span>{{ 'ADDED TO SALARY' | translate }}</span> <br />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.addToSalary" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.addToSalary ? yes : no }}
@@ -221,7 +172,7 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <span>{{ '-1' | translate }}</span> <br/>
+              <span>{{ '-1' | translate }}</span> <br />
               <input
                 pInputText
                 type="number"
@@ -254,12 +205,12 @@
         <td>
           <div class="flex justify-center">
             <div class="flex align-items-center justify-content-center gap-2">
-              @if(!editing) {
+              @if (!editing) {
                 <button
                   pButton
                   type="button"
                   icon="pi pi-clone"
-                  [pTooltip]=duplicateExtraTooltip
+                  [pTooltip]="duplicateExtraTooltip"
                   class="p-button-rounded p-button-success"
                   (click)="this.duplicateExtra(extra)"
                 ></button>
@@ -269,7 +220,7 @@
                   type="button"
                   pInitEditableRow
                   icon="pi pi-pencil"
-                  [pTooltip]=modifyExtraTooltip
+                  [pTooltip]="modifyExtraTooltip"
                   class="p-button-rounded p-button-success"
                   (click)="this.onRowEditInit(extra)"
                 ></button>
@@ -280,18 +231,18 @@
                   type="button"
                   pDeleteEditableRow
                   icon="pi pi-trash"
-                  [pTooltip]=deleteExtraTooltip
+                  [pTooltip]="deleteExtraTooltip"
                   class="p-button-rounded p-button-success"
                   (click)="this.showDialog(rowData)"
                 ></button>
-              }@else {
+              } @else {
                 <button
                   pButton
                   pRipple
                   type="button"
                   pSaveEditableRow
                   icon="pi pi-check"
-                  [pTooltip]=saveExtraTooltip
+                  [pTooltip]="saveExtraTooltip"
                   (click)="this.onRowEditSave(extra)"
                   class="p-button-rounded p-button-text p-button-success mr-2"
                 ></button>
@@ -301,7 +252,7 @@
                   type="button"
                   pCancelEditableRow
                   icon="pi pi-times"
-                  [pTooltip]=cancelExtraTooltip
+                  [pTooltip]="cancelExtraTooltip"
                   (click)="this.onRowEditCancel(extra, ri)"
                   class="p-button-rounded p-button-text p-button-danger"
                 ></button>
@@ -312,30 +263,35 @@
       </tr>
     </ng-template>
   </p-table>
-  <p-paginator 
+  <p-paginator
     (onPageChange)="paginate($event)"
-    [first]="first" 
+    [first]="first"
     [rows]="rows"
     [showCurrentPageReport]="true"
     [totalRecords]="totalRecords"
     [rowsPerPageOptions]="[5, 10, 20]"
   ></p-paginator>
-  <p-dialog header="{{'DELETE EXTRA'|translate}}" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }"
-    #dialog>
-    <span>{{'ARE YOU SURE'|translate}}</span>
+  <p-dialog
+    header="{{ 'DELETE EXTRA' | translate }}"
+    [modal]="true"
+    [(visible)]="visible"
+    [style]="{ width: '25rem' }"
+    #dialog
+  >
+    <span>{{ 'ARE YOU SURE' | translate }}</span>
     <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
       <div class="grid-flow-col col-span-2">
-        <button class="send py-2 px-5 rounded-lg float-end"
-          (click)="this.deleteExtra()">
-          {{'DELETE'|translate}}
+        <button class="send py-2 px-5 rounded-lg float-end" (click)="this.deleteExtra()">
+          {{ 'DELETE' | translate }}
         </button>
-        <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
-          (click)="this.closeDialog(dialog, $event)">
-          {{'CANCEL'|translate}}
+        <button
+          class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+          (click)="this.closeDialog(dialog, $event)"
+        >
+          {{ 'CANCEL' | translate }}
         </button>
       </div>
     </div>
   </p-dialog>
-  <p-toast position="bottom-center" key="bc"></p-toast>
   <div class="h-12"></div>
 </div>

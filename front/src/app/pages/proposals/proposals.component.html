@@ -12,12 +12,12 @@
   <p-table
     #dt2
     styleClass="p-datatable-striped p-datatable-sm"
-    [value]="proposals"
+    [value]="proposals()"
     sortMode="multiple"
     [scrollable]="true"
     scrollHeight="660px"
     [globalFilterFields]="['role', 'candidate.name', 'candidate.surname', 'candidate.email']"
-    [loading]="isLoading"
+    [loading]="isLoading()"
   >
     <ng-template pTemplate="header">
       <tr>
@@ -143,5 +143,4 @@
       </div>
     </div>
   </p-dialog>
-  <p-toast position="bottom-center" key="bc"></p-toast>
 </div>

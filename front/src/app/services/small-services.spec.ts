@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../environments/environment';
@@ -10,6 +10,7 @@ import { OfficeService } from './office.service';
 import { ParameterService } from './parameter.service';
 import { Parameter } from '../utils/types';
 import { ToastService } from './toast.service';
+import { errorToastInterceptor } from './error-toast.interceptor';
 
 const API = environment.API_ENDPOINT;
 
@@ -133,5 +134,43 @@ describe('ToastService', () => {
         detail: 'hello',
       });
     });
+  });
+});
+
+describe('errorToastInterceptor', () => {
+  let http: HttpTestingController;
+  let client: HttpClient;
+  let messages: jasmine.SpyObj<MessageService>;
+
+  beforeEach(() => {
+    messages = jasmine.createSpyObj<MessageService>('MessageService', ['add']);
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorToastInterceptor])),
+        provideHttpClientTesting(),
+        { provide: MessageService, useValue: messages },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    client = TestBed.inject(HttpClient);
+  });
+
+  afterEach(() => http.verify());
+
+  it('shows an error toast when an HTTP call fails', () => {
+    client.get('/api/test').subscribe({ error: () => undefined });
+
+    http.expectOne('/api/test').flush('nope', {
+      status: 500,
+      statusText: 'Server Error',
+    });
+
+    expect(messages.add).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        key: 'bc',
+        severity: 'error',
+        detail: 'Request failed. Please try again.',
+      }),
+    );
   });
 });

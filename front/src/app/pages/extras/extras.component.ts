@@ -1,19 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { Extra } from '../../utils/types';
 import { TableModule } from 'primeng/table';
-import { PaginatorModule } from 'primeng/paginator';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
-import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { NewExtraButtonComponent } from '../../components/new-extra-button/new-extra-button.component';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ExtrasService } from '../../services/extras.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogModule, Dialog } from 'primeng/dialog';
@@ -27,36 +20,29 @@ import { sleep } from '../../utils/functions';
     PaginatorModule,
     ButtonModule,
     FormsModule,
-    ToastModule,
     NewExtraButtonComponent,
     TooltipModule,
     TranslateModule,
     DialogModule,
   ],
-  providers: [MessageService, TranslateService, TranslateStore, ToastService],
+  providers: [TranslateService, TranslateStore],
   templateUrl: './extras.component.html',
   styleUrl: './extras.component.scss',
 })
-export class ExtrasComponent {
-  extras: Extra[] = [];
-  clonedExtra: { [s: number]: Extra } = {};
-  displayedColumns: string[] = [
-    'id',
-    'name',
-    'amount',
-    'isAPercentage',
-    'multiplyToMakeItYearly',
-  ];
-  selectedRow: any;
+export class ExtrasComponent implements OnInit {
+  extras = signal<Extra[]>([]);
+  clonedExtra = new Map<number, Extra>();
+  displayedColumns: string[] = ['id', 'name', 'amount', 'isAPercentage', 'multiplyToMakeItYearly'];
   // Pagination variables with default values:
-  first: number = 0;
-  rows: number = 10;
-  currentPage: number = 20;
-  demandedPage: number = 0;
-  totalPages: number = 20;
-  totalRecords: number = 200;
-  visible: boolean = false;
-  extrasId: number = -1;
+  first = 0;
+  rows = 10;
+  currentPage = 20;
+  demandedPage = 0;
+  totalPages = 20;
+  totalRecords = 200;
+  visible = false;
+  extrasId = -1;
+  isLoading = signal(true);
 
   percentage!: string;
   amount!: string;
@@ -72,27 +58,19 @@ export class ExtrasComponent {
   constructor(
     private toastService: ToastService,
     private translateService: TranslateService,
-    private extraService: ExtrasService
+    private extraService: ExtrasService,
   ) {
     this.translateService.use(localStorage.getItem('lang') || 'en');
 
-    this.translateService
-      .get(['PERCENTAGE', 'AMOUNT', 'YES', 'NO'])
-      .subscribe((translations) => {
-        this.percentage = translations['PERCENTAGE'];
-        this.amount = translations['AMOUNT'];
-        this.yes = translations['YES'];
-        this.no = translations['NO'];
-      });
+    this.translateService.get(['PERCENTAGE', 'AMOUNT', 'YES', 'NO']).subscribe((translations) => {
+      this.percentage = translations['PERCENTAGE'];
+      this.amount = translations['AMOUNT'];
+      this.yes = translations['YES'];
+      this.no = translations['NO'];
+    });
 
     this.translateService
-      .get([
-        'DUPLICATE_EXTRA',
-        'MODIFY_EXTRA',
-        'DELETE_EXTRA',
-        'SAVE_EXTRA',
-        'CANCEL_EXTRA',
-      ])
+      .get(['DUPLICATE_EXTRA', 'MODIFY_EXTRA', 'DELETE_EXTRA', 'SAVE_EXTRA', 'CANCEL_EXTRA'])
       .subscribe((translations) => {
         this.duplicateExtraTooltip = translations['DUPLICATE_EXTRA'];
         this.modifyExtraTooltip = translations['MODIFY_EXTRA'];
@@ -106,26 +84,27 @@ export class ExtrasComponent {
     this.getExtras(this.demandedPage, this.rows);
   }
 
-  paginate(event: any) {
-    this.first = event.page * event.rows;
-    this.rows = event.rows;
-    this.demandedPage = event.page; //Index of the new page
+  paginate(event: PaginatorState) {
+    this.first = (event.page ?? 0) * (event.rows ?? this.rows);
+    this.rows = event.rows ?? this.rows;
+    this.demandedPage = event.page ?? 0; //Index of the new page
     this.getExtras(this.demandedPage, this.rows);
   }
 
   getExtras(page: number, size: number) {
     this.extraService.getExtras(page, size).subscribe((data) => {
-      this.extras = data.extras;
+      this.extras.set(data.extras);
       this.first = page * size + 1; // Calculate index of first item shown
       this.rows = size; // Update size input from the request
       this.currentPage = data.currentPage + 1; // In back first pago is index 0
       this.totalRecords = data.totalItems;
+      this.isLoading.set(false);
     });
   }
 
   duplicateExtra(extra: Extra) {
     this.extraService.duplicateExtra(extra).subscribe((data) => {
-      this.extras.push(data);
+      this.extras.update((list) => [...list, data]);
       this.ngOnInit();
       sleep(500).then(() => {
         this.toastService.success('Extra duplicated correctly');
@@ -134,7 +113,7 @@ export class ExtrasComponent {
   }
 
   updateExtra(modifiedExtra: Extra, id: number) {
-    let extraCopy = { ...modifiedExtra };
+    const extraCopy = { ...modifiedExtra };
     this.extraService
       .updateExtra(modifiedExtra, id)
       .subscribe((data) => Object.assign(extraCopy, data));
@@ -149,9 +128,7 @@ export class ExtrasComponent {
             this.toastService.success('Extra deleted succesfully');
           });
         },
-        error: (error) => {
-          this.toastService.error(error);
-        },
+        error: () => undefined,
       });
     }
     this.extrasId = -1;
@@ -160,14 +137,14 @@ export class ExtrasComponent {
 
   // HTML IN ROW EDITING METHODS:
   onRowEditInit(extra: Extra) {
-    this.clonedExtra[extra.id as number] = { ...extra };
+    this.clonedExtra.set(extra.id, { ...extra });
   }
 
   onRowEditSave(extra: Extra) {
     if (extra.amount > 0) {
       // Conditions to validate row form inputs
       this.updateExtra(extra, extra.id);
-      delete this.clonedExtra[extra.id as number];
+      this.clonedExtra.delete(extra.id);
       sleep(500).then(() => {
         this.toastService.success('Extra saved correctly');
       });
@@ -177,8 +154,12 @@ export class ExtrasComponent {
   }
 
   onRowEditCancel(extra: Extra, index: number) {
-    this.extras[index] = this.clonedExtra[extra.id as number];
-    delete this.clonedExtra[extra.id as number];
+    this.extras.update((list) => {
+      const updated = [...list];
+      updated[index] = this.clonedExtra.get(extra.id) ?? extra;
+      return updated;
+    });
+    this.clonedExtra.delete(extra.id);
   }
 
   onSaveExtra() {
@@ -186,12 +167,12 @@ export class ExtrasComponent {
     this.ngOnInit();
   }
 
-  closeDialog(dialog: Dialog, event: any) {
+  closeDialog(dialog: Dialog, event: Event) {
     this.extrasId = -1;
     dialog.close(event);
   }
 
-  showDialog(rowData: any) {
+  showDialog(rowData: Extra) {
     this.extrasId = rowData.id;
     this.visible = true;
   }
