@@ -120,9 +120,15 @@ export class ExtrasComponent implements OnInit {
 
   updateExtra(modifiedExtra: Extra, id: number) {
     const extraCopy = { ...modifiedExtra };
-    this.extraService
-      .updateExtra(modifiedExtra, id)
-      .subscribe((data) => Object.assign(extraCopy, data));
+    this.extraService.updateExtra(modifiedExtra, id, callerHandlesErrors()).subscribe({
+      next: (data) => {
+        Object.assign(extraCopy, data);
+        this.toastService.success('Extra saved correctly');
+      },
+      error: () => {
+        this.toastService.error('The extra could not be saved');
+      },
+    });
   }
 
   deleteExtra(): void {
@@ -153,9 +159,6 @@ export class ExtrasComponent implements OnInit {
       // Conditions to validate row form inputs
       this.updateExtra(extra, extra.id);
       this.clonedExtra.delete(extra.id);
-      sleep(500).then(() => {
-        this.toastService.success('Extra saved correctly');
-      });
     } else {
       this.toastService.error('Could not save extra');
     }

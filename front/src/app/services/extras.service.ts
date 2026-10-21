@@ -35,10 +35,11 @@ export class ExtrasService {
     return this.http.post<Extra>(EXTRASURL + 'extratemplates/', newExtra);
   }
 
-  updateExtra(modifiedExtra: Extra, id: number): Observable<any> {
+  updateExtra(modifiedExtra: Extra, id: number, context?: HttpContext): Observable<any> {
     return this.http.put<Extra>(
       EXTRASURL + 'extratemplates/' + id,
-      modifiedExtra
+      modifiedExtra,
+      { context }
     );
   }
 

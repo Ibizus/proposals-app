@@ -89,8 +89,8 @@ export class TaxesService {
     });
   }
 
-  modifyTaxes(tax: Taxes): Observable<Object> {
-    return this.http.put<Taxes>(TAXESURL + tax.id, tax);
+  modifyTaxes(tax: Taxes, context?: HttpContext): Observable<Object> {
+    return this.http.put<Taxes>(TAXESURL + tax.id, tax, { context });
   }
 
   deleteTaxes(id: number, context?: HttpContext): Observable<Taxes> {

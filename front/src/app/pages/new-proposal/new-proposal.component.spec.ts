@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
 import { makeCandidate } from '../../../testing/fixtures';
+import { environment } from '../../../environments/environment';
 import { ProposalService } from '../../services/proposal.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -61,12 +62,14 @@ describe('NewProposalComponent', () => {
   });
 
   it('reports a failed creation with a specific toast', () => {
-    spyOn(proposalService, 'createProposal').and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 400 })),
-    );
     const error = spyOn(toast, 'error');
 
     component.onSubmit();
+    TestBed.inject(HttpTestingController)
+      .expectOne(
+        (req) => req.method === 'POST' && req.url === environment.API_ENDPOINT + 'proposals/',
+      )
+      .flush('nope', { status: 400, statusText: 'Bad Request' });
 
     expect(error).toHaveBeenCalledOnceWith(
       "The proposal couldn't be created, please check the form for errors or missing fields!",
