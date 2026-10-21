@@ -1,12 +1,13 @@
 package org.propflow.back.model;
 
-import java.time.LocalDate;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "taxes", indexes = @Index(name = "maxSal_index", columnList = "salaryMax"))
+@Schema(description = "A tax bracket used for salary calculations.")
 public class Taxes extends AuditableSuperclass {
 
   @Id

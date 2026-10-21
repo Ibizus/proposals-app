@@ -1,6 +1,7 @@
 package org.propflow.back.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,8 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
-@Table(name = "extra",
-      indexes = @Index(name = "extra_name_index", columnList = "name"))
+@Table(name = "extra", indexes = @Index(name = "extra_name_index", columnList = "name"))
+@Schema(description = "A salary extra such as a bonus or allowance.")
 public class Extra {
 
   @Id

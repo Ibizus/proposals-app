@@ -1,6 +1,7 @@
 package org.propflow.back.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,6 +11,7 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "status", indexes = @Index(name = "status_status_index", columnList = "status"))
+@Schema(description = "A status entry in a proposal's history.")
 public class Status extends AuditableSuperclass {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,6 +20,7 @@ public class Status extends AuditableSuperclass {
 
   private int status;
   private String message;
+
   // private LocalDateTime date;
 
   @JsonBackReference

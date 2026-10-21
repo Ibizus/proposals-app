@@ -1,16 +1,17 @@
 package org.propflow.back.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper=false)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
-@Table(name = "extraTemplate",
-      indexes = @Index(name = "exTemp_name_index", columnList = "name"))
-public class ExtraTemplate extends AuditableSuperclass{
+@Table(name = "extraTemplate", indexes = @Index(name = "exTemp_name_index", columnList = "name"))
+@Schema(description = "A reusable template for salary extras.")
+public class ExtraTemplate extends AuditableSuperclass {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

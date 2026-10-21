@@ -1,11 +1,12 @@
 package org.propflow.back.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-import org.propflow.back.serializer.ProposalSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import jakarta.persistence.*;
 import lombok.*;
+import org.propflow.back.serializer.ProposalSerializer;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,7 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "candidate", indexes = @Index(name = "idn_index", columnList = "idNumber"))
+@Schema(description = "A candidate considered for one or more proposals.")
 public class Candidate extends AuditableSuperclass {
 
   @Id
