@@ -284,7 +284,7 @@ export class ProposalsComponent implements OnInit {
     this.proposalService.createProposal(newProposal, callerHandlesErrors()).subscribe({
       next: () => {
         this.ngOnInit();
-        this.toastService.success('Extra duplicated correctly');
+        this.toastService.success('Proposal duplicated correctly');
       },
       error: () => {
         this.toastService.error('Failed to duplicate the proposal');

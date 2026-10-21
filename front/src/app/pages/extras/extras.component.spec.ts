@@ -3,6 +3,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { provideTestDefaults } from '../../../testing/test-providers';
 import { environment } from '../../../environments/environment';
 import { makeExtra } from '../../../testing/fixtures';
+import { ToastService } from '../../services/toast.service';
 
 import { ExtrasComponent } from './extras.component';
 
@@ -45,5 +46,36 @@ describe('ExtrasComponent', () => {
       .flush('nope', { status: 500, statusText: 'Server Error' });
 
     expect(component.isLoading()).toBeFalse();
+  });
+
+  it('confirms a saved row only after the API accepts it', () => {
+    http
+      .expectOne(API + 'extratemplates/?page=0&size=10')
+      .flush({ extras: [makeExtra()], currentPage: 0, totalItems: 1 });
+    const toast = TestBed.inject(ToastService);
+    const success = spyOn(toast, 'success');
+
+    component.onRowEditSave(makeExtra({ amount: 150 }));
+    expect(success).not.toHaveBeenCalled();
+    http.expectOne(API + 'extratemplates/1').flush(makeExtra({ amount: 150 }));
+
+    expect(success).toHaveBeenCalledOnceWith('Extra saved correctly');
+  });
+
+  it('shows only a specific error toast when saving a row fails', () => {
+    http
+      .expectOne(API + 'extratemplates/?page=0&size=10')
+      .flush({ extras: [makeExtra()], currentPage: 0, totalItems: 1 });
+    const toast = TestBed.inject(ToastService);
+    const success = spyOn(toast, 'success');
+    const error = spyOn(toast, 'error');
+
+    component.onRowEditSave(makeExtra({ amount: 150 }));
+    http
+      .expectOne(API + 'extratemplates/1')
+      .flush('nope', { status: 400, statusText: 'Bad Request' });
+
+    expect(error).toHaveBeenCalledOnceWith('The extra could not be saved');
+    expect(success).not.toHaveBeenCalled();
   });
 });

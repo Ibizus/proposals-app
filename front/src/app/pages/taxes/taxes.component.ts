@@ -171,7 +171,15 @@ export class TaxesComponent implements OnInit {
 
   updateTaxes(modifiedTaxes: Taxes) {
     const taxesCopy = { ...modifiedTaxes };
-    this.taxesService.modifyTaxes(taxesCopy).subscribe((data) => Object.assign(taxesCopy, data));
+    this.taxesService.modifyTaxes(taxesCopy, callerHandlesErrors()).subscribe({
+      next: (data) => {
+        Object.assign(taxesCopy, data);
+        this.toastService.success('Taxes saved correctly');
+      },
+      error: () => {
+        this.toastService.error('The taxes could not be saved');
+      },
+    });
   }
 
   deleteTaxes(): void {
@@ -218,9 +226,6 @@ export class TaxesComponent implements OnInit {
     if (taxes.salaryMax > 0 && taxes.taxPercentageCompany > 0) {
       this.updateTaxes(taxes);
       this.clonedTaxes.delete(taxes.id);
-      sleep(500).then(() => {
-        this.toastService.success('Taxes saved correctly');
-      });
     } else {
       this.toastService.error('Could not save the Taxes');
     }
