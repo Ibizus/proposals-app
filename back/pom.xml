@@ -96,8 +96,7 @@
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>7.4</version>
 		</dependency>
-		<!--Default Access:  http://localhost:8080/swagger-ui/index.html -->
-		<!--Access: http://localhost:8080/openapi -->
+		<!--Swagger UI and OpenAPI paths: see README.md "API documentation and observability" -->
         <dependency>
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
