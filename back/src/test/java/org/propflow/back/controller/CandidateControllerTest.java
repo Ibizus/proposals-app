@@ -109,10 +109,25 @@ class CandidateControllerTest {
             post("/v1/api/candidates")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"name\":\"Eve\",\"idNumber\":\"ID-9\",\"maritalStatus\":1,\"dependentsNumber\":2}"))
+                    "{\"name\":\"Eve\",\"surname\":\"Adams\",\"idNumber\":\"ID-9\",\"phone\":\"600000000\",\"email\":\"eve@example.com\",\"maritalStatus\":1,\"dependentsNumber\":2}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(3))
         .andExpect(jsonPath("$.name").value("Eve"))
         .andExpect(jsonPath("$.dependentsNumber").value(2));
+  }
+
+  @Test
+  void blankCandidateNameIsRejectedWithFieldError() throws Exception {
+    mockMvc
+        .perform(
+            post("/v1/api/candidates")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"name\":\"\",\"surname\":\"Adams\",\"idNumber\":\"ID-9\",\"phone\":\"600000000\",\"email\":\"eve@example.com\",\"maritalStatus\":1,\"dependentsNumber\":2}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.type").value("urn:propflow:problem:validation-failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("name"));
   }
 }

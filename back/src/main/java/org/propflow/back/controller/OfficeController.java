@@ -1,11 +1,10 @@
 package org.propflow.back.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
-
 import org.propflow.back.model.Office;
 import org.propflow.back.service.OfficeService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,17 +27,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/api/offices")
 public class OfficeController {
 
-  @Autowired
-  private OfficeService officeService;
+  @Autowired private OfficeService officeService;
 
-  @GetMapping({ "", "/" })
+  @GetMapping({"", "/"})
   public List<Office> all() {
     return this.officeService.all();
   }
 
   // Filters by Name and Code
-  @GetMapping(value = { "", "/" }, params = "filter")
-  public List<Office> findOfficeByNameAndCode(@RequestParam("filter") Optional<String> filterOptional) {
+  @GetMapping(
+      value = {"", "/"},
+      params = "filter")
+  public List<Office> findOfficeByNameAndCode(
+      @RequestParam("filter") Optional<String> filterOptional) {
     return this.officeService.filter(filterOptional).getContent();
   }
 
@@ -47,13 +48,13 @@ public class OfficeController {
     return this.officeService.one(id);
   }
 
-  @PostMapping({ "", "/" })
-  public Office newOffice(@RequestBody Office office) {
+  @PostMapping({"", "/"})
+  public Office newOffice(@Valid @RequestBody Office office) {
     return this.officeService.save(office);
   }
 
   @PutMapping("/{id}")
-  public Office replaceOffice(@PathVariable("id") Long id, @RequestBody Office office) {
+  public Office replaceOffice(@PathVariable("id") Long id, @Valid @RequestBody Office office) {
     return this.officeService.replace(id, office);
   }
 

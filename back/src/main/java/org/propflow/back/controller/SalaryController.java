@@ -1,7 +1,8 @@
 package org.propflow.back.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Salary;
 import org.propflow.back.service.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,44 +19,41 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/salaries")
 public class SalaryController {
 
-    @Autowired
-    private SalaryService salaryService;
+  @Autowired private SalaryService salaryService;
 
-    @GetMapping({"", "/"})
-    public List<Salary> all() {
-        return salaryService.all();
-    }
+  @GetMapping({"", "/"})
+  public List<Salary> all() {
+    return salaryService.all();
+  }
 
-    @GetMapping( "/{id}")
-    public Salary one(@PathVariable("id") Long id) {
-        return salaryService.one(id);
-    }
+  @GetMapping("/{id}")
+  public Salary one(@PathVariable("id") Long id) {
+    return salaryService.one(id);
+  }
 
-    @PostMapping({"","/"})
-    public Salary newSalary(@RequestBody Salary salary) {
-        log.info("Creating new salary = " + salary);
-        return this.salaryService.save(salary);
-    }
+  @PostMapping({"", "/"})
+  public Salary newSalary(@Valid @RequestBody Salary salary) {
+    log.info("Creating new salary = " + salary);
+    return this.salaryService.save(salary);
+  }
 
-    @PutMapping("/{id}")
-    public Salary replaceSalary(@PathVariable("id") Long id, @RequestBody Salary salary) {
-        log.info("Updated salary with id = " + id + "\n Salary = " + salary);
-        return this.salaryService.replace(id, salary);
-    }
+  @PutMapping("/{id}")
+  public Salary replaceSalary(@PathVariable("id") Long id, @Valid @RequestBody Salary salary) {
+    log.info("Updated salary with id = " + id + "\n Salary = " + salary);
+    return this.salaryService.replace(id, salary);
+  }
 
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}")
-    public void deleteSalary(@PathVariable("id") Long id) {
-        log.info("Deleting salary with id = " + id);
-        this.salaryService.delete(id);
-    }
+  @ResponseBody
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{id}")
+  public void deleteSalary(@PathVariable("id") Long id) {
+    log.info("Deleting salary with id = " + id);
+    this.salaryService.delete(id);
+  }
 }

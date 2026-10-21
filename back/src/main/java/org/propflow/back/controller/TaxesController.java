@@ -1,7 +1,8 @@
 package org.propflow.back.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Taxes;
 import org.propflow.back.service.TaxesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,34 +20,40 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
-@CrossOrigin(origins = { "http://localhost:4200", "http://localhost:3000" })
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/taxes")
 public class TaxesController {
 
-  @Autowired
-  private TaxesService taxesService;
+  @Autowired private TaxesService taxesService;
 
-  @GetMapping(value = { "", "/" }, params = { "!salary", "!maritalStatus" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"!salary", "!maritalStatus"})
   public List<Taxes> all() {
     return this.taxesService.all();
   }
 
-  @GetMapping(value = { "", "/" }, params = { "salary", "!maritalStatus" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"salary", "!maritalStatus"})
   public Taxes findBySalary(@RequestParam Double salary) {
     return this.taxesService.findBySalary(salary);
   }
 
-  @GetMapping(value = { "", "/" }, params = { "!salary", "maritalStatus" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"!salary", "maritalStatus"})
   public List<Taxes> findByMaritalStatus(@RequestParam Integer maritalStatus) {
     return this.taxesService.findByMaritalStatus(maritalStatus);
   }
 
-  @GetMapping(value = { "", "/" }, params = { "salary", "maritalStatus" })
-  public Taxes findBySalaryAndMaritalStatus(@RequestParam Double salary, @RequestParam Integer maritalStatus) {
+  @GetMapping(
+      value = {"", "/"},
+      params = {"salary", "maritalStatus"})
+  public Taxes findBySalaryAndMaritalStatus(
+      @RequestParam Double salary, @RequestParam Integer maritalStatus) {
     return this.taxesService.findBySalaryAndMaritalStatus(salary, maritalStatus);
   }
 
@@ -55,14 +62,14 @@ public class TaxesController {
     return this.taxesService.one(id);
   }
 
-  @PostMapping({ "", "/" })
-  public Taxes newTaxes(@RequestBody Taxes extra) {
+  @PostMapping({"", "/"})
+  public Taxes newTaxes(@Valid @RequestBody Taxes extra) {
     log.info("Creating new extra = " + extra);
     return this.taxesService.save(extra);
   }
 
   @PutMapping("/{id}")
-  public Taxes replaceTaxes(@PathVariable("id") Long id, @RequestBody Taxes extra) {
+  public Taxes replaceTaxes(@PathVariable("id") Long id, @Valid @RequestBody Taxes extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.taxesService.replace(id, extra);
   }

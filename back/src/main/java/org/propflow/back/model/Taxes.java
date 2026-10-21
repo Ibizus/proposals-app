@@ -1,12 +1,15 @@
 package org.propflow.back.model;
 
-import java.time.LocalDate;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,13 +28,16 @@ public class Taxes extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
-  private Double salaryMax;
-  private Double socialSecurityTax;
+  @NotNull @Positive private Double salaryMax;
+
+  @NotNull @PositiveOrZero private Double socialSecurityTax;
+
   // private Double taxPercentageIRS;
   private Double taxPercentageCompany;
   private LocalDate validFrom;
   private LocalDate validUntil;
-  private Integer maritalStatus;
+
+  @NotNull private Integer maritalStatus;
   // attributes for the IRS tax for each number of dependents
   private Double zero;
   private Double one;

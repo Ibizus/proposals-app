@@ -1,9 +1,10 @@
 package org.propflow.back.model;
 
-import java.util.HashSet;
-import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.*;
 
 @Data
@@ -11,8 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
-@Table(name = "office",
-      indexes = @Index(name = "ofi_name_index", columnList = "name"))
+@Table(name = "office", indexes = @Index(name = "ofi_name_index", columnList = "name"))
 public class Office {
 
   @Id
@@ -20,8 +20,9 @@ public class Office {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private String code;
+  @NotBlank private String name;
+
+  @NotBlank private String code;
 
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL)

@@ -1,7 +1,8 @@
 package org.propflow.back.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Parameter;
 import org.propflow.back.service.ParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/parameters")
 public class ParameterController {
 
-  @Autowired
-  private ParameterService ParameterService;
+  @Autowired private ParameterService ParameterService;
 
-  @GetMapping({ "", "/" })
+  @GetMapping({"", "/"})
   public List<Parameter> all() {
     return this.ParameterService.all();
   }
@@ -39,14 +37,15 @@ public class ParameterController {
     return this.ParameterService.one(id);
   }
 
-  @PostMapping({ "", "/" })
-  public Parameter newParameter(@RequestBody Parameter Parameter) {
+  @PostMapping({"", "/"})
+  public Parameter newParameter(@Valid @RequestBody Parameter Parameter) {
     log.info("Creating new Parameter = " + Parameter);
     return this.ParameterService.save(Parameter);
   }
 
   @PutMapping("/{id}")
-  public Parameter replaceParameter(@PathVariable("id") Long id, @RequestBody Parameter Parameter) {
+  public Parameter replaceParameter(
+      @PathVariable("id") Long id, @Valid @RequestBody Parameter Parameter) {
     log.info("Updated Parameter with id = " + id + "\n Parameter = " + Parameter);
     return this.ParameterService.replace(id, Parameter);
   }

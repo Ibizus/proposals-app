@@ -1,24 +1,26 @@
 package org.propflow.back.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper=false)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
-@Table(name = "extraTemplate",
-      indexes = @Index(name = "exTemp_name_index", columnList = "name"))
-public class ExtraTemplate extends AuditableSuperclass{
+@Table(name = "extraTemplate", indexes = @Index(name = "exTemp_name_index", columnList = "name"))
+public class ExtraTemplate extends AuditableSuperclass {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private Double amount;
+  @NotBlank private String name;
+
+  @NotNull private Double amount;
   private Double ssTaxrate;
   private Double irsTaxrate;
   private Boolean isPercentage;

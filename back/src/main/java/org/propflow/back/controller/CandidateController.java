@@ -1,7 +1,9 @@
 package org.propflow.back.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.service.CandidateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,24 +21,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@CrossOrigin(origins = { "http://localhost:4200", "http://localhost:3000" })
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/candidates")
 public class CandidateController {
 
-  @Autowired
-  private CandidateService candidateService;
+  @Autowired private CandidateService candidateService;
 
-  @GetMapping(value = { "", "/" })
+  @GetMapping(value = {"", "/"})
   public List<Candidate> all() {
     log.info("Accessing All Candidates");
     return candidateService.all();
   }
 
-  @GetMapping(value = { "", "/" }, params = { "page", "size", "!filter" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"page", "size", "!filter"})
   public ResponseEntity<Map<String, Object>> all(
       @RequestParam(value = "page", defaultValue = "0") int page,
       @RequestParam(value = "size", defaultValue = "3") int size) {
@@ -47,7 +49,9 @@ public class CandidateController {
     return ResponseEntity.ok(responseAll);
   }
 
-  @GetMapping(value = { "", "/" }, params = { "page", "size", "filter" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"page", "size", "filter"})
   public ResponseEntity<Map<String, Object>> all(
       @RequestParam(value = "page", defaultValue = "0") int page,
       @RequestParam(value = "size", defaultValue = "3") int size,
@@ -59,7 +63,9 @@ public class CandidateController {
     return ResponseEntity.ok(responseAll);
   }
 
-  @GetMapping(value = { "", "/" }, params = { "!page", "!size", "filter" })
+  @GetMapping(
+      value = {"", "/"},
+      params = {"!page", "!size", "filter"})
   public ResponseEntity<Map<String, Object>> findByFilter(
       @RequestParam(value = "page", defaultValue = "0") int page,
       @RequestParam(value = "size", defaultValue = "10") int size,
@@ -76,14 +82,15 @@ public class CandidateController {
     return candidateService.one(id);
   }
 
-  @PostMapping({ "", "/" })
-  public Candidate newCandidate(@RequestBody Candidate candidate) {
+  @PostMapping({"", "/"})
+  public Candidate newCandidate(@Valid @RequestBody Candidate candidate) {
     log.info("Creating new candidate = " + candidate);
     return this.candidateService.save(candidate);
   }
 
   @PutMapping("/{id}")
-  public Candidate replaceCandidate(@PathVariable("id") Long id, @RequestBody Candidate candidate) {
+  public Candidate replaceCandidate(
+      @PathVariable("id") Long id, @Valid @RequestBody Candidate candidate) {
     log.info("Updated candidate with id = " + id + "\n Candidate = " + candidate);
     return this.candidateService.replace(id, candidate);
   }
