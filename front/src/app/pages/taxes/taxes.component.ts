@@ -12,6 +12,7 @@ import { DialogModule, Dialog } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 @Component({
   selector: 'app-taxes',
@@ -36,7 +37,7 @@ export class TaxesComponent implements OnInit {
   cols!: Column[];
   isLoading = signal(true);
   moneySign = '€';
-  visible = false;
+  visible = signal(false);
   taxId = -1;
   maritalStatus!: string[];
   numberOfDependents: string[] = ['0', '1', '2', '3', '4', '5+'];
@@ -144,17 +145,27 @@ export class TaxesComponent implements OnInit {
 
   getTaxes() {
     this.isLoading.set(true);
-    this.taxesService.getTaxes().subscribe((data) => {
-      this.taxesTable = data;
-      this.isLoading.set(false);
+    this.taxesService.getTaxes().subscribe({
+      next: (data) => {
+        this.taxesTable = data;
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 
   getTaxesForMaritalStatus(maritalStatus: number) {
     this.isLoading.set(true);
-    this.taxesService.getTaxesForMaritalStatus(maritalStatus).subscribe((data) => {
-      this.taxesTable = data;
-      this.isLoading.set(false);
+    this.taxesService.getTaxesForMaritalStatus(maritalStatus).subscribe({
+      next: (data) => {
+        this.taxesTable = data;
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -165,19 +176,21 @@ export class TaxesComponent implements OnInit {
 
   deleteTaxes(): void {
     if (this.taxId !== -1) {
-      this.taxesService.deleteTaxes(this.taxId).subscribe({
+      this.taxesService.deleteTaxes(this.taxId, callerHandlesErrors()).subscribe({
         next: () => {
           this.ngOnInit();
           sleep(200).then(() => {
             this.toastService.success('Taxes deleted succesfully');
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error('The taxes could not be deleted');
+        },
       });
     }
 
     this.taxId = -1;
-    this.visible = false;
+    this.visible.set(false);
   }
 
   closeDialog(dialog: Dialog, event: Event) {
@@ -187,7 +200,7 @@ export class TaxesComponent implements OnInit {
 
   showDialog(rowData: Taxes) {
     this.taxId = rowData.id;
-    this.visible = true;
+    this.visible.set(true);
   }
 
   onMaritalStatusChange($event: { value: string }) {

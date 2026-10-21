@@ -11,6 +11,7 @@ import { ExtrasService } from '../../services/extras.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogModule, Dialog } from 'primeng/dialog';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 @Component({
   selector: 'app-extras',
@@ -34,13 +35,13 @@ export class ExtrasComponent implements OnInit {
   clonedExtra = new Map<number, Extra>();
   displayedColumns: string[] = ['id', 'name', 'amount', 'isAPercentage', 'multiplyToMakeItYearly'];
   // Pagination variables with default values:
-  first = 0;
-  rows = 10;
+  first = signal(0);
+  rows = signal(10);
   currentPage = 20;
   demandedPage = 0;
   totalPages = 20;
-  totalRecords = 200;
-  visible = false;
+  totalRecords = signal(200);
+  visible = signal(false);
   extrasId = -1;
   isLoading = signal(true);
 
@@ -81,24 +82,29 @@ export class ExtrasComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.getExtras(this.demandedPage, this.rows);
+    this.getExtras(this.demandedPage, this.rows());
   }
 
   paginate(event: PaginatorState) {
-    this.first = (event.page ?? 0) * (event.rows ?? this.rows);
-    this.rows = event.rows ?? this.rows;
+    this.first.set((event.page ?? 0) * (event.rows ?? this.rows()));
+    this.rows.set(event.rows ?? this.rows());
     this.demandedPage = event.page ?? 0; //Index of the new page
-    this.getExtras(this.demandedPage, this.rows);
+    this.getExtras(this.demandedPage, this.rows());
   }
 
   getExtras(page: number, size: number) {
-    this.extraService.getExtras(page, size).subscribe((data) => {
-      this.extras.set(data.extras);
-      this.first = page * size + 1; // Calculate index of first item shown
-      this.rows = size; // Update size input from the request
-      this.currentPage = data.currentPage + 1; // In back first pago is index 0
-      this.totalRecords = data.totalItems;
-      this.isLoading.set(false);
+    this.extraService.getExtras(page, size).subscribe({
+      next: (data) => {
+        this.extras.set(data.extras);
+        this.first.set(page * size + 1); // Calculate index of first item shown
+        this.rows.set(size); // Update size input from the request
+        this.currentPage = data.currentPage + 1; // In back first pago is index 0
+        this.totalRecords.set(data.totalItems);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -121,18 +127,20 @@ export class ExtrasComponent implements OnInit {
 
   deleteExtra(): void {
     if (this.extrasId !== -1) {
-      this.extraService.deleteExtra(this.extrasId).subscribe({
+      this.extraService.deleteExtra(this.extrasId, callerHandlesErrors()).subscribe({
         next: () => {
           this.ngOnInit();
           sleep(500).then(() => {
             this.toastService.success('Extra deleted succesfully');
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error('The extra could not be deleted');
+        },
       });
     }
     this.extrasId = -1;
-    this.visible = false;
+    this.visible.set(false);
   }
 
   // HTML IN ROW EDITING METHODS:
@@ -174,6 +182,6 @@ export class ExtrasComponent implements OnInit {
 
   showDialog(rowData: Extra) {
     this.extrasId = rowData.id;
-    this.visible = true;
+    this.visible.set(true);
   }
 }

@@ -10,6 +10,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { FormsModule } from '@angular/forms';
 import { ParameterService } from '../../services/parameter.service';
 import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 @Component({
   selector: 'app-parameters',
@@ -32,7 +33,7 @@ export class ParametersComponent implements OnInit {
   parameters = signal<Parameter[]>([]);
   paramId = -1;
   currentParameter!: Parameter;
-  visible = false;
+  visible = signal(false);
   isLoading = signal(true);
   @ViewChild('dt2') dataTable!: Table;
   displayedColumns: string[] = ['id', 'name', 'value', 'validFrom', 'validUntil'];
@@ -91,34 +92,38 @@ export class ParametersComponent implements OnInit {
   }
 
   deleteParameter(parameter: Parameter): void {
-    this.parameterService.deleteParameter(parameter).subscribe({
+    this.parameterService.deleteParameter(parameter, callerHandlesErrors()).subscribe({
       next: () => {
         this.parameters.update((list) => list.filter((p) => p.id !== parameter.id));
         setTimeout(() => {
           this.toastService.success('Parameter deleted successfully');
           this.paramId = -1;
-          this.visible = false;
+          this.visible.set(false);
           console.log('Completed successfully');
         }, 500);
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('The parameter could not be deleted');
+      },
     });
   }
 
   modifyParameter(modifiedParameter: Parameter) {
     const parameterCopy = { ...modifiedParameter };
-    this.parameterService.modifyParameter(modifiedParameter).subscribe({
+    this.parameterService.modifyParameter(modifiedParameter, callerHandlesErrors()).subscribe({
       next: (data) => {
         Object.assign(parameterCopy, data);
         this.toastService.success('Parameter modified successfully');
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('The parameter could not be modified');
+      },
     });
   }
 
   showDialog(parameter: Parameter): void {
     this.currentParameter = parameter;
-    this.visible = true;
+    this.visible.set(true);
   }
 
   closeDialog(dialog: Dialog, event: Event) {

@@ -17,6 +17,7 @@ import { ToastService } from '../../services/toast.service';
 import { Dialog, DialogModule } from 'primeng/dialog';
 import { sleep } from '../../utils/functions';
 import { Subscription } from 'rxjs';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 @Component({
   selector: 'app-proposals',
@@ -46,17 +47,17 @@ export class ProposalsComponent implements OnInit {
   selectedCandidate = signal<Candidate | null>(null);
 
   // Pagination variables with default values:
-  first = 0;
-  rows = 10;
+  first = signal(0);
+  rows = signal(10);
   currentPage = 20;
   demandedPage = 0;
   totalPages = 20;
-  totalRecords = 200;
+  totalRecords = signal(200);
 
   @ViewChild('dt2') dataTable!: Table;
   filter = '';
   newProposalButton: string = this.t.instant('NEW PROPOSAL');
-  visible = false;
+  visible = signal(false);
   proposalId = -1;
 
   routerSubscription!: Subscription;
@@ -115,19 +116,19 @@ export class ProposalsComponent implements OnInit {
 
   ngOnInit() {
     if (this.selectedCandidate()) {
-      this.getProposals(this.demandedPage, this.rows, this.selectedCandidate()?.email ?? '');
+      this.getProposals(this.demandedPage, this.rows(), this.selectedCandidate()?.email ?? '');
       this.candidateService.changeCandidate(null);
     } else {
-      this.getProposals(this.demandedPage, this.rows, '');
+      this.getProposals(this.demandedPage, this.rows(), '');
     }
   }
 
   paginate(event: PaginatorState) {
-    this.first = (event.page ?? 0) * (event.rows ?? this.rows);
-    this.rows = event.rows ?? this.rows;
+    this.first.set((event.page ?? 0) * (event.rows ?? this.rows()));
+    this.rows.set(event.rows ?? this.rows());
     this.demandedPage = event.page ?? 0; //Index of the new page
     this.isLoading.set(true);
-    this.getProposals(this.demandedPage, this.rows, this.filter);
+    this.getProposals(this.demandedPage, this.rows(), this.filter);
   }
 
   newProposal() {
@@ -139,17 +140,20 @@ export class ProposalsComponent implements OnInit {
   onInputChange(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.filter = filterValue;
-    this.getProposals(0, this.rows, this.filter);
+    this.getProposals(0, this.rows(), this.filter);
   }
 
   getProposals(page: number, size: number, filter: string) {
     this.proposalService.getProposals(page, size, filter).subscribe({
       next: (data) => {
         this.proposals.set(data.proposals);
-        this.first = page * size + 1; // Calculate index of first item shown
-        this.rows = size; // Update size input from the request
+        this.first.set(page * size + 1); // Calculate index of first item shown
+        this.rows.set(size); // Update size input from the request
         this.currentPage = data.currentPage + 1; // In back first pago is index 0
-        this.totalRecords = data.totalItems;
+        this.totalRecords.set(data.totalItems);
+        this.isLoading.set(false);
+      },
+      error: () => {
         this.isLoading.set(false);
       },
     });
@@ -160,7 +164,7 @@ export class ProposalsComponent implements OnInit {
   }
 
   getProposalById(proposalId: number) {
-    this.proposalService.getProposal(proposalId).subscribe({
+    this.proposalService.getProposal(proposalId, callerHandlesErrors()).subscribe({
       next: (proposal) => {
         console.log(proposal);
         return proposal;
@@ -173,33 +177,37 @@ export class ProposalsComponent implements OnInit {
 
   goToModifyProposal(proposalId: number) {
     // Get the proposal of Id === proposalId
-    this.proposalService.getProposal(proposalId).subscribe({
+    this.proposalService.getProposal(proposalId, callerHandlesErrors()).subscribe({
       next: (proposal) => {
         // If it finds the proposal, change it in the service and navigate to the new proposal page
         this.proposalService.changeProposal(proposal);
         this.router.navigate(['/new-proposal']);
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('The proposal could not be loaded');
+      },
     });
   }
 
   deleteProposal(): void {
     if (this.proposalId !== -1) {
-      this.proposalService.deleteProposal(this.proposalId).subscribe({
+      this.proposalService.deleteProposal(this.proposalId, callerHandlesErrors()).subscribe({
         next: () => {
           this.ngOnInit();
           sleep(200).then(() => {
             this.toastService.success('The proposal has been deleted successfully');
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error('The proposal could not be deleted');
+        },
       });
     } else {
       this.toastService.error('proposalId is not set');
     }
 
     this.proposalId = -1;
-    this.visible = false;
+    this.visible.set(false);
   }
 
   getSeverity(status: string) {
@@ -228,7 +236,7 @@ export class ProposalsComponent implements OnInit {
 
   showDialog(rowData: Proposal) {
     this.proposalId = rowData.id;
-    this.visible = true;
+    this.visible.set(true);
   }
 
   duplicateProposal(existingProposal: Proposal) {
@@ -273,12 +281,14 @@ export class ProposalsComponent implements OnInit {
       modifiedBy: '',
     });
 
-    this.proposalService.createProposal(newProposal).subscribe({
+    this.proposalService.createProposal(newProposal, callerHandlesErrors()).subscribe({
       next: () => {
         this.ngOnInit();
         this.toastService.success('Extra duplicated correctly');
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('Failed to duplicate the proposal');
+      },
     });
   }
 }

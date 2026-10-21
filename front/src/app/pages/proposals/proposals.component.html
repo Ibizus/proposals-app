@@ -115,10 +115,10 @@
   <p-paginator
     class="relative"
     (onPageChange)="paginate($event)"
-    [first]="first"
-    [rows]="rows"
+    [first]="first()"
+    [rows]="rows()"
     [showCurrentPageReport]="true"
-    [totalRecords]="totalRecords"
+    [totalRecords]="totalRecords()"
     [rowsPerPageOptions]="[10, 20, 30]"
   ></p-paginator>
   <p-dialog

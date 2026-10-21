@@ -16,6 +16,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { forkJoin } from 'rxjs';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 @Component({
   selector: 'app-candidates',
@@ -43,21 +44,21 @@ export class CandidatesComponent implements OnInit {
   modifyCandidateString: string = this.t.instant('MODIFY CANDIDATE');
   isLoading = signal(true);
 
-  visibleCandidateModal = false;
-  visibleDelete = false;
-  visibleCandidateDetails = false;
+  visibleCandidateModal = signal(false);
+  visibleDelete = signal(false);
+  visibleCandidateDetails = signal(false);
   candidateId = -1;
 
   // Names of the colums to be displayed on the Candidates table
   displayedColumns: string[] = ['id', 'name', 'surname', 'phone', 'email', 'actions'];
   selectedCandidate = signal<Candidate | null>(null);
   // Pagination variables with default values:
-  first = 0;
-  rows = 10;
+  first = signal(0);
+  rows = signal(10);
   currentPage = 20;
   demandedPage = 0;
   totalPages = 20;
-  totalRecords = 200;
+  totalRecords = signal(200);
 
   @ViewChild('dt2') dataTable!: Table;
   filter = '';
@@ -95,7 +96,7 @@ export class CandidatesComponent implements OnInit {
 
   ngOnInit() {
     // Fetch paginated canidates
-    this.getCandidates(this.demandedPage, this.rows, '');
+    this.getCandidates(this.demandedPage, this.rows(), '');
     // Reset candidate
     this.candidate = {
       '@id': 0,
@@ -114,34 +115,36 @@ export class CandidatesComponent implements OnInit {
   }
 
   paginate(event: PaginatorState) {
-    this.first = (event.page ?? 0) * (event.rows ?? this.rows);
-    this.rows = event.rows ?? this.rows;
+    this.first.set((event.page ?? 0) * (event.rows ?? this.rows()));
+    this.rows.set(event.rows ?? this.rows());
     this.demandedPage = event.page ?? 0; //Index of the new page
     this.isLoading.set(true);
-    this.getCandidates(this.demandedPage, this.rows, this.filter);
+    this.getCandidates(this.demandedPage, this.rows(), this.filter);
   }
 
   // Search bar event
   onInputChange(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.filter = filterValue;
-    this.getCandidates(0, this.rows, this.filter);
+    this.getCandidates(0, this.rows(), this.filter);
   }
 
   goToCandidateDetail(candidate: Candidate): void {
     // Show toast
     this.toastService.success('Going to candidate: ' + candidate.name + ' ' + candidate.surname);
     // Show modal with Candidate details
-    this.candidateService.getCandidateById(candidate.id).subscribe({
+    this.candidateService.getCandidateById(candidate.id, callerHandlesErrors()).subscribe({
       next: (candidate) => {
         this.showCandidateModal(candidate);
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('Error fetching candidate details');
+      },
     });
   }
 
   goToModifyCandidate(candidate: Candidate) {
-    this.visibleCandidateModal = true;
+    this.visibleCandidateModal.set(true);
     this.candidate = candidate;
   }
 
@@ -149,13 +152,15 @@ export class CandidatesComponent implements OnInit {
     this.candidateService.getCandidates(page, size, filter).subscribe({
       next: (data) => {
         this.candidates.set(data.candidates);
-        this.first = page * size + 1; // Calculate index of first item shown
-        this.rows = size; // Update size input from the request
+        this.first.set(page * size + 1); // Calculate index of first item shown
+        this.rows.set(size); // Update size input from the request
         this.currentPage = data.currentPage + 1; // In back first page is index 0
-        this.totalRecords = data.totalItems;
+        this.totalRecords.set(data.totalItems);
         this.isLoading.set(false);
       },
-      error: () => undefined,
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -173,40 +178,46 @@ export class CandidatesComponent implements OnInit {
 
   deleteCandidate(): void {
     if (this.candidateId !== -1) {
-      this.candidateService.deleteCandidate(this.candidateId).subscribe({
+      this.candidateService.deleteCandidate(this.candidateId, callerHandlesErrors()).subscribe({
         next: () => {
           this.ngOnInit();
           sleep(250).then(() => {
             this.toastService.success('Candidate deleted succesfully');
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error('The candidate could not be deleted');
+        },
       });
     } else {
       this.toastService.error('candidateId is not set');
     }
 
     this.candidateId = -1;
-    this.visibleDelete = false;
+    this.visibleDelete.set(false);
   }
 
   newProposalCandidate(id: number) {
-    this.candidateService.newProposalCandidate(id).subscribe({
+    this.candidateService.newProposalCandidate(id, callerHandlesErrors()).subscribe({
       next: (candidate) => {
         this.candidateService.changeCandidate(candidate);
         this.router.navigate(['/new-proposal']);
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('The candidate could not be loaded');
+      },
     });
   }
 
   goToCandidateProposals(id: number) {
-    this.candidateService.newProposalCandidate(id).subscribe({
+    this.candidateService.newProposalCandidate(id, callerHandlesErrors()).subscribe({
       next: (candidate) => {
         this.candidateService.changeCandidate(candidate);
         this.router.navigate(['/proposals']);
       },
-      error: () => undefined,
+      error: () => {
+        this.toastService.error('The candidate could not be loaded');
+      },
     });
   }
 
@@ -218,7 +229,7 @@ export class CandidatesComponent implements OnInit {
   onModifyCandidate() {
     this.candidateService.modifyCandidate(this.candidate).subscribe({
       next: () => {
-        this.visibleCandidateModal = false;
+        this.visibleCandidateModal.set(false);
         this.candidate = {
           '@id': 0,
           id: 0,
@@ -244,7 +255,7 @@ export class CandidatesComponent implements OnInit {
 
   showDeleteDialog(rowData: Candidate) {
     this.candidateId = rowData.id;
-    this.visibleDelete = true;
+    this.visibleDelete.set(true);
   }
 
   closeDeleteDialog(dialog: Dialog, event: Event) {
@@ -254,12 +265,12 @@ export class CandidatesComponent implements OnInit {
 
   showCandidateModal(candidate: Candidate) {
     this.selectedCandidate.set(candidate);
-    this.visibleCandidateDetails = true;
+    this.visibleCandidateDetails.set(true);
     this.getProposalsByCandidate(candidate);
   }
 
   closeCandidateModal() {
-    this.visibleCandidateDetails = false;
+    this.visibleCandidateDetails.set(false);
     this.selectedCandidate.set(null);
   }
 
