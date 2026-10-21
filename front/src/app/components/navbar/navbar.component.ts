@@ -157,6 +157,16 @@ import { forkJoin } from 'rxjs';
       font-weight: 600;
     }
 
+    #DeltaSiteLogo {
+      flex-shrink: 0;
+    }
+
+    .ms-siteicon-img {
+      width: min(177px, 24vw);
+      max-width: none;
+      height: auto;
+    }
+
     @media (max-width: 991.98px) {
       .ui-navbar-top #siteIcon #ctl00_PlaceHolderSiteName_ProjectPropertyTitle {
         padding-left: 8px;

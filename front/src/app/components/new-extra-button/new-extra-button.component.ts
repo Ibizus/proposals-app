@@ -5,22 +5,12 @@ import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslateService,
+  TranslateStore,
+} from '@ngx-translate/core';
 import { ExtrasService } from '../../services/extras.service';
-import { Extra } from '../../utils/types';
-
-interface ExtraForm {
-  name: string;
-  amount: number;
-  isPercentage: boolean;
-  isSSTaxable: boolean;
-  ssTaxrate: number;
-  irsTaxrate: number;
-  isIRSTaxable: boolean;
-  multiplyMonthly: number;
-  multiplyYearly: number;
-  addToSalary: boolean;
-}
 
 @Component({
   selector: 'app-new-extra-button',
@@ -33,13 +23,17 @@ interface ExtraForm {
     ButtonModule,
     TranslateModule,
   ],
-  viewProviders: [provideIcons({ matAddCircleOutline }), TranslateService, TranslateStore],
+  viewProviders: [
+    provideIcons({ matAddCircleOutline }),
+    TranslateService,
+    TranslateStore,
+  ],
   template: ` <div>
     <button
       pButton
       [label]="newExtraLabel"
       icon="pi pi-plus"
-      class="newProposal bg-[#0056D2] text-white mb-3 px-4 p-1 w-44 h-14 rounded-full md:absolute md:top-0 md:right-0"
+      class="newProposal bg-[#0056D2] text-white mb-3 px-4 p-1 w-44 h-14 rounded-full  absolute top-0 right-0"
       (click)="newExtra()"
     ></button>
     <p-dialog
@@ -53,17 +47,23 @@ interface ExtraForm {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Name -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'NAME' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'NAME' | translate
+          }}</label>
           <input [(ngModel)]="extra.name" class="input-field" required />
         </div>
         <!-- Amount -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'AMOUNT' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'AMOUNT' | translate
+          }}</label>
           <input [(ngModel)]="extra.amount" class="input-field" required />
         </div>
         <!-- isPercentage -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'IS IT A PERCENTAGE' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'IS IT A PERCENTAGE' | translate
+          }}</label>
           <p-checkbox [(ngModel)]="extra.isPercentage" [binary]="true" />
         </div>
         <!-- isSSTaxable -->
@@ -75,12 +75,16 @@ interface ExtraForm {
         </div>
         <!-- ssTaxrates -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'SS Taxrate' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'SS Taxrate' | translate
+          }}</label>
           <input [(ngModel)]="extra.ssTaxrate" class="input-field" required />
         </div>
         <!-- irsTaxrates -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'IRS Taxrate' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'IRS Taxrate' | translate
+          }}</label>
           <input [(ngModel)]="extra.irsTaxrate" class="input-field" required />
         </div>
         <!-- isIRSTaxable -->
@@ -92,17 +96,31 @@ interface ExtraForm {
         </div>
         <!-- Multiply Monthly -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'MONTHLY MULTIPLIER' | translate }}</label>
-          <input [(ngModel)]="extra.multiplyMonthly" class="input-field" type="number" />
+          <label class="text-gray-700 font-semibold">{{
+            'MONTHLY MULTIPLIER' | translate
+          }}</label>
+          <input
+            [(ngModel)]="extra.multiplyMonthly"
+            class="input-field"
+            type="number"
+          />
         </div>
         <!-- Yearly multiplier -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'YEARLY MULTIPLIER' | translate }}</label>
-          <input [(ngModel)]="extra.multiplyYearly" class="input-field" type="number" />
+          <label class="text-gray-700 font-semibold">{{
+            'YEARLY MULTIPLIER' | translate
+          }}</label>
+          <input
+            [(ngModel)]="extra.multiplyYearly"
+            class="input-field"
+            type="number"
+          />
         </div>
         <!-- isAddedToSalary -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'IS ADDED TO SALARY' | translate }}</label>
+          <label class="text-gray-700 font-semibold">{{
+            'IS ADDED TO SALARY' | translate
+          }}</label>
           <p-checkbox [(ngModel)]="extra.addToSalary" [binary]="true" />
         </div>
         <button
@@ -117,7 +135,7 @@ interface ExtraForm {
   </div>`,
   styles: `
     :host ::ng-deep {
-      .p-checkbox-box {
+      .p-checkbox-box	 {
         border: 1px solid grey;
       }
 
@@ -136,19 +154,19 @@ interface ExtraForm {
         border-radius: 0 !important;
         box-shadow: none !important;
         color: #333333;
-        background: #efefef;
+        background: #EFEFEF;
       }
 
       .input-field:focus {
         border: none !important;
-        border-bottom: 2px solid #0056d2 !important;
+        border-bottom: 2px solid #0056D2 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
         transition: 100ms ease-out;
       }
 
       .input-field input:checked {
-        background: #0056d2;
+        background: #0056D2;
       }
 
       .p-inputtext {
@@ -157,92 +175,88 @@ interface ExtraForm {
         border-radius: 0 !important;
         box-shadow: none !important;
         color: #333333;
-        background: #efefef;
+        background: #EFEFEF;
       }
 
       .p-inputtext:focus {
         border: none !important;
-        border-bottom: 2px solid #0056d2 !important;
+        border-bottom: 2px solid #0056D2 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
         transition: 100ms ease-out;
       }
 
-      textarea:focus,
-      input:focus {
+      textarea:focus, input:focus {
         outline: none;
       }
 
       .p-button {
-        background-color: #0056d2;
+        background-color: #0056D2;
         color: white;
         border: none;
         border-radius: 15px;
         padding: 10px 20px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition:
-          background-color 0.3s ease,
-          box-shadow 0.3s ease,
-          transform 0.2s ease;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
       }
 
       .p-button:hover {
-        background-color: darken(#0056d2, 10%);
+        background-color: darken(#0056D2, 10%);
         box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-        transform: translateY(-2px);
+        transform: translateY(-2px); 
+        
       }
 
       .p-button:active {
-        background-color: #462c9c;
+        background-color: #462C9C;
         opacity: 0.9;
         transform: translateY(1px);
       }
 
       .p-button:focus {
-        outline: none;
-        box-shadow:
-          0 0 0 2px rgba(255, 255, 255, 0.4),
-          0 0 0 4px #0056d2;
+        outline: none; 
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 0 4px #0056D2; 
       }
-    }
+  }
   `,
 })
 export class NewExtraButtonComponent {
   @Output() extraSaved: EventEmitter<void> = new EventEmitter<void>();
-  visible = false;
-  extra!: ExtraForm;
+  visible: boolean = false;
+  extra!: any;
 
   newExtraLabel!: string;
 
   constructor(
     private t: TranslateService,
-    private extrasService: ExtrasService,
+    private extrasService: ExtrasService
   ) {
     this.extra = {
       name: '',
       amount: 0.0,
       isPercentage: false,
       isSSTaxable: false,
-      ssTaxrate: 0,
-      irsTaxrate: 0,
       isIRSTaxable: false,
-      multiplyMonthly: 0,
       multiplyYearly: 0,
-      addToSalary: false,
+      multiplyMonthly: 0,
     };
 
     this.t.use(localStorage.getItem('lang') || 'en');
 
-    this.t.get('NEW EXTRA').subscribe((newExtraLabel) => (this.newExtraLabel = newExtraLabel));
+    this.t
+      .get('NEW EXTRA')
+      .subscribe((newExtraLabel) => (this.newExtraLabel = newExtraLabel));
   }
+
+  ngOnInit() {}
 
   newExtra() {
     this.visible = true;
   }
 
   onSaveExtra() {
-    this.extrasService.createExtra(this.extra as Extra).subscribe({
-      next: () => {
+    this.extrasService.createExtra(this.extra).subscribe({
+      next: (response) => {
         this.visible = false;
         this.extraSaved.emit();
         this.extra = {
@@ -250,15 +264,12 @@ export class NewExtraButtonComponent {
           amount: 0.0,
           isPercentage: false,
           isSSTaxable: false,
-          ssTaxrate: 0,
-          irsTaxrate: 0,
           isIRSTaxable: false,
-          multiplyMonthly: 0,
           multiplyYearly: 0,
-          addToSalary: false,
+          multiplyMonthly: 0,
         };
       },
-      error: (error) => console.error('Failed to create extra', error),
+      error: (error) => {},
     });
   }
 }
