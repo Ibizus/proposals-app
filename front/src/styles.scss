@@ -1,5 +1,3 @@
-
-
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
@@ -9,25 +7,40 @@
 @tailwind utilities;
 
 .input-field {
-  @apply p-2 rounded-md mt-1
+  @apply p-2 rounded-md mt-1;
 }
 
 // html, body { height: 100%; }
-body { margin: 0; font-family: "Source Sans Pro", Arial, "Helvetica Neue", sans-serif; }
-
-:root {
-  --checkbox-background-color: #0056D2;
+body {
+  margin: 0;
+  font-family: 'Source Sans Pro', Arial, 'Helvetica Neue', sans-serif;
 }
 
+:root {
+  --checkbox-background-color: #0056d2;
+}
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   border-color: var(--checkbox-border-color);
   background-color: var(--checkbox-background-color);
 }
 
+// Logo in the navbar and login form keeps a fixed height with proportional
+// width so flex layout never stretches or crushes it at any viewport width.
+.ms-siteicon-img {
+  height: 40px;
+  width: auto;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+#DeltaSiteLogo {
+  flex-shrink: 0;
+}
+
 :host ::ng-deep {
   .p-tag.p-tag-warning {
-    background-color: #F1A425;
+    background-color: #f1a425;
     color: #000000;
   }
 }
