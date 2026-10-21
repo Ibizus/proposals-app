@@ -68,7 +68,7 @@ describe('ParametersComponent', () => {
     expect(success).toHaveBeenCalledWith('Parameter deleted successfully');
   }));
 
-  it('leaves parameters unchanged when modification fails', () => {
+  it('reports a failed modification with a specific toast', () => {
     const error = spyOn(toast, 'error');
 
     component.modifyParameter(param(2, 'spp', 6));
@@ -76,7 +76,7 @@ describe('ParametersComponent', () => {
     expect(req.request.method).toBe('PUT');
     req.flush('nope', { status: 400, statusText: 'Bad Request' });
 
-    expect(error).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledOnceWith('The parameter could not be modified');
     expect(component.parameters().map((p) => p.name)).toEqual(['iht', 'spp']);
   });
 });

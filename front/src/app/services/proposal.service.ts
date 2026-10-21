@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Extra, Proposal, Taxes } from '../utils/types';
@@ -203,28 +203,31 @@ export class ProposalService {
     );
   }
 
-  getProposal(id: number): Observable<Proposal> {
+  getProposal(id: number, context?: HttpContext): Observable<Proposal> {
     return this.http.get<Proposal>(
-      environment.API_ENDPOINT + 'proposals/' + id
+      environment.API_ENDPOINT + 'proposals/' + id,
+      { context }
     );
   }
 
-  deleteProposal(id: number): Observable<Proposal> {
+  deleteProposal(id: number, context?: HttpContext): Observable<Proposal> {
     return this.http.delete<Proposal>(
-      environment.API_ENDPOINT + 'proposals/' + id
+      environment.API_ENDPOINT + 'proposals/' + id,
+      { context }
     );
   }
 
-  modifyProposal(proposal: Proposal): Observable<Object> {
+  modifyProposal(proposal: Proposal, context?: HttpContext): Observable<Object> {
     return this.http.put(
       environment.API_ENDPOINT + 'proposals/' + proposal.id,
-      proposal
+      proposal,
+      { context }
     );
   }
 
-  createProposal(proposal: Proposal): Observable<any> {
+  createProposal(proposal: Proposal, context?: HttpContext): Observable<any> {
     
-    return this.http.post(environment.API_ENDPOINT + 'proposals/', proposal);
+    return this.http.post(environment.API_ENDPOINT + 'proposals/', proposal, { context });
   }
 
   // duplicateProposal(newProposal: Proposal): Observable<any>{

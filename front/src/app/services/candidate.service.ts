@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -35,15 +35,16 @@ export class CandidateService {
     );
   }
 
-  deleteCandidate(id: number): Observable<Candidate> {
+  deleteCandidate(id: number, context?: HttpContext): Observable<Candidate> {
     return this.http.delete<Candidate>(
-      environment.API_ENDPOINT + 'candidates/' + id
+      environment.API_ENDPOINT + 'candidates/' + id,
+      { context }
     );
   }
 
-  newProposalCandidate(id: number): Observable<Candidate> {
+  newProposalCandidate(id: number, context?: HttpContext): Observable<Candidate> {
     return this.http
-      .get<Candidate>(environment.API_ENDPOINT + 'candidates/' + id)
+      .get<Candidate>(environment.API_ENDPOINT + 'candidates/' + id, { context })
       .pipe(
         map((data: Candidate) => {
           console.log(data);
@@ -59,8 +60,8 @@ export class CandidateService {
     );
   }
 
-  getCandidateById(candidateId: number): Observable<Candidate>{
-    return this.http.get<Candidate>(environment.API_ENDPOINT+'candidates/'+ candidateId);
+  getCandidateById(candidateId: number, context?: HttpContext): Observable<Candidate>{
+    return this.http.get<Candidate>(environment.API_ENDPOINT+'candidates/'+ candidateId, { context });
   }
 
   createCandidate(candidate: Candidate): Observable<Object> {

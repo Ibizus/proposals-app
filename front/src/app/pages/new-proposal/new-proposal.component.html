@@ -13,16 +13,16 @@
               <p-autoComplete
                 [dropdown]="true"
                 [(ngModel)]="proposalForm.candidate"
-                [suggestions]="filteredCandidates"
+                [suggestions]="filteredCandidates()"
                 (onSelect)="onSelectedCandidate($event)"
                 (completeMethod)="searchCandidates($event)"
                 field="name"
                 name="candidate"
               ></p-autoComplete>
 
-              @if (!!selectedCandidate) {
+              @if (selectedCandidate(); as candidate) {
                 <div class="mt-[22px]">
-                  <app-candidate-card [candidate]="selectedCandidate" />
+                  <app-candidate-card [candidate]="candidate" />
                 </div>
               }
             </p-accordionTab>
@@ -43,7 +43,7 @@
                   <p-autoComplete
                     [(ngModel)]="proposalForm.office"
                     [dropdown]="true"
-                    [suggestions]="filteredOffices"
+                    [suggestions]="filteredOffices()"
                     (completeMethod)="searchOffices($event)"
                     field="code"
                     name="office"
@@ -115,7 +115,7 @@
                 </div>
               </div>
             </p-accordionTab>
-            @if (selectedCandidate === null) {
+            @if (selectedCandidate() === null) {
               <p-accordionTab
                 header="{{ this.salaryHeader }}"
                 [selected]="selected"
@@ -139,7 +139,7 @@
                     <label class="text-gray-700 font-semibold">{{ 'EXTRAS' | translate }}</label>
                     <p-multiSelect
                       styleClass="extra-dropdown"
-                      [options]="extras"
+                      [options]="extras()"
                       placeholder="Select Extras"
                       optionLabel="name"
                       [filter]="true"
@@ -239,7 +239,7 @@
                     <label class="text-gray-700 font-semibold">{{ 'EXTRAS' | translate }}</label>
                     <p-multiSelect
                       styleClass="extra-dropdown"
-                      [options]="extras"
+                      [options]="extras()"
                       placeholder="Select Extras"
                       optionLabel="name"
                       [filter]="true"
@@ -351,7 +351,7 @@
                 {{ 'SALARY ESTIMATIONS' | translate }}
               </h2>
               <h2 class="text-black text-lg font-bold absolute top-2 right-0">
-                {{ 'SCR USED' | translate }}: {{ this.scrValue }}
+                {{ 'SCR USED' | translate }}: {{ scrValue() }}
               </h2>
             </div>
             <hr />
@@ -361,7 +361,7 @@
                   {{ 'MONTHLY' | translate }}
                 </h3>
                 <!-- iterate through monthly map -->
-                @for (item of monthlyList; track $index) {
+                @for (item of monthlyList(); track $index) {
                   <h3 class="text-black text-md font-semibold mt-4 text-center">
                     {{ item[0] }}:
                     <span>{{ item[1] | currency: 'EUR' }}</span>
@@ -374,7 +374,7 @@
                   {{ 'YEARLY' | translate }}
                 </h2>
                 <!-- iterate through yarly map -->
-                @for (item of yearlyList; track $index) {
+                @for (item of yearlyList(); track $index) {
                   <h3 class="text-black text-md font-semibold mt-4 text-center">
                     {{ item[0] }}:
                     <span>{{ item[1] | currency: 'EUR' }}</span>

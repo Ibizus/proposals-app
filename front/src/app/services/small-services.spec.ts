@@ -10,7 +10,7 @@ import { OfficeService } from './office.service';
 import { ParameterService } from './parameter.service';
 import { Parameter } from '../utils/types';
 import { ToastService } from './toast.service';
-import { errorToastInterceptor } from './error-toast.interceptor';
+import { callerHandlesErrors, errorToastInterceptor } from './error-toast.interceptor';
 
 const API = environment.API_ENDPOINT;
 
@@ -172,5 +172,20 @@ describe('errorToastInterceptor', () => {
         detail: 'Request failed. Please try again.',
       }),
     );
+  });
+
+  it('leaves the error toast to callers that handle the error themselves', () => {
+    let failed = false;
+    client.get('/api/test', { context: callerHandlesErrors() }).subscribe({
+      error: () => (failed = true),
+    });
+
+    http.expectOne('/api/test').flush('nope', {
+      status: 500,
+      statusText: 'Server Error',
+    });
+
+    expect(failed).toBeTrue();
+    expect(messages.add).not.toHaveBeenCalled();
   });
 });

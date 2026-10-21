@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Taxes } from '../utils/types';
 import { Observable, map } from 'rxjs';
 
@@ -93,7 +93,7 @@ export class TaxesService {
     return this.http.put<Taxes>(TAXESURL + tax.id, tax);
   }
 
-  deleteTaxes(id: number): Observable<Taxes> {
-    return this.http.delete<Taxes>(TAXESURL + id);
+  deleteTaxes(id: number, context?: HttpContext): Observable<Taxes> {
+    return this.http.delete<Taxes>(TAXESURL + id, { context });
   }
 }

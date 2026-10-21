@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Extra } from '../utils/types';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -42,8 +42,8 @@ export class ExtrasService {
     );
   }
 
-  deleteExtra(extraId: any): Observable<any> {
-    return this.http.delete<Extra>(EXTRASURL + 'extratemplates/' + extraId);
+  deleteExtra(extraId: any, context?: HttpContext): Observable<any> {
+    return this.http.delete<Extra>(EXTRASURL + 'extratemplates/' + extraId, { context });
   }
 
   createExtra(extra: Extra): Observable<Object> {

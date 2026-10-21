@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy proposal-form state is untyped */
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavigationStart, Router } from '@angular/router';
 import { Candidate, Extra, Office, Taxes, Status, EmptyProposalForm } from '../../utils/types';
@@ -25,6 +25,7 @@ import { OfficeService } from '../../services/office.service';
 import { ExtrasService } from '../../services/extras.service';
 import { ToastService } from '../../services/toast.service';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 @Component({
   selector: 'app-new-proposal',
   standalone: true,
@@ -57,15 +58,15 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   date: Date | undefined;
   minDate: Date = new Date();
   offices: Office[] = [];
-  extras: Extra[] = [];
+  extras = signal<Extra[]>([]);
   parameters: any[] = [];
   selectedExtras: any[] = [];
   searchTextOffices = '';
   searchTextCandidates = '';
-  filteredOffices: Office[] = [];
-  filteredCandidates: Candidate[] = [];
+  filteredOffices = signal<Office[]>([]);
+  filteredCandidates = signal<Candidate[]>([]);
   candidate!: Candidate | null;
-  selectedCandidate!: Candidate | null;
+  selectedCandidate = signal<Candidate | null>(null);
   taxes!: Taxes[];
   contractLevels = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
   yearlyGross!: number;
@@ -79,10 +80,10 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   scr!: number;
   ss!: number;
   irs!: number;
-  monthlySalaryCalculations = new Map<string, number>();
-  yearlySalaryCalculations = new Map<string, number>();
-  monthlyList!: [string, number][];
-  yearlyList!: [string, number][];
+  monthlySalaryCalculations = signal(new Map<string, number>());
+  yearlySalaryCalculations = signal(new Map<string, number>());
+  monthlyList = computed(() => Array.from(this.monthlySalaryCalculations()));
+  yearlyList = computed(() => Array.from(this.yearlySalaryCalculations()));
   temporalProposal!: any;
   candidateHeaderTemplate = '';
   proposalHeaderTemplate = '';
@@ -90,7 +91,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   candidateHeader = this.candidateHeaderTemplate;
   proposalHeader = this.proposalHeaderTemplate;
   salaryHeader = this.salaryHeaderTemplate;
-  scrValue!: number;
+  scrValue = signal<number | undefined>(undefined);
 
   subscription!: Subscription;
 
@@ -163,11 +164,11 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     // Fetch extras into this.extras mapped by the method mapJsonToExtra
     this.extrasService.getExtras(0, 100).subscribe({
       next: (data) => {
-        this.extras = data.extras.map(this.mapJsonToExtra);
+        const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
 
         // If it's a new proposal, add the default extras to it
         if (this.selectedExtras.length === 0) {
-          this.extras.forEach((ex) => {
+          extras.forEach((ex) => {
             if (ex.isDefault) {
               this.selectedExtras.push(ex);
             }
@@ -176,11 +177,12 @@ export class NewProposalComponent implements OnInit, OnDestroy {
 
         // Find matching extras and update the selectedExtras.
         this.selectedExtras.forEach((ex) => {
-          const matchingExtraIndex = this.extras.findIndex((extra) => extra.name === ex.name);
+          const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
           if (matchingExtraIndex !== -1) {
-            this.extras[matchingExtraIndex] = ex;
+            extras[matchingExtraIndex] = ex;
           }
         });
+        this.extras.set(extras);
       },
       error: (error) => {
         console.error('Error while fetching extras:', error);
@@ -213,7 +215,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     // Get current candidate
     this.candidateService.currentCandidate.subscribe((candidate) => {
       console.log(candidate);
-      this.selectedCandidate = candidate;
+      this.selectedCandidate.set(candidate);
     });
 
     // Get current proposal from service and set it in temporalProposal
@@ -257,7 +259,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       this.proposalForm.startDate = new Date(this.temporalProposal.startDate);
       this.proposalForm.dueDate = new Date(this.temporalProposal.dueDate);
 
-      this.selectedCandidate = this.temporalProposal.candidate;
+      this.selectedCandidate.set(this.temporalProposal.candidate);
 
       const extras: any[] = this.proposalForm.salary.extras.map((e: any) => mapInputToOutput(e));
       this.selectedExtras = extras;
@@ -265,8 +267,8 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       this.proposalForm = EmptyProposalForm();
     }
 
-    if (this.selectedCandidate) {
-      this.proposalForm.candidate = this.selectedCandidate;
+    if (this.selectedCandidate()) {
+      this.proposalForm.candidate = this.selectedCandidate();
     }
   }
 
@@ -286,7 +288,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
 
   clearFormFields() {
     this.candidateService.changeCandidate(null);
-    this.selectedCandidate = null;
+    this.selectedCandidate.set(null);
     this.candidate = null;
     this.proposalForm = EmptyProposalForm();
   }
@@ -300,7 +302,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     this.salaryHeader =
       this.salaryHeaderTemplate +
       ': ' +
-      this.formatCurrency(this.yearlySalaryCalculations.get('Estimated Net Salary'));
+      this.formatCurrency(this.yearlySalaryCalculations().get('Estimated Net Salary'));
   }
 
   mapJsonToExtra(json: any): Extra {
@@ -335,8 +337,6 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   calculateAll() {
-    this.monthlySalaryCalculations.clear();
-    this.yearlySalaryCalculations.clear();
     this.proposalForm.salary.extras = this.selectedExtras;
     let irs, ss;
     if (this.ss) {
@@ -346,11 +346,9 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       irs = this.irs;
     }
     this.proposalService.salaryCalculations(this.proposalForm, irs, ss).subscribe((result) => {
-      this.monthlyList = Array.from(result.get('monthly') ?? new Map());
-      this.yearlyList = Array.from(result.get('yearly') ?? new Map());
-      this.monthlySalaryCalculations = result.get('monthly') ?? new Map();
-      this.yearlySalaryCalculations = result.get('yearly') ?? new Map();
-      this.scrValue = Number(this.proposalService.getScrValue());
+      this.monthlySalaryCalculations.set(result.get('monthly') ?? new Map());
+      this.yearlySalaryCalculations.set(result.get('yearly') ?? new Map());
+      this.scrValue.set(Number(this.proposalService.getScrValue()));
     });
   }
 
@@ -382,8 +380,8 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     }
 
     // Add selectedCandidate if not null
-    if (this.selectedCandidate != null) {
-      this.proposalForm.candidate = this.selectedCandidate;
+    if (this.selectedCandidate() != null) {
+      this.proposalForm.candidate = this.selectedCandidate();
     }
 
     // If temporalProposal is not null, it means that we are editing an existing proposal,
@@ -403,16 +401,22 @@ export class NewProposalComponent implements OnInit, OnDestroy {
         statusList.push(status);
         console.log(statusList);
       }
-      this.proposalService.modifyProposal(this.proposalForm).subscribe({
+      this.proposalService.modifyProposal(this.proposalForm, callerHandlesErrors()).subscribe({
         next: () => {
           this.toastService.success(
-            'The proposal for ' + this.selectedCandidate?.name + ' has been modified successfully!',
+            'The proposal for ' +
+              this.selectedCandidate()?.name +
+              ' has been modified successfully!',
           );
           sleep(1000).then(() => {
             this.router.navigate(['/proposals']);
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error(
+            "The proposal couldn't be modified, please check the form for errors or missing fields!",
+          );
+        },
       });
     } else {
       const status: Status = {
@@ -425,16 +429,22 @@ export class NewProposalComponent implements OnInit, OnDestroy {
         modifiedBy: '',
       };
       this.proposalForm.statuses[0] = status;
-      this.proposalService.createProposal(this.proposalForm).subscribe({
+      this.proposalService.createProposal(this.proposalForm, callerHandlesErrors()).subscribe({
         next: () => {
           this.toastService.success(
-            'The proposal for ' + this.selectedCandidate?.name + ' has been created successfully!',
+            'The proposal for ' +
+              this.selectedCandidate()?.name +
+              ' has been created successfully!',
           );
           sleep(1000).then(() => {
             this.router.navigate(['/proposals']);
           });
         },
-        error: () => undefined,
+        error: () => {
+          this.toastService.error(
+            "The proposal couldn't be created, please check the form for errors or missing fields!",
+          );
+        },
       });
     }
     this.proposalForm = EmptyProposalForm();
@@ -442,13 +452,13 @@ export class NewProposalComponent implements OnInit, OnDestroy {
 
   searchCandidates(event: any) {
     this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
-      this.filteredCandidates = candidates.candidates;
+      this.filteredCandidates.set(candidates.candidates);
     });
   }
 
   searchOffices(event: any) {
     this.officeService.getOffices(event).subscribe((offices) => {
-      this.filteredOffices = offices;
+      this.filteredOffices.set(offices);
     });
   }
 
@@ -457,7 +467,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   onSelectedCandidate($event: AutoCompleteSelectEvent) {
-    this.selectedCandidate = $event.value;
+    this.selectedCandidate.set($event.value);
     this.calculateAll();
     this.updateHeaders();
   }
