@@ -67,4 +67,14 @@ class CandidateRepositoryTest {
     assertThat(search("w-2").getContent()).extracting(Candidate::getName).containsExactly("Bob");
     assertThat(search("nobody").getContent()).isEmpty();
   }
+
+  @Test
+  void persistenceDoesNotEnforceRequestValidationConstraints() {
+    Candidate candidate = candidate("", "Doe", "ID-400", "not-an-email", "W-4");
+    candidate.setMaritalStatus(null);
+
+    Candidate saved = candidateRepository.saveAndFlush(candidate);
+
+    assertThat(candidateRepository.findById(saved.getId())).isPresent();
+  }
 }
