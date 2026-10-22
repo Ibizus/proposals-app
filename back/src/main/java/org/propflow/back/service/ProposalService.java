@@ -80,7 +80,6 @@ public class ProposalService {
     response.put("proposals", pageAll.getContent().stream()
         .map(proposalMapper::toDTO)
         .collect(Collectors.toList()));
-    System.out.println("Returning proposal map: " + response.get("proposals"));
     response.put("currentPage", pageAll.getNumber());
     response.put("totalItems", pageAll.getTotalElements());
     response.put("totalPages", pageAll.getTotalPages());
@@ -106,7 +105,6 @@ public class ProposalService {
     response.put("proposals", pageFiltered.getContent().stream()
         .map(proposalMapper::toDTO)
         .collect(Collectors.toList()));
-    System.out.println("Returning proposal map: " + response.get("proposals"));
     response.put("currentPage", pageFiltered.getNumber());
     response.put("totalItems", pageFiltered.getTotalElements());
     response.put("totalPages", pageFiltered.getTotalPages());
@@ -125,7 +123,6 @@ public class ProposalService {
         .map(proposalMapper::toDTO)
         .collect(Collectors.toList());
 
-    System.out.println("Proposals mapped into ProposalDTO List: " + resultList);
     return resultList;
   }
 
