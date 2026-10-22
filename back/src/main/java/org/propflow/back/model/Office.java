@@ -1,9 +1,10 @@
 package org.propflow.back.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
 import lombok.*;
 
 @Data
@@ -11,8 +12,8 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
-@Table(name = "office",
-      indexes = @Index(name = "ofi_name_index", columnList = "name"))
+@Table(name = "office", indexes = @Index(name = "ofi_name_index", columnList = "name"))
+@Schema(description = "A company office that owns proposals.")
 public class Office {
 
   @Id

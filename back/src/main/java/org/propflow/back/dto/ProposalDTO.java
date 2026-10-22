@@ -1,18 +1,22 @@
 package org.propflow.back.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
-
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Salary;
 import org.propflow.back.model.Status;
 
 /**
- * This DTO was created to solve a problem where fetching a proposal would have an Office object with a set of Proposals
- * and it can result in an infinite loop. So ProposalDTO has an OfficeDTO property instead of an Office, and the 
- * OfficeDTO has a set of the id's of the proposals it has, so this should solve the infinite loop problem
+ * This DTO was created to solve a problem where fetching a proposal would have an Office object
+ * with a set of Proposals and it can result in an infinite loop. So ProposalDTO has an OfficeDTO
+ * property instead of an Office, and the OfficeDTO has a set of the id's of the proposals it has,
+ * so this should solve the infinite loop problem
  */
+@Schema(
+    description =
+        "Proposal payload returned by the API; the office is reduced to its identifiers to avoid reference cycles.")
 public class ProposalDTO {
   private long id;
   private String description;
@@ -21,13 +25,27 @@ public class ProposalDTO {
   private Boolean indefinite;
   private LocalDate startDate;
   private LocalDate dueDate;
+
+  @Schema(description = "Not populated; the current status is the most recent entry in statuses.")
   private Integer status;
+
+  @Schema(
+      description = "Link to further details about the proposal.",
+      example = "https://example.com/proposal-details")
   private String knowMore;
+
+  @Schema(description = "Office the proposal belongs to.")
   private OfficeDTO office;
+
   private Salary salary;
   private Candidate candidate;
+
+  @Schema(description = "Status history of the proposal; the latest entry is the current status.")
   private Set<Status> statuses;
+
+  @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")
   private String njoyn;
+
   private LocalDateTime createdAt = LocalDateTime.now();
   private String createdBy;
   private LocalDateTime modifiedAt = this.createdAt;
@@ -176,5 +194,4 @@ public class ProposalDTO {
   public void setStatuses(Set<Status> statuses) {
     this.statuses = statuses;
   }
-
 }

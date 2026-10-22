@@ -23,3 +23,11 @@ Run `./dev.sh` from the repository root. It starts MySQL and jsReport with Docke
 ## Backend tests
 
 Run `./mvnw test` from `back/`. The tests need no MySQL, SMTP or jsReport: `back/src/test/resources/application.properties` points them at an in-memory H2 database and sets `app.seed-demo-data=false` and `app.reset-pdf-folder=false` so no startup runner touches data or files.
+
+## API documentation and observability
+
+The backend exposes:
+
+- **Swagger UI** at `/swagger-ui.html` (which redirects to `/swagger-ui/index.html`) and the OpenAPI document at `/v3/api-docs`. API info, controller tags, operation summaries and schema descriptions are provided by springdoc-openapi.
+- **Actuator** endpoints under `/actuator`: `health`, `info`, `metrics` and `prometheus` are exposed; the sensitive endpoints stay closed.
+- **Structured JSON logs**: activate the `prod` Spring profile (`SPRING_PROFILES_ACTIVE=prod`) to switch the console output from readable logs to structured JSON via the Logstash encoder. The default and `dev` profiles keep readable console logs.

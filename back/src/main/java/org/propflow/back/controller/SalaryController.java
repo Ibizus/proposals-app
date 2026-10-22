@@ -1,7 +1,11 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Salary;
 import org.propflow.back.service.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,44 +22,60 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/salaries")
+@Tag(name = "salaries", description = "Proposal salaries")
 public class SalaryController {
 
-    @Autowired
-    private SalaryService salaryService;
+  @Autowired private SalaryService salaryService;
 
-    @GetMapping({"", "/"})
-    public List<Salary> all() {
-        return salaryService.all();
-    }
+  @Operation(summary = "List all salaries")
+  @GetMapping({"", "/"})
+  public List<Salary> all() {
+    return salaryService.all();
+  }
 
-    @GetMapping( "/{id}")
-    public Salary one(@PathVariable("id") Long id) {
-        return salaryService.one(id);
-    }
+  @Operation(summary = "Get a salary by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Salary found"),
+    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+  })
+  @GetMapping("/{id}")
+  public Salary one(@PathVariable("id") Long id) {
+    return salaryService.one(id);
+  }
 
-    @PostMapping({"","/"})
-    public Salary newSalary(@RequestBody Salary salary) {
-        log.info("Creating new salary = " + salary);
-        return this.salaryService.save(salary);
-    }
+  @Operation(summary = "Create a salary")
+  @ApiResponse(responseCode = "200", description = "Salary created")
+  @PostMapping({"", "/"})
+  public Salary newSalary(@RequestBody Salary salary) {
+    log.info("Creating new salary = " + salary);
+    return this.salaryService.save(salary);
+  }
 
-    @PutMapping("/{id}")
-    public Salary replaceSalary(@PathVariable("id") Long id, @RequestBody Salary salary) {
-        log.info("Updated salary with id = " + id + "\n Salary = " + salary);
-        return this.salaryService.replace(id, salary);
-    }
+  @Operation(summary = "Replace a salary")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Salary replaced"),
+    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+  })
+  @PutMapping("/{id}")
+  public Salary replaceSalary(@PathVariable("id") Long id, @RequestBody Salary salary) {
+    log.info("Updated salary with id = " + id + "\n Salary = " + salary);
+    return this.salaryService.replace(id, salary);
+  }
 
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}")
-    public void deleteSalary(@PathVariable("id") Long id) {
-        log.info("Deleting salary with id = " + id);
-        this.salaryService.delete(id);
-    }
+  @Operation(summary = "Delete a salary")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Salary deleted"),
+    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+  })
+  @ResponseBody
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{id}")
+  public void deleteSalary(@PathVariable("id") Long id) {
+    log.info("Deleting salary with id = " + id);
+    this.salaryService.delete(id);
+  }
 }
