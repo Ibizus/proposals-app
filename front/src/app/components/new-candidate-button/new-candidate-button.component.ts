@@ -35,7 +35,7 @@ import { forkJoin } from 'rxjs';
           [label]="newCandidateString"
           pButton
           icon="pi pi-plus"
-          class="bg-[#0056D2] text-white px-4 p-1 h-14 rounded-full absolute top-0 right-0"
+          class="bg-[#0056D2] text-white px-4 p-1 h-14 rounded-full md:absolute md:top-0 md:right-0"
           (click)="newCandidate()"
           [label]="newCandidateString"
         ></button>
