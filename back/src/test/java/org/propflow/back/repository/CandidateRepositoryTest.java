@@ -34,7 +34,8 @@ class CandidateRepositoryTest {
         0,
         0,
         new HashSet<>(),
-        new HashSet<>());
+        new HashSet<>(),
+        null);
   }
 
   @BeforeEach

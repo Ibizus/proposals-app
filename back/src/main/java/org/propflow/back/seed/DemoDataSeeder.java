@@ -20,6 +20,7 @@ import org.propflow.back.model.Extra;
 import org.propflow.back.model.ExtraTemplate;
 import org.propflow.back.model.Office;
 import org.propflow.back.model.Parameter;
+import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
 import org.propflow.back.model.Salary;
 import org.propflow.back.model.Status;
@@ -29,6 +30,7 @@ import org.propflow.back.repository.ExtraRepository;
 import org.propflow.back.repository.ExtraTemplateRepository;
 import org.propflow.back.repository.OfficeRepository;
 import org.propflow.back.repository.ParameterRepository;
+import org.propflow.back.repository.PositionRepository;
 import org.propflow.back.repository.ProposalRepository;
 import org.propflow.back.repository.StatusRepository;
 import org.propflow.back.repository.TaxesRepository;
@@ -51,11 +53,13 @@ import org.springframework.transaction.annotation.Transactional;
 @ConditionalOnProperty(name = "app.seed-demo-data", havingValue = "true")
 public class DemoDataSeeder implements CommandLineRunner {
 
-  static final int PROPOSAL_COUNT = 30;
+  static final int POSITION_COUNT = 5;
+  static final int PROPOSAL_COUNT = 16;
   static final int CANDIDATE_COUNT = 24;
 
   private static final long FAKER_SEED = 20260101L;
   private static final LocalDateTime FIRST_PROPOSAL_AT = LocalDateTime.of(2026, 5, 4, 9, 0);
+  private static final LocalDateTime FIRST_POSITION_AT = FIRST_PROPOSAL_AT.minusDays(10);
 
   private static final String[][] OFFICES = {
     {"Lisbon Oriente", "ORI-LIS"},
@@ -65,28 +69,39 @@ public class DemoDataSeeder implements CommandLineRunner {
     {"Madrid", "ESP-MAD"},
     {"Munich", "DEU-MUC"}
   };
-  private static final String[] ROLES = {
-    "Java Backend Developer",
-    "Angular Frontend Developer",
-    "Full Stack Developer",
-    "DevOps Engineer",
-    "QA Automation Engineer",
-    "Data Engineer",
-    "Scrum Master",
-    "Business Analyst",
-    "UX/UI Designer",
-    "Cloud Architect",
-    "Android Developer",
-    "Site Reliability Engineer"
+  private static final String[][] POSITIONS = {
+    {
+      "Java Backend Developer",
+      "Design and maintain the backend services that power the platform.",
+      "NJ-POS-01",
+      "https://example.com/positions/java-backend"
+    },
+    {
+      "Angular Frontend Developer",
+      "Build and maintain the Angular frontend used by recruiters.",
+      "NJ-POS-02",
+      "https://example.com/positions/angular-frontend"
+    },
+    {
+      "Full Stack Developer",
+      "Work across backend and frontend to ship end-to-end features.",
+      "NJ-POS-03",
+      "https://example.com/positions/full-stack"
+    },
+    {
+      "DevOps Engineer",
+      "Own the CI/CD pipeline and the cloud infrastructure.",
+      "NJ-POS-04",
+      "https://example.com/positions/devops"
+    },
+    {
+      "QA Automation Engineer",
+      "Automate the test suite and keep the quality gates green.",
+      "NJ-POS-05",
+      "https://example.com/positions/qa-automation"
+    }
   };
   private static final String[] CONTRACT_LEVELS = {"L1", "L2", "L3", "L4", "L5", "L6", "L7"};
-  private static final String[] WORK_MODELS = {
-    "Hybrid: 2 days per week on site.",
-    "Hybrid: 3 days per week on site.",
-    "Fully remote, with a monthly team day at the office.",
-    "On site, flexible working hours.",
-    "Remote first, occasional travel to the client (up to 10%)."
-  };
 
   // Status codes as shown in the frontend: 0 Draft, 1 Confirmed, 2 Sent, 3 Declined,
   // 4 Cancelled, 5 Approved. Each history ends in the proposal's current status.
@@ -105,6 +120,7 @@ public class DemoDataSeeder implements CommandLineRunner {
   private final OfficeRepository officeRepository;
   private final CandidateRepository candidateRepository;
   private final ProposalRepository proposalRepository;
+  private final PositionRepository positionRepository;
   private final StatusRepository statusRepository;
   private final ExtraRepository extraRepository;
   private final ExtraTemplateRepository extraTemplateRepository;
@@ -115,6 +131,7 @@ public class DemoDataSeeder implements CommandLineRunner {
       OfficeRepository officeRepository,
       CandidateRepository candidateRepository,
       ProposalRepository proposalRepository,
+      PositionRepository positionRepository,
       StatusRepository statusRepository,
       ExtraRepository extraRepository,
       ExtraTemplateRepository extraTemplateRepository,
@@ -123,6 +140,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     this.officeRepository = officeRepository;
     this.candidateRepository = candidateRepository;
     this.proposalRepository = proposalRepository;
+    this.positionRepository = positionRepository;
     this.statusRepository = statusRepository;
     this.extraRepository = extraRepository;
     this.extraTemplateRepository = extraTemplateRepository;
@@ -142,16 +160,19 @@ public class DemoDataSeeder implements CommandLineRunner {
     seedIfEmpty("tax brackets", taxesRepository, this::seedTaxes);
     seedIfEmpty("salary parameters", parameterRepository, this::seedParameters);
     if (officeRepository.count() == 0
+        && positionRepository.count() == 0
         && candidateRepository.count() == 0
         && proposalRepository.count() == 0) {
-      seedProposals();
+      seedDemoData();
       log.info(
-          "Seeded demo data: {} offices, {} candidates, {} proposals",
+          "Seeded demo data: {} offices, {} positions, {} candidates, {} proposals",
           OFFICES.length,
+          POSITION_COUNT,
           CANDIDATE_COUNT,
           PROPOSAL_COUNT);
     } else {
-      log.info("Offices, candidates or proposals already exist; skipping demo proposals");
+      log.info(
+          "Offices, positions, candidates or proposals already exist; skipping demo proposals");
     }
   }
 
@@ -229,7 +250,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             new Parameter(0, "scr", 0.9235, null, null)));
   }
 
-  private void seedProposals() {
+  private void seedDemoData() {
     Faker faker = new Faker(Locale.ENGLISH, new Random(FAKER_SEED));
     List<ExtraTemplate> templates = extraTemplateRepository.findAll();
 
@@ -237,31 +258,56 @@ public class DemoDataSeeder implements CommandLineRunner {
     for (String[] office : OFFICES) {
       offices.add(officeRepository.save(new Office(0, office[0], office[1], new HashSet<>())));
     }
+
+    List<Position> positions = new ArrayList<>();
+    for (String[] position : POSITIONS) {
+      positions.add(positionRepository.save(fakePosition(position)));
+    }
+
     List<Candidate> candidates = new ArrayList<>();
     for (int i = 0; i < CANDIDATE_COUNT; i++) {
-      candidates.add(candidateRepository.save(fakeCandidate(faker)));
+      Position position = positions.get(i * POSITION_COUNT / CANDIDATE_COUNT);
+      candidates.add(candidateRepository.save(fakeCandidate(faker, position)));
     }
 
     LocalDateTime createdAt = FIRST_PROPOSAL_AT;
-    for (int i = 0; i < PROPOSAL_COUNT; i++) {
-      // Every candidate gets one proposal; the last few get a second one.
-      Candidate candidate =
-          i < CANDIDATE_COUNT ? candidates.get(i) : candidates.get(faker.random().nextInt(10));
+    int proposalIndex = 0;
+    for (int i = 0; i < CANDIDATE_COUNT; i++) {
+      if (!isFinalStage(i)) {
+        continue;
+      }
+      Candidate candidate = candidates.get(i);
+      Position position = candidate.getPosition();
       Office office = offices.get(faker.random().nextInt(offices.size()));
-      createdAt = createdAt.plusDays(faker.random().nextInt(1, 5)).withHour(9 + i % 8);
-      // Entities compare by id, so each one is saved before it goes into a set.
+      createdAt = createdAt.plusDays(faker.random().nextInt(1, 5)).withHour(9 + proposalIndex % 8);
       Proposal proposal =
-          proposalRepository.save(fakeProposal(faker, i, createdAt, office, candidate));
+          proposalRepository.save(
+              fakeProposal(faker, proposalIndex, createdAt, office, candidate, position));
       office.getProposals().add(proposal);
       candidate.getProposals().add(proposal);
       candidate.getNJoynSet().add(proposal.getNjoyn());
       candidate.setProposalsCount(candidate.getProposals().size());
       addStatuses(faker, proposal, createdAt);
       addExtras(faker, proposal.getSalary(), templates, proposal.getNjoyn());
+      proposalIndex++;
     }
   }
 
-  private Candidate fakeCandidate(Faker faker) {
+  /**
+   * Candidate {@code i} reaches the final stage (and gets a proposal) unless i is divisible by 3.
+   */
+  private static boolean isFinalStage(int candidateIndex) {
+    return candidateIndex % 3 != 0;
+  }
+
+  private Position fakePosition(String[] position) {
+    Position entity =
+        new Position(0, position[0], position[1], position[2], position[3], new HashSet<>());
+    stamp(entity, FIRST_POSITION_AT);
+    return entity;
+  }
+
+  private Candidate fakeCandidate(Faker faker, Position position) {
     String name = faker.name().firstName();
     String surname = faker.name().lastName();
     String email =
@@ -278,12 +324,18 @@ public class DemoDataSeeder implements CommandLineRunner {
         faker.options().option(0, 0, 1, 1, 2, 3),
         0,
         new HashSet<>(),
-        new HashSet<>());
+        new HashSet<>(),
+        position);
   }
 
   private Proposal fakeProposal(
-      Faker faker, int index, LocalDateTime createdAt, Office office, Candidate candidate) {
-    String role = faker.options().option(ROLES);
+      Faker faker,
+      int index,
+      LocalDateTime createdAt,
+      Office office,
+      Candidate candidate,
+      Position position) {
+    String role = position.getTitle();
     int level = faker.random().nextInt(CONTRACT_LEVELS.length);
     boolean indefinite = faker.random().nextInt(10) < 7;
     LocalDate startDate = createdAt.toLocalDate().plusDays(faker.random().nextInt(14, 60));
@@ -295,17 +347,23 @@ public class DemoDataSeeder implements CommandLineRunner {
     Proposal proposal =
         new Proposal(
             0,
-            "NJ-" + (260100 + index * 7 + faker.random().nextInt(7)),
-            role + " for " + faker.company().name() + " (" + faker.company().industry() + ")",
+            position.getNjoyn() + "-" + (index + 1),
+            position.getDescription()
+                + " ("
+                + candidate.getName()
+                + " "
+                + candidate.getSurname()
+                + ")",
             role,
             indefinite,
             CONTRACT_LEVELS[level],
             startDate,
             dueDate,
-            faker.options().option(WORK_MODELS),
+            position.getKnowMore(),
             office,
             salary,
             candidate,
+            position,
             new HashSet<>());
     salary.setProposal(proposal);
     stamp(proposal, createdAt);
