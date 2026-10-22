@@ -45,4 +45,26 @@ describe('CandidatesComponent', () => {
 
     expect(component.candidates()[0].position?.title).toBe('Frontend');
   });
+
+  it('reloads the filtered first page after editing from a fresh search', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const api = environment.API_ENDPOINT + 'candidates/';
+    http
+      .expectOne(api + '?page=0&size=10')
+      .flush({ candidates: [], currentPage: 0, totalItems: 40 });
+    component.paginate({ page: 3, rows: 10 });
+    http
+      .expectOne(api + '?page=3&size=10')
+      .flush({ candidates: [], currentPage: 3, totalItems: 40 });
+    spyOn(TestBed.inject(CandidateService), 'modifyCandidate').and.returnValue(of({}));
+
+    component.onInputChange({ target: { value: 'ana' } } as unknown as Event);
+    http
+      .expectOne(api + '?page=0&size=10&filter=ana')
+      .flush({ candidates: [makeCandidate()], currentPage: 0, totalItems: 1 });
+    component.goToModifyCandidate(makeCandidate());
+    component.onModifyCandidate();
+
+    http.expectOne(api + '?page=0&size=10&filter=ana');
+  });
 });

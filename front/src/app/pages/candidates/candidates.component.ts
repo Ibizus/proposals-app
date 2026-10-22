@@ -137,7 +137,9 @@ export class CandidatesComponent implements OnInit {
   onInputChange(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.filter = filterValue;
-    this.getCandidates(0, this.rows(), this.filter);
+    this.demandedPage = 0;
+    this.first.set(0);
+    this.getCandidates(this.demandedPage, this.rows(), this.filter);
   }
 
   goToCandidateDetail(candidate: Candidate): void {

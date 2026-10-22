@@ -71,7 +71,7 @@ describe('NewProposalComponent', () => {
       [21, makeCandidate({ id: 21, name: 'Marta', surname: 'Gomes' })],
       [22, makeCandidate({ id: 22, name: 'Rui', surname: 'Costa' })],
     ]);
-    spyOn(candidateService, 'getCandidateById').and.callFake((id: number) =>
+    const fetch = spyOn(candidateService, 'getCandidateById').and.callFake((id: number) =>
       of(byId.get(id) as Candidate),
     );
     component.selectedPosition = makePosition({ id: 5, candidates: [21, 22] });
@@ -82,6 +82,28 @@ describe('NewProposalComponent', () => {
     component.searchCandidates({ query: 'COST' });
     expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([22]);
     expect(filtered).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("fetches a position's candidates once and again only when the position changes", () => {
+    const http = TestBed.inject(HttpTestingController);
+    const url = (id: number) => environment.API_ENDPOINT + 'candidates/' + id;
+    component.selectedPosition = makePosition({ id: 5, candidates: [21, 22] });
+
+    component.searchCandidates({ query: 'm' });
+    component.searchCandidates({ query: 'ma' });
+    http.expectOne(url(21)).flush(makeCandidate({ id: 21, name: 'Marta' }));
+    http.expectOne(url(22)).flush('gone', { status: 404, statusText: 'Not Found' });
+    expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([21]);
+
+    component.searchCandidates({ query: 'mar' });
+    http.expectNone(url(21));
+    expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([21]);
+
+    component.selectedPosition = makePosition({ id: 6, candidates: [30] });
+    component.searchCandidates({ query: '' });
+    http.expectOne(url(30)).flush(makeCandidate({ id: 30, name: 'Rui' }));
+    expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([30]);
   });
 
   it('suggests no candidates for a position without candidates', () => {

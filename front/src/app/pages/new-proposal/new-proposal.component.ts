@@ -21,7 +21,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { TableModule } from 'primeng/table';
-import { forkJoin, Subscription } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, shareReplay, Subscription } from 'rxjs';
 import { CurrencyPipe } from '@angular/common';
 import { CandidateCardComponent } from '../../components/candidate-card/candidate-card.component';
 import { CandidateService } from '../../services/candidate.service';
@@ -76,6 +76,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   filteredCandidates = signal<Candidate[]>([]);
   positions = signal<Position[]>([]);
   selectedPosition: Position | null = null;
+  private positionCandidates?: { positionId: number; candidates$: Observable<Candidate[]> };
   candidate!: Candidate | null;
   selectedCandidate = signal<Candidate | null>(null);
   taxes!: Taxes[];
@@ -490,28 +491,39 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    const ids = this.selectedPosition.candidates ?? [];
-    if (ids.length === 0) {
-      this.filteredCandidates.set([]);
-      return;
-    }
     const query = (event.query ?? '').toLowerCase();
-    forkJoin(ids.map((id) => this.candidateService.getCandidateById(id))).subscribe(
-      (candidates) => {
-        this.filteredCandidates.set(
-          candidates.filter((candidate) =>
-            [
-              candidate.name,
-              candidate.surname,
-              candidate.idNumber,
-              candidate.phone,
-              candidate.email,
-              candidate.workerId,
-            ].some((value) => value?.toLowerCase().includes(query)),
-          ),
-        );
-      },
-    );
+    this.candidatesOf(this.selectedPosition).subscribe((candidates) => {
+      this.filteredCandidates.set(
+        candidates.filter((candidate) =>
+          [
+            candidate.name,
+            candidate.surname,
+            candidate.idNumber,
+            candidate.phone,
+            candidate.email,
+            candidate.workerId,
+          ].some((value) => value?.toLowerCase().includes(query)),
+        ),
+      );
+    });
+  }
+
+  private candidatesOf(position: Position): Observable<Candidate[]> {
+    if (this.positionCandidates?.positionId !== position.id) {
+      const ids = position.candidates ?? [];
+      this.positionCandidates = {
+        positionId: position.id,
+        candidates$: (ids.length === 0
+          ? of([])
+          : forkJoin(
+              ids.map((id) =>
+                this.candidateService.getCandidateById(id).pipe(catchError(() => of(null))),
+              ),
+            ).pipe(map((candidates) => candidates.filter((c): c is Candidate => c !== null)))
+        ).pipe(shareReplay(1)),
+      };
+    }
+    return this.positionCandidates.candidates$;
   }
 
   defaultPositionFrom(candidate: Candidate | null) {
