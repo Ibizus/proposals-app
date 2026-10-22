@@ -1,11 +1,12 @@
 package org.propflow.back.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-import org.propflow.back.serializer.ProposalSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import jakarta.persistence.*;
 import lombok.*;
+import org.propflow.back.serializer.ProposalSerializer;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,7 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "candidate", indexes = @Index(name = "idn_index", columnList = "idNumber"))
+@Schema(description = "A candidate considered for one or more proposals.")
 public class Candidate extends AuditableSuperclass {
 
   @Id
@@ -26,7 +28,15 @@ public class Candidate extends AuditableSuperclass {
   private String phone;
   private String email;
   private String workerId;
+
+  @Schema(
+      description =
+          "Marital status used to pick the tax bracket: 0 = single, 1 = married with one income, 2"
+              + " = married with two incomes.",
+      allowableValues = {"0", "1", "2"},
+      example = "0")
   private Integer maritalStatus;
+
   private Integer dependentsNumber;
   private Integer proposalsCount = 0;
 
