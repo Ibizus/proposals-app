@@ -32,7 +32,7 @@
         <section class="message">
             <p th:text="${#messages.msg('candidateGreeting', candidate)}">Dear [Recipient's Name],</p>
             <br>
-            <p th:utext="${#messages.msg('candidateIntro', role, office)}">Introduction</p>
+            <p th:text="${#messages.msg('candidateIntro', role, office)}">Introduction</p>
             <br>
             <p th:utext="${#messages.msg('candidateBody')}">Body of the email</p>
         </section>

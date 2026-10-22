@@ -52,7 +52,7 @@
         <section class="message">
             <p th:text="${#messages.msg('greeting', candidate)}">Dear [Recipient's Name],</p>
             <br>
-            <p th:utext="${#messages.msg('intro', office)}">Introduction</p>
+            <p th:text="${#messages.msg('intro', office)}">Introduction</p>
             <ol>
                 <li th:text="${#messages.msg('contractType', contract)}">Contract</li>
                 <li th:text="${#messages.msg('startDate', date)}">Start date</li>

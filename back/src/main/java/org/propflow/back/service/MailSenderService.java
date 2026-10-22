@@ -116,7 +116,7 @@ public class MailSenderService {
 
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("body", body);
-    Context thymeleafContext = new Context();
+    Context thymeleafContext = new Context(Locale.ENGLISH);
     thymeleafContext.setVariables(templateModel);
     String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
     byte[] attachment = new byte[0];

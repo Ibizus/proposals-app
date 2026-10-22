@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -42,7 +43,7 @@ class MailTemplateI18nTest {
   @CsvSource({
     "en, indefinite, Hello Ada|Contract Type: indefinite contract|Monthly Remuneration: 1000.0"
         + " gross monthly",
-    "pt, sin termo, Olá Ada|Tipo de Contrato: Contrato sin termo|Remuneração Mensal: 1000.0€"
+    "pt, sem termo, Olá Ada|Tipo de Contrato: Contrato sem termo|Remuneração Mensal: 1000.0€"
         + " ilíquidos mensais",
     "de, Unbefristeter, Hallo Ada|Vertragstyp: Unbefristeter Vertrag|Monatliche Vergütung: 1000.0"
         + " brutto pro Monat",
@@ -78,6 +79,30 @@ class MailTemplateI18nTest {
     assertThat(render("proposal.html", lang, offerModel("indefinite")))
         .contains("Hello Ada", "Contract Type: indefinite contract");
     assertThat(render("candidateOffer.html", lang, candidateModel())).contains("Dear Ada");
+  }
+
+  @Test
+  void portugueseOfferIntroNamesTheEmployer() {
+    assertThat(render("proposal.html", "pt", offerModel("sem termo")))
+        .contains(
+            "Na sequência da conversa efetuada, apresentamos de seguida as condições propostas"
+                + " para a tua admissão na PropFlowTI Portugal, SA:");
+  }
+
+  @Test
+  void userEnteredNamesAreHtmlEscaped() {
+    Map<String, Object> offer = offerModel("indefinite");
+    offer.put("office", "<a href=\"https://evil.example\">x</a>");
+    Map<String, Object> candidate = candidateModel();
+    candidate.put("role", "<b>Engineer</b>");
+    candidate.put("office", "<a href=\"https://evil.example\">x</a>");
+
+    assertThat(render("proposal.html", "en", offer))
+        .doesNotContain("<a href")
+        .contains("&lt;a href=");
+    assertThat(render("candidateOffer.html", "en", candidate))
+        .doesNotContain("<a href", "<b>Engineer</b>")
+        .contains("&lt;b&gt;Engineer&lt;/b&gt;", "<br/>");
   }
 
   private String render(String template, String lang, Map<String, Object> model) {

@@ -105,7 +105,7 @@ class MailSenderServiceTest {
     assertThat(html)
         .contains(
             "Olá Ada,",
-            "Tipo de Contrato: Contrato sin termo",
+            "Tipo de Contrato: Contrato sem termo",
             "Remuneração Mensal: 1000.0€ ilíquidos mensais (14000.0€ ilíquidos anuais)");
   }
 
