@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
 import { makeCandidate } from '../../../testing/fixtures';
 import { environment } from '../../../environments/environment';
+import { CandidateService } from '../../services/candidate.service';
 import { ProposalService } from '../../services/proposal.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -13,6 +14,7 @@ describe('NewProposalComponent', () => {
   let component: NewProposalComponent;
   let fixture: ComponentFixture<NewProposalComponent>;
   let proposalService: ProposalService;
+  let candidateService: CandidateService;
   let toast: ToastService;
 
   beforeEach(async () => {
@@ -22,6 +24,7 @@ describe('NewProposalComponent', () => {
     }).compileComponents();
 
     proposalService = TestBed.inject(ProposalService);
+    candidateService = TestBed.inject(CandidateService);
     toast = TestBed.inject(ToastService);
     fixture = TestBed.createComponent(NewProposalComponent);
     component = fixture.componentInstance;
@@ -59,6 +62,49 @@ describe('NewProposalComponent', () => {
     component.onSelectedCandidate({ value: candidate } as never);
 
     expect(component.selectedCandidate()).toEqual(candidate);
+  });
+
+  it('filters candidate suggestions to the chosen position', () => {
+    spyOn(candidateService, 'getFilteredCandidates').and.returnValue(
+      of({
+        candidates: [
+          makeCandidate({
+            id: 1,
+            position: { id: 1, title: 'Backend', description: '', njoyn: '', knowMore: '' },
+          }),
+          makeCandidate({
+            id: 2,
+            position: { id: 2, title: 'Frontend', description: '', njoyn: '', knowMore: '' },
+          }),
+        ],
+      }),
+    );
+    component.selectedPosition = {
+      id: 1,
+      title: 'Backend',
+      description: '',
+      njoyn: '',
+      knowMore: '',
+    };
+
+    component.searchCandidates({ query: 'a' });
+
+    expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([1]);
+  });
+
+  it('clears the candidate and records the chosen position', () => {
+    component.selectedPosition = {
+      id: 1,
+      title: 'Backend',
+      description: '',
+      njoyn: '',
+      knowMore: '',
+    };
+
+    component.onSelectedPosition();
+
+    expect(component.selectedCandidate()).toBeNull();
+    expect(component.proposalForm.position).toEqual(component.selectedPosition);
   });
 
   it('reports a failed creation with a specific toast', () => {

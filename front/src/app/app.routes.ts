@@ -4,6 +4,7 @@ import { ProposalsComponent } from './pages/proposals/proposals.component';
 import { NewProposalComponent } from './pages/new-proposal/new-proposal.component';
 import { DetailedProposalComponent } from './pages/detailed-proposal/detailed-proposal.component';
 import { CandidatesComponent } from './pages/candidates/candidates.component';
+import { PositionsComponent } from './pages/positions/positions.component';
 import { TaxesComponent } from './pages/taxes/taxes.component';
 import { ExtrasComponent } from './pages/extras/extras.component';
 import { ParametersComponent } from './pages/parameters/parameters.component';
@@ -39,6 +40,11 @@ export const routes: Routes = [
     path: 'candidates',
     component: CandidatesComponent,
     title: 'Candidates | PropFlow',
+  },
+  {
+    path: 'positions',
+    component: PositionsComponent,
+    title: 'Positions | PropFlow',
   },
   {
     path: 'taxes',

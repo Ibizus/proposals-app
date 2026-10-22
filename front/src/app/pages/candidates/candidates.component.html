@@ -31,6 +31,11 @@
         <th pSortableColumn="email" class="header-cell" i18n>
           <div class="header-content">{{ 'EMAIL' | translate }} <p-sortIcon field="email" /></div>
         </th>
+        <th pSortableColumn="position.title" class="header-cell" i18n>
+          <div class="header-content">
+            {{ 'POSITION' | translate }} <p-sortIcon field="position.title" />
+          </div>
+        </th>
         <th pSortableColumn="proposalsCount" class="header-cell" i18n>
           <div class="header-content">
             {{ 'COUNT' | translate }} <p-sortIcon field="proposalsCount" />
@@ -61,6 +66,7 @@
         <td>{{ rowData.surname }}</td>
         <td>{{ rowData.phone }}</td>
         <td>{{ rowData.email }}</td>
+        <td>{{ rowData.position?.title }}</td>
         <td>
           <button
             pButton
@@ -326,6 +332,21 @@
         <small>
           {{ 'NUMBER OF DEPENDENTS FIELD INFORMATION' | translate }}
         </small>
+      </div>
+
+      <!-- Position -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{ 'POSITION' | translate }}</label>
+        <p-dropdown
+          styleClass="dropDown"
+          [options]="positions()"
+          [(ngModel)]="candidate.position"
+          optionLabel="title"
+          placeholder=""
+          name="position"
+          [showClear]="true"
+        ></p-dropdown>
+        <small>{{ 'POSITION FIELD INFORMATION' | translate }}</small>
       </div>
 
       <button

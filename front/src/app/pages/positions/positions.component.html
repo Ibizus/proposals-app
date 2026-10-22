@@ -1,0 +1,173 @@
+<div class="mt-24 px-10">
+  <div class="relative">
+    <h1 class="font-bold text-5xl mb-5">{{ 'POSITIONS' | translate }}</h1>
+    <app-new-position-button (positionSaved)="onSavePosition()" />
+  </div>
+  <p-table
+    [value]="positions()"
+    styleClass="p-datatable-striped p-datatable-sm"
+    sortMode="multiple"
+    [scrollable]="true"
+    scrollHeight="660px"
+    [loading]="isLoading()"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="title" class="header-cell">
+          <div class="header-content">{{ 'TITLE' | translate }} <p-sortIcon field="title" /></div>
+        </th>
+        <th pSortableColumn="description" class="header-cell">
+          <div class="header-content">
+            {{ 'DESCRIPTION' | translate }} <p-sortIcon field="description" />
+          </div>
+        </th>
+        <th pSortableColumn="njoyn" class="header-cell">
+          <div class="header-content">{{ 'NJOYN' | translate }} <p-sortIcon field="njoyn" /></div>
+        </th>
+        <th pSortableColumn="candidates" class="header-cell">
+          <div class="header-content">
+            {{ 'CANDIDATES' | translate }} <p-sortIcon field="candidates" />
+          </div>
+        </th>
+        <th [width]="100"></th>
+      </tr>
+      <tr>
+        <div class="absolute tableGradient h-1 w-full col-span-full"></div>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData>
+      <tr>
+        <td>{{ rowData.title }}</td>
+        <td>{{ rowData.description }}</td>
+        <td>{{ rowData.njoyn }}</td>
+        <td>{{ rowData.candidates?.length ?? 0 }}</td>
+        <td>
+          <div class="flex justify-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              pTooltip="{{ 'MODIFY POSITION' | translate }}"
+              class="p-button-rounded p-button-success"
+              (click)="this.goToModifyPosition(rowData)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              pTooltip="{{ 'DELETE POSITION' | translate }}"
+              tooltipPosition="left"
+              class="p-button-rounded p-button-success"
+              (click)="this.showDeleteDialog(rowData)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="paginate($event)"
+    [first]="first()"
+    [rows]="rows()"
+    [showCurrentPageReport]="true"
+    [totalRecords]="totalRecords()"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  ></p-paginator>
+
+  <p-dialog
+    [header]="'MODIFY POSITION' | translate"
+    [(visible)]="visiblePositionModal"
+    [modal]="true"
+    [style]="{ width: '50vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    (onHide)="closePositionModal()"
+  >
+    <span class="p-text-secondary block mb-5">{{ 'MODAL NEW POSITION HELP' | translate }}</span>
+    <div class="grid grid-cols-1 gap-4 p-4">
+      <!-- Title -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2"
+          >{{ 'TITLE' | translate }}<span class="mandatory">*</span></label
+        >
+        <input type="text" [(ngModel)]="position.title" name="title" required #title="ngModel" />
+        @if (title.invalid && (title.dirty || title.touched)) {
+          <small>
+            <p class="text-red-500">{{ 'PLEASE ENTER A VALID TITLE' | translate }}</p>
+          </small>
+        } @else {
+          <small>{{ 'TITLE FIELD INFORMATION' | translate }}</small>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2"
+          >{{ 'DESCRIPTION' | translate }}<span class="mandatory">*</span></label
+        >
+        <textarea
+          rows="4"
+          pInputTextarea
+          [(ngModel)]="position.description"
+          name="description"
+          required
+          #description="ngModel"
+        ></textarea>
+        @if (description.invalid && (description.dirty || description.touched)) {
+          <small>
+            <p class="text-red-500">{{ 'PLEASE ENTER A VALID DESCRIPTION' | translate }}</p>
+          </small>
+        } @else {
+          <small>{{ 'DESCRIPTION FIELD INFORMATION' | translate }}</small>
+        }
+      </div>
+
+      <!-- nJoyn -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{ 'NJOYN' | translate }}</label>
+        <input type="text" [(ngModel)]="position.njoyn" name="njoyn" placeholder="" />
+        <small>{{ 'NJOYN FIELD INFORMATION' | translate }}</small>
+      </div>
+
+      <!-- Know more -->
+      <div class="max-w-sm">
+        <label class="block text-sm font-medium mb-2">{{ 'KNOW MORE' | translate }}</label>
+        <input type="text" [(ngModel)]="position.knowMore" name="knowMore" placeholder="" />
+        <small>{{ 'KNOW MORE FIELD INFORMATION' | translate }}</small>
+      </div>
+
+      <button
+        class="bg-[#0056D2] text-white py-2 px-4 rounded-md mx-auto block mt-6 col-span-full"
+        type="button"
+        (click)="onModifyPosition()"
+      >
+        <span>{{ 'SAVE POSITION' | translate }}</span>
+      </button>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    header="{{ 'DELETE POSITION' | translate }}"
+    [modal]="true"
+    [(visible)]="visibleDelete"
+    [style]="{ width: '25rem' }"
+    #dialog
+  >
+    <span>{{ 'ARE YOU SURE' | translate }}</span>
+    <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
+      <div class="grid-flow-col col-span-2">
+        <button class="send py-2 px-5 rounded-lg float-end" (click)="this.deletePosition()">
+          {{ 'DELETE' | translate }}
+        </button>
+        <button
+          class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+          (click)="this.closeDeleteDialog(dialog, $event)"
+        >
+          {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </p-dialog>
+  <div class="h-12"></div>
+</div>

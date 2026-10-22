@@ -2,7 +2,15 @@
 import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavigationStart, Router } from '@angular/router';
-import { Candidate, Extra, Office, Taxes, Status, EmptyProposalForm } from '../../utils/types';
+import {
+  Candidate,
+  Extra,
+  Office,
+  Position,
+  Taxes,
+  Status,
+  EmptyProposalForm,
+} from '../../utils/types';
 import { matCloseOutline } from '@ng-icons/material-icons/outline';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -17,6 +25,7 @@ import { forkJoin, Subscription } from 'rxjs';
 import { CurrencyPipe } from '@angular/common';
 import { CandidateCardComponent } from '../../components/candidate-card/candidate-card.component';
 import { CandidateService } from '../../services/candidate.service';
+import { PositionService } from '../../services/position.service';
 import { ProposalService } from '../../services/proposal.service';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
@@ -65,6 +74,8 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   searchTextCandidates = '';
   filteredOffices = signal<Office[]>([]);
   filteredCandidates = signal<Candidate[]>([]);
+  positions = signal<Position[]>([]);
+  selectedPosition: Position | null = null;
   candidate!: Candidate | null;
   selectedCandidate = signal<Candidate | null>(null);
   taxes!: Taxes[];
@@ -112,6 +123,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     private router: Router,
     private toastService: ToastService,
     private candidateService: CandidateService,
+    private positionService: PositionService,
     private proposalService: ProposalService,
     private taxesService: TaxesService,
     private officeService: OfficeService,
@@ -160,6 +172,21 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       { label: 'Cancelled', value: 4 },
       { label: 'Approved', value: 5 },
     ];
+
+    // Fetch every position for the position picker
+    this.positionService.getAllPositions().subscribe({
+      next: (positions) => {
+        this.positions.set(positions);
+        if (this.selectedPosition) {
+          const match = positions.find((position) => position.id === this.selectedPosition?.id);
+          if (match) {
+            this.selectedPosition = match;
+            this.proposalForm.position = match;
+          }
+        }
+      },
+      error: () => this.positions.set([]),
+    });
 
     // Fetch extras into this.extras mapped by the method mapJsonToExtra
     this.extrasService.getExtras(0, 100).subscribe({
@@ -260,6 +287,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       this.proposalForm.dueDate = new Date(this.temporalProposal.dueDate);
 
       this.selectedCandidate.set(this.temporalProposal.candidate);
+      this.selectedPosition = this.temporalProposal.position ?? null;
 
       const extras: any[] = this.proposalForm.salary.extras.map((e: any) => mapInputToOutput(e));
       this.selectedExtras = extras;
@@ -289,12 +317,13 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   clearFormFields() {
     this.candidateService.changeCandidate(null);
     this.selectedCandidate.set(null);
+    this.selectedPosition = null;
     this.candidate = null;
     this.proposalForm = EmptyProposalForm();
   }
 
   updateHeaders() {
-    const candidateName = this.proposalForm.candidate.name;
+    const candidateName = this.proposalForm.candidate?.name ?? '';
     const proposalRole = this.proposalForm.role;
 
     this.candidateHeader = this.candidateHeaderTemplate + ': ' + candidateName;
@@ -384,6 +413,9 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       this.proposalForm.candidate = this.selectedCandidate();
     }
 
+    // Send the chosen position with the proposal
+    this.proposalForm.position = this.selectedPosition;
+
     // If temporalProposal is not null, it means that we are editing an existing proposal,
     // and if it's null, it means that we are creating a new one.
     if (this.temporalProposal) {
@@ -452,8 +484,19 @@ export class NewProposalComponent implements OnInit, OnDestroy {
 
   searchCandidates(event: any) {
     this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
-      this.filteredCandidates.set(candidates.candidates);
+      const all = candidates.candidates as Candidate[];
+      const filtered = this.selectedPosition
+        ? all.filter((candidate) => candidate.position?.id === this.selectedPosition?.id)
+        : all;
+      this.filteredCandidates.set(filtered);
     });
+  }
+
+  onSelectedPosition() {
+    this.selectedCandidate.set(null);
+    this.proposalForm.candidate = null;
+    this.proposalForm.position = this.selectedPosition;
+    this.updateHeaders();
   }
 
   searchOffices(event: any) {

@@ -12,6 +12,7 @@ interface Proposal {
   office: Office;
   salary: Salary;
   candidate: Candidate;
+  position?: Position | null;
   statuses: Status[];
   createdAt: Date;
   createdBy: string;
@@ -35,8 +36,8 @@ interface Extra {
   id: number;
   name: string;
   amount: number;
-  ssTaxrate: number,
-  irsTaxrate: number,
+  ssTaxrate: number;
+  irsTaxrate: number;
   isPercentage: boolean;
   isSSTaxable: boolean;
   isIRSTaxable: boolean;
@@ -63,6 +64,20 @@ interface Candidate {
   dependentsNumber: number;
   nJoynSet: string[];
   proposals: number[];
+  position?: Position | null;
+}
+
+interface Position {
+  id: number;
+  title: string;
+  description: string;
+  njoyn: string;
+  knowMore: string;
+  candidates?: number[];
+  createdAt?: Date;
+  createdBy?: string;
+  modifiedAt?: Date;
+  modifiedBy?: string;
 }
 
 interface Taxes {
@@ -152,6 +167,7 @@ const EmptyProposalForm = () => {
       maritalStatus: '',
       dependentsNumber: 0,
     },
+    position: null,
     statuses: [],
     createdAt: new Date(),
     createdBy: '',
@@ -166,6 +182,7 @@ export {
   Salary,
   Extra,
   Candidate,
+  Position,
   Status,
   Taxes,
   Parameter,
