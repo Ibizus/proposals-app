@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ import org.propflow.back.dto.PositionDTO;
 import org.propflow.back.exception.EntityNotFoundException;
 import org.propflow.back.exception.NotCouplingIdException;
 import org.propflow.back.mapper.PositionMapper;
+import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Position;
 import org.propflow.back.service.PositionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +139,8 @@ class PositionControllerTest {
               saved.setId(5);
               return saved;
             });
+    when(positionMapper.toDTO(any(Position.class)))
+        .thenAnswer(invocation -> new PositionMapper().toDTO(invocation.getArgument(0)));
 
     mockMvc
         .perform(
@@ -148,6 +152,27 @@ class PositionControllerTest {
         .andExpect(jsonPath("$.id").value(5))
         .andExpect(jsonPath("$.title").value("Backend"))
         .andExpect(jsonPath("$.description").value("Build services"));
+  }
+
+  @Test
+  void replaceAcceptsFetchedPositionShapeAndReturnsDTO() throws Exception {
+    Position stored = new Position(1, "Platform", "desc", null, null, new HashSet<>());
+    Candidate linked = new Candidate();
+    linked.setId(7);
+    stored.getCandidates().add(linked);
+    when(positionService.replace(eq(1L), any(Position.class))).thenReturn(stored);
+    when(positionMapper.toDTO(stored)).thenReturn(new PositionMapper().toDTO(stored));
+
+    mockMvc
+        .perform(
+            put("/v1/api/positions/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"id\":1,\"title\":\"Platform\",\"description\":\"desc\",\"candidates\":[1,2]}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.title").value("Platform"))
+        .andExpect(jsonPath("$.candidates.length()").value(1))
+        .andExpect(jsonPath("$.candidates[0]").value(7));
   }
 
   @Test

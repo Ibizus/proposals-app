@@ -22,6 +22,7 @@ import org.propflow.back.dto.PositionDTO;
 import org.propflow.back.exception.EntityNotFoundException;
 import org.propflow.back.exception.NotCouplingIdException;
 import org.propflow.back.mapper.PositionMapper;
+import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Position;
 import org.propflow.back.repository.PositionRepository;
 import org.springframework.data.domain.PageImpl;
@@ -107,12 +108,19 @@ class PositionServiceTest {
   }
 
   @Test
-  void replaceSavesWhenIdsMatch() {
-    Position updated = position(1, "Backend");
-    when(positionRepository.findById(1L)).thenReturn(Optional.of(position(1, "Backend")));
-    when(positionRepository.save(updated)).thenReturn(updated);
+  void replaceUpdatesExistingPositionAndKeepsItsCandidates() {
+    Position existing = position(1, "Backend");
+    Candidate linked = new Candidate();
+    linked.setId(7);
+    existing.getCandidates().add(linked);
+    when(positionRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(positionRepository.save(existing)).thenReturn(existing);
 
-    assertThat(positionService.replace(1L, updated)).isSameAs(updated);
+    Position result = positionService.replace(1L, position(1, "Platform"));
+
+    assertThat(result).isSameAs(existing);
+    assertThat(result.getTitle()).isEqualTo("Platform");
+    assertThat(result.getCandidates()).containsExactly(linked);
   }
 
   @Test

@@ -74,9 +74,9 @@ public class PositionController {
     @ApiResponse(responseCode = "400", description = "Invalid position payload")
   })
   @PostMapping({"", "/"})
-  public Position newPosition(@Valid @RequestBody Position position) {
+  public PositionDTO newPosition(@Valid @RequestBody Position position) {
     log.info("Creating new position = " + position);
-    return positionService.save(position);
+    return positionMapper.toDTO(positionService.save(position));
   }
 
   @Operation(summary = "Replace a position")
@@ -87,10 +87,10 @@ public class PositionController {
     @ApiResponse(responseCode = "409", description = "Path id does not match position id")
   })
   @PutMapping("/{id}")
-  public Position replacePosition(
+  public PositionDTO replacePosition(
       @PathVariable("id") Long id, @Valid @RequestBody Position position) {
     log.info("Updated position with id = " + id + "\n Position = " + position);
-    return positionService.replace(id, position);
+    return positionMapper.toDTO(positionService.replace(id, position));
   }
 
   @Operation(summary = "Delete a position")

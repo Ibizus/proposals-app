@@ -1,6 +1,7 @@
 package org.propflow.back.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -43,6 +44,7 @@ public class Position extends AuditableSuperclass {
   private String knowMore;
 
   @JsonIgnoreProperties("position")
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @OneToMany(mappedBy = "position")
   private Set<Candidate> candidates = new HashSet<>();
 }

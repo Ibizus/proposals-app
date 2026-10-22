@@ -60,7 +60,13 @@ public class PositionService {
         .map(
             existing -> {
               if (id.equals(position.getId())) {
-                return positionRepository.save(position);
+                existing.setTitle(position.getTitle());
+                existing.setDescription(position.getDescription());
+                existing.setNjoyn(position.getNjoyn());
+                existing.setKnowMore(position.getKnowMore());
+                existing.setModifiedAt(position.getModifiedAt());
+                existing.setModifiedBy(position.getModifiedBy());
+                return positionRepository.save(existing);
               } else {
                 throw new NotCouplingIdException(id, position.getId(), Position.class);
               }
