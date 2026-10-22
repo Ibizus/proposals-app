@@ -1,6 +1,6 @@
 package org.propflow.back.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -42,7 +42,7 @@ public class Position extends AuditableSuperclass {
   @Schema(description = "Link to further details about the position.")
   private String knowMore;
 
-  @JsonManagedReference
+  @JsonIgnoreProperties("position")
   @OneToMany(mappedBy = "position")
   private Set<Candidate> candidates = new HashSet<>();
 }

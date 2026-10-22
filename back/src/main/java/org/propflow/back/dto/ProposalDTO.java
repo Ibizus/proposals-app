@@ -1,10 +1,12 @@
 package org.propflow.back.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 import org.propflow.back.model.Candidate;
+import org.propflow.back.model.Position;
 import org.propflow.back.model.Salary;
 import org.propflow.back.model.Status;
 
@@ -34,6 +36,9 @@ public record ProposalDTO(
     @Schema(description = "Office the proposal belongs to.") OfficeDTO office,
     Salary salary,
     Candidate candidate,
+    @Schema(description = "Optional position this proposal belongs to; null for legacy proposals.")
+        @JsonIgnoreProperties("candidates")
+        Position position,
     @Schema(description = "Status history of the proposal; the latest entry is the current status.")
         Set<Status> statuses,
     @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")

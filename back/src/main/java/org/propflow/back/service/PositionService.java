@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PositionService {
@@ -67,11 +68,14 @@ public class PositionService {
         .orElseThrow(() -> new EntityNotFoundException(id, Position.class));
   }
 
+  @Transactional
   public void delete(Long id) {
     positionRepository
         .findById(id)
         .map(
             existing -> {
+              positionRepository.unlinkCandidates(existing);
+              positionRepository.unlinkProposals(existing);
               positionRepository.delete(existing);
               return existing;
             })

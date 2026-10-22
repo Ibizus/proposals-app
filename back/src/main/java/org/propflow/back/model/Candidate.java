@@ -1,6 +1,6 @@
 package org.propflow.back.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
@@ -63,7 +63,7 @@ public class Candidate extends AuditableSuperclass {
   @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL)
   private Set<Proposal> proposals = new HashSet<>();
 
-  @JsonBackReference
+  @JsonIgnoreProperties("candidates")
   @ManyToOne
   @JoinColumn(name = "position_id")
   private Position position;

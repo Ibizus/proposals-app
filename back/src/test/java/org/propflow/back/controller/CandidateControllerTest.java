@@ -1,11 +1,14 @@
 package org.propflow.back.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.propflow.back.config.SecurityConfig;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.service.CandidateService;
@@ -116,6 +120,27 @@ class CandidateControllerTest {
         .andExpect(jsonPath("$.id").value(3))
         .andExpect(jsonPath("$.name").value("Eve"))
         .andExpect(jsonPath("$.dependentsNumber").value(2));
+  }
+
+  @Test
+  void replaceRoundTripsPositionLink() throws Exception {
+    when(candidateService.replace(eq(3L), any(Candidate.class)))
+        .thenAnswer(invocation -> invocation.getArgument(1));
+
+    mockMvc
+        .perform(
+            put("/v1/api/candidates/3")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"id\":3,\"name\":\"Eve\",\"surname\":\"Adams\",\"idNumber\":\"ID-9\",\"phone\":\"600000000\",\"email\":\"eve@example.com\",\"maritalStatus\":1,\"position\":{\"id\":5,\"title\":\"Backend\"}}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.position.id").value(5))
+        .andExpect(jsonPath("$.position.title").value("Backend"))
+        .andExpect(jsonPath("$.position.candidates").doesNotExist());
+
+    ArgumentCaptor<Candidate> replaced = ArgumentCaptor.forClass(Candidate.class);
+    verify(candidateService).replace(eq(3L), replaced.capture());
+    assertThat(replaced.getValue().getPosition().getId()).isEqualTo(5);
   }
 
   @Test

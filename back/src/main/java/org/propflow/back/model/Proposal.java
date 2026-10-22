@@ -61,6 +61,7 @@ public class Proposal extends AuditableSuperclass {
   private Candidate candidate;
 
   @Schema(description = "Optional position this proposal belongs to; null for legacy proposals.")
+  @JsonIgnoreProperties("candidates")
   @ManyToOne
   @JoinColumn(name = "position_id")
   private Position position;
