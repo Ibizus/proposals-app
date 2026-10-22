@@ -1,11 +1,11 @@
 package org.propflow.back.model;
 
+import com.fasterxml.jackson.annotation.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.*;
-import jakarta.persistence.*;
 import lombok.*;
 
 @Data
@@ -15,6 +15,7 @@ import lombok.*;
 @Entity
 @Table(name = "proposal", indexes = @Index(name = "nj_index", columnList = "njoyn"))
 @JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class, property = "@id")
+@Schema(description = "A job proposal for a candidate at an office.")
 // @JsonSerialize(using = ProposalSerializer.class)
 public class Proposal extends AuditableSuperclass {
 
@@ -23,7 +24,9 @@ public class Proposal extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
+  @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")
   private String njoyn;
+
   private String description;
   private String role;
   private Boolean indefinite;
@@ -38,7 +41,7 @@ public class Proposal extends AuditableSuperclass {
   private Office office;
 
   @JsonManagedReference
-  @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+  @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "salary_id")
   private Salary salary;
 

@@ -1,7 +1,11 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Extra;
 import org.propflow.back.service.ExtraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,49 +23,68 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/extras")
+@Tag(name = "extras", description = "Salary extras")
 public class ExtraController {
 
-    @Autowired
-    private ExtraService extraService;
+  @Autowired private ExtraService extraService;
 
-    @GetMapping({"", "/"})
-    public List<Extra> all() {
-        return this.extraService.all();
-    }
+  @Operation(summary = "List all extras")
+  @GetMapping({"", "/"})
+  public List<Extra> all() {
+    return this.extraService.all();
+  }
 
-    @GetMapping(value = {"", "/"}, params = "filter")
-    public List<Extra> filterByNameAndDescription(@RequestParam String filter) {
-        return this.extraService.findByNameAndDescription(filter);
-    }
+  @Operation(summary = "Find extras by name or description")
+  @GetMapping(
+      value = {"", "/"},
+      params = "filter")
+  public List<Extra> filterByNameAndDescription(@RequestParam String filter) {
+    return this.extraService.findByNameAndDescription(filter);
+  }
 
-    @GetMapping( "/{id}")
-    public Extra one(@PathVariable("id") Long id) {
-        return this.extraService.one(id);
-    }
+  @Operation(summary = "Get an extra by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Extra found"),
+    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+  })
+  @GetMapping("/{id}")
+  public Extra one(@PathVariable("id") Long id) {
+    return this.extraService.one(id);
+  }
 
-    @PostMapping({"","/"})
-    public Extra newExtra(@RequestBody Extra extra) {
-        log.info("Creating new extra = " + extra);
-        return this.extraService.save(extra);
-    }
+  @Operation(summary = "Create an extra")
+  @ApiResponse(responseCode = "200", description = "Extra created")
+  @PostMapping({"", "/"})
+  public Extra newExtra(@RequestBody Extra extra) {
+    log.info("Creating new extra = " + extra);
+    return this.extraService.save(extra);
+  }
 
-    @PutMapping("/{id}")
-    public Extra replaceExtra(@PathVariable("id") Long id, @RequestBody Extra extra) {
-        log.info("Updated extra with id = " + id + "\n Extra = " + extra);
-        return this.extraService.replace(id, extra);
-    }
+  @Operation(summary = "Replace an extra")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Extra replaced"),
+    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+  })
+  @PutMapping("/{id}")
+  public Extra replaceExtra(@PathVariable("id") Long id, @RequestBody Extra extra) {
+    log.info("Updated extra with id = " + id + "\n Extra = " + extra);
+    return this.extraService.replace(id, extra);
+  }
 
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}")
-    public void deleteExtra(@PathVariable("id") Long id) {
-        log.info("Deleting extra with id = " + id);
-        this.extraService.delete(id);
-    }
+  @Operation(summary = "Delete an extra")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Extra deleted"),
+    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+  })
+  @ResponseBody
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{id}")
+  public void deleteExtra(@PathVariable("id") Long id) {
+    log.info("Deleting extra with id = " + id);
+    this.extraService.delete(id);
+  }
 }
