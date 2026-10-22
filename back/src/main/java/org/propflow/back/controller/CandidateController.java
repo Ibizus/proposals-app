@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +89,7 @@ public class CandidateController {
   @Operation(summary = "Get a candidate by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Candidate found"),
-    @ApiResponse(responseCode = "500", description = "Candidate not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Candidate not found")
   })
   @GetMapping("/{id}")
   public Candidate one(@PathVariable("id") Long id) {
@@ -96,9 +97,12 @@ public class CandidateController {
   }
 
   @Operation(summary = "Create a candidate")
-  @ApiResponse(responseCode = "200", description = "Candidate created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Candidate created"),
+    @ApiResponse(responseCode = "400", description = "Invalid candidate payload")
+  })
   @PostMapping({"", "/"})
-  public Candidate newCandidate(@RequestBody Candidate candidate) {
+  public Candidate newCandidate(@Valid @RequestBody Candidate candidate) {
     log.info("Creating new candidate = " + candidate);
     return this.candidateService.save(candidate);
   }
@@ -106,10 +110,13 @@ public class CandidateController {
   @Operation(summary = "Replace a candidate")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Candidate replaced"),
-    @ApiResponse(responseCode = "500", description = "Candidate not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid candidate payload"),
+    @ApiResponse(responseCode = "404", description = "Candidate not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match candidate id")
   })
   @PutMapping("/{id}")
-  public Candidate replaceCandidate(@PathVariable("id") Long id, @RequestBody Candidate candidate) {
+  public Candidate replaceCandidate(
+      @PathVariable("id") Long id, @Valid @RequestBody Candidate candidate) {
     log.info("Updated candidate with id = " + id + "\n Candidate = " + candidate);
     return this.candidateService.replace(id, candidate);
   }
@@ -117,7 +124,7 @@ public class CandidateController {
   @Operation(summary = "Delete a candidate")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Candidate deleted"),
-    @ApiResponse(responseCode = "500", description = "Candidate not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Candidate not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

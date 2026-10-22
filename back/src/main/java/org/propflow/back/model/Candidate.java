@@ -3,6 +3,10 @@ package org.propflow.back.model;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
@@ -22,11 +26,16 @@ public class Candidate extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private String surname;
-  private String idNumber;
-  private String phone;
-  private String email;
+  @NotBlank private String name;
+
+  @NotBlank private String surname;
+
+  @NotBlank private String idNumber;
+
+  @NotBlank private String phone;
+
+  @NotBlank @Email private String email;
+
   private String workerId;
 
   @Schema(
@@ -35,9 +44,11 @@ public class Candidate extends AuditableSuperclass {
               + " = married with two incomes.",
       allowableValues = {"0", "1", "2"},
       example = "0")
+  @NotNull
   private Integer maritalStatus;
 
-  private Integer dependentsNumber;
+  @PositiveOrZero private Integer dependentsNumber;
+
   private Integer proposalsCount = 0;
 
   // Use of EAGER load strategy for this field because of its importance and

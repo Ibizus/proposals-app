@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Status;
@@ -42,7 +43,7 @@ public class StatusController {
   @Operation(summary = "Get a status by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Status found"),
-    @ApiResponse(responseCode = "500", description = "Status not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Status not found")
   })
   @GetMapping("/{id}")
   public Status one(@PathVariable("id") Long id) {
@@ -50,9 +51,12 @@ public class StatusController {
   }
 
   @Operation(summary = "Create a status")
-  @ApiResponse(responseCode = "200", description = "Status created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Status created"),
+    @ApiResponse(responseCode = "400", description = "Invalid status payload")
+  })
   @PostMapping({"", "/"})
-  public Status newStatus(@RequestBody Status extra) {
+  public Status newStatus(@Valid @RequestBody Status extra) {
     log.info("Creating new extra = " + extra);
     return this.statusService.save(extra);
   }
@@ -60,10 +64,12 @@ public class StatusController {
   @Operation(summary = "Replace a status")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Status replaced"),
-    @ApiResponse(responseCode = "500", description = "Status not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid status payload"),
+    @ApiResponse(responseCode = "404", description = "Status not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match status id")
   })
   @PutMapping("/{id}")
-  public Status replaceStatus(@PathVariable("id") Long id, @RequestBody Status extra) {
+  public Status replaceStatus(@PathVariable("id") Long id, @Valid @RequestBody Status extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.statusService.replace(id, extra);
   }
@@ -71,7 +77,7 @@ public class StatusController {
   @Operation(summary = "Delete a status")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Status deleted"),
-    @ApiResponse(responseCode = "500", description = "Status not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Status not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

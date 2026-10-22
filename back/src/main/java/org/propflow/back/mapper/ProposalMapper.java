@@ -1,46 +1,42 @@
 package org.propflow.back.mapper;
 
-import org.propflow.back.dto.ProposalDTO;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.propflow.back.dto.OfficeDTO;
-import org.propflow.back.model.Proposal;
+import org.propflow.back.dto.ProposalDTO;
 import org.propflow.back.model.Office;
+import org.propflow.back.model.Proposal;
 import org.springframework.stereotype.Component;
 
-/**
- * This class maps the Proposal model to the ProposalDTO
- */
+/** This class maps the Proposal model to the ProposalDTO. */
 @Component
 public class ProposalMapper {
 
   public ProposalDTO toDTO(Proposal proposal) {
-    ProposalDTO dto = new ProposalDTO();
-    dto.setId(proposal.getId());
-    dto.setDescription(proposal.getDescription());
-    dto.setRole(proposal.getRole());
-    dto.setDueDate(proposal.getDueDate());
-    dto.setIndefinite(proposal.getIndefinite());
-    dto.setContractLevel(proposal.getContractLevel());
-    dto.setStartDate(proposal.getStartDate());
-    dto.setStatuses(proposal.getStatuses());
-    dto.setKnowMore(proposal.getKnowMore());
-    dto.setSalary(proposal.getSalary());
-    dto.setCandidate(proposal.getCandidate());
-    dto.setNjoyn(proposal.getNjoyn());
-    dto.setCreatedAt(proposal.getCreatedAt());
-    dto.setCreatedBy(proposal.getCreatedBy());
-    dto.setModifiedAt(proposal.getModifiedAt());
-    dto.setModifiedBy(proposal.getModifiedBy());
-
     Office office = proposal.getOffice();
-    OfficeDTO officeDTO = new OfficeDTO();
-    officeDTO.setId(office.getId());
-    officeDTO.setName(office.getName());
-    officeDTO.setCode(office.getCode());
-    officeDTO.setProposals(office.getProposals().stream().map(Proposal::getId).collect(Collectors.toSet()));
+    Set<Long> proposalIds =
+        office.getProposals().stream().map(Proposal::getId).collect(Collectors.toSet());
+    OfficeDTO officeDTO =
+        new OfficeDTO(office.getId(), office.getName(), office.getCode(), proposalIds);
 
-    dto.setOffice(officeDTO);
-
-    return dto;
+    return new ProposalDTO(
+        proposal.getId(),
+        proposal.getDescription(),
+        proposal.getRole(),
+        proposal.getContractLevel(),
+        proposal.getIndefinite(),
+        proposal.getStartDate(),
+        proposal.getDueDate(),
+        null,
+        proposal.getKnowMore(),
+        officeDTO,
+        proposal.getSalary(),
+        proposal.getCandidate(),
+        proposal.getStatuses(),
+        proposal.getNjoyn(),
+        proposal.getCreatedAt(),
+        proposal.getCreatedBy(),
+        proposal.getModifiedAt(),
+        proposal.getModifiedBy());
   }
 }

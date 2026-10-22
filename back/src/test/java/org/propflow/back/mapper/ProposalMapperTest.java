@@ -40,21 +40,21 @@ class ProposalMapperTest {
 
     ProposalDTO dto = mapper.toDTO(proposal);
 
-    assertThat(dto.getId()).isEqualTo(10);
-    assertThat(dto.getNjoyn()).isEqualTo("NJ-10");
-    assertThat(dto.getDescription()).isEqualTo("Backend developer");
-    assertThat(dto.getRole()).isEqualTo("Developer");
-    assertThat(dto.getStartDate()).isEqualTo(LocalDate.of(2024, 5, 1));
-    assertThat(dto.getDueDate()).isEqualTo(LocalDate.of(2024, 4, 15));
-    assertThat(dto.getIndefinite()).isTrue();
-    assertThat(dto.getContractLevel()).isEqualTo("B2");
-    assertThat(dto.getKnowMore()).isEqualTo("More info");
-    assertThat(dto.getSalary()).isSameAs(salary);
-    assertThat(dto.getCandidate()).isSameAs(candidate);
-    assertThat(dto.getCreatedAt()).isEqualTo(proposal.getCreatedAt());
-    assertThat(dto.getOffice().getId()).isEqualTo(3);
-    assertThat(dto.getOffice().getName()).isEqualTo("Lisbon");
-    assertThat(dto.getOffice().getCode()).isEqualTo("LIS");
-    assertThat(dto.getOffice().getProposals()).containsExactlyInAnyOrder(10L, 11L);
+    assertThat(dto.id()).isEqualTo(10);
+    assertThat(dto.njoyn()).isEqualTo("NJ-10");
+    assertThat(dto.description()).isEqualTo("Backend developer");
+    assertThat(dto.role()).isEqualTo("Developer");
+    assertThat(dto.startDate()).isEqualTo(LocalDate.of(2024, 5, 1));
+    assertThat(dto.dueDate()).isEqualTo(LocalDate.of(2024, 4, 15));
+    assertThat(dto.indefinite()).isTrue();
+    assertThat(dto.contractLevel()).isEqualTo("B2");
+    assertThat(dto.knowMore()).isEqualTo("More info");
+    assertThat(dto.salary()).isSameAs(salary);
+    assertThat(dto.candidate()).isSameAs(candidate);
+    assertThat(dto.createdAt()).isEqualTo(proposal.getCreatedAt());
+    assertThat(dto.office().id()).isEqualTo(3);
+    assertThat(dto.office().name()).isEqualTo("Lisbon");
+    assertThat(dto.office().code()).isEqualTo("LIS");
+    assertThat(dto.office().proposals()).containsExactlyInAnyOrder(10L, 11L);
   }
 }

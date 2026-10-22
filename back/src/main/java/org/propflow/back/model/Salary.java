@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
@@ -22,7 +24,7 @@ public class Salary {
   @EqualsAndHashCode.Include
   private long id;
 
-  private Double base;
+  @NotNull @Positive private Double base;
 
   @JsonBackReference
   @OneToOne(mappedBy = "salary", cascade = CascadeType.PERSIST)

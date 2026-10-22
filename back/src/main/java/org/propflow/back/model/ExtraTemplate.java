@@ -2,6 +2,8 @@ package org.propflow.back.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -18,8 +20,9 @@ public class ExtraTemplate extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private Double amount;
+  @NotBlank private String name;
+
+  @NotNull private Double amount;
   private Double ssTaxrate;
   private Double irsTaxrate;
   private Boolean isPercentage;

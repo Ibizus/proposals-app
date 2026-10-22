@@ -7,6 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,9 +35,12 @@ public class Taxes extends AuditableSuperclass {
           "Upper bound (inclusive) of the monthly gross salary covered by this bracket; a salary"
               + " uses the bracket with the smallest salaryMax that is not below it.",
       example = "1000")
+  @NotNull
+  @Positive
   private Double salaryMax;
 
-  private Double socialSecurityTax;
+  @NotNull @PositiveOrZero private Double socialSecurityTax;
+
   // private Double taxPercentageIRS;
   private Double taxPercentageCompany;
   private LocalDate validFrom;
@@ -46,6 +52,7 @@ public class Taxes extends AuditableSuperclass {
               + " married with two incomes.",
       allowableValues = {"0", "1", "2"},
       example = "0")
+  @NotNull
   private Integer maritalStatus;
 
   // attributes for the IRS tax for each number of dependents

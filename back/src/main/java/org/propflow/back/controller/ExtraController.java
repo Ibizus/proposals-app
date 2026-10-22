@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Extra;
@@ -49,7 +50,7 @@ public class ExtraController {
   @Operation(summary = "Get an extra by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Extra found"),
-    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Extra not found")
   })
   @GetMapping("/{id}")
   public Extra one(@PathVariable("id") Long id) {
@@ -57,9 +58,12 @@ public class ExtraController {
   }
 
   @Operation(summary = "Create an extra")
-  @ApiResponse(responseCode = "200", description = "Extra created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Extra created"),
+    @ApiResponse(responseCode = "400", description = "Invalid extra payload")
+  })
   @PostMapping({"", "/"})
-  public Extra newExtra(@RequestBody Extra extra) {
+  public Extra newExtra(@Valid @RequestBody Extra extra) {
     log.info("Creating new extra = " + extra);
     return this.extraService.save(extra);
   }
@@ -67,10 +71,12 @@ public class ExtraController {
   @Operation(summary = "Replace an extra")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Extra replaced"),
-    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid extra payload"),
+    @ApiResponse(responseCode = "404", description = "Extra not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match extra id")
   })
   @PutMapping("/{id}")
-  public Extra replaceExtra(@PathVariable("id") Long id, @RequestBody Extra extra) {
+  public Extra replaceExtra(@PathVariable("id") Long id, @Valid @RequestBody Extra extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.extraService.replace(id, extra);
   }
@@ -78,7 +84,7 @@ public class ExtraController {
   @Operation(summary = "Delete an extra")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Extra deleted"),
-    @ApiResponse(responseCode = "500", description = "Extra not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Extra not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

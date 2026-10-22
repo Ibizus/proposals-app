@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Taxes;
@@ -68,7 +69,7 @@ public class TaxesController {
   @Operation(summary = "Get a tax bracket by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Tax bracket found"),
-    @ApiResponse(responseCode = "500", description = "Tax bracket not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found")
   })
   @GetMapping("/{id}")
   public Taxes one(@PathVariable("id") Long id) {
@@ -76,9 +77,12 @@ public class TaxesController {
   }
 
   @Operation(summary = "Create a tax bracket")
-  @ApiResponse(responseCode = "200", description = "Tax bracket created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Tax bracket created"),
+    @ApiResponse(responseCode = "400", description = "Invalid tax bracket payload")
+  })
   @PostMapping({"", "/"})
-  public Taxes newTaxes(@RequestBody Taxes extra) {
+  public Taxes newTaxes(@Valid @RequestBody Taxes extra) {
     log.info("Creating new extra = " + extra);
     return this.taxesService.save(extra);
   }
@@ -86,10 +90,12 @@ public class TaxesController {
   @Operation(summary = "Replace a tax bracket")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Tax bracket replaced"),
-    @ApiResponse(responseCode = "500", description = "Tax bracket not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid tax bracket payload"),
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match tax bracket id")
   })
   @PutMapping("/{id}")
-  public Taxes replaceTaxes(@PathVariable("id") Long id, @RequestBody Taxes extra) {
+  public Taxes replaceTaxes(@PathVariable("id") Long id, @Valid @RequestBody Taxes extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.taxesService.replace(id, extra);
   }
@@ -97,7 +103,7 @@ public class TaxesController {
   @Operation(summary = "Delete a tax bracket")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Tax bracket deleted"),
-    @ApiResponse(responseCode = "500", description = "Tax bracket not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

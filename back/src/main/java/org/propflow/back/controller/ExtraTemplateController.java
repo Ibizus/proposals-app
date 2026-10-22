@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,7 @@ public class ExtraTemplateController {
   @Operation(summary = "Get an extra template by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Extra template found"),
-    @ApiResponse(responseCode = "500", description = "Extra template not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Extra template not found")
   })
   @GetMapping("/{id}")
   public ExtraTemplate one(@PathVariable("id") Long id) {
@@ -73,9 +74,12 @@ public class ExtraTemplateController {
   }
 
   @Operation(summary = "Create an extra template")
-  @ApiResponse(responseCode = "200", description = "Extra template created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Extra template created"),
+    @ApiResponse(responseCode = "400", description = "Invalid extra template payload")
+  })
   @PostMapping({"", "/"})
-  public ExtraTemplate newExtraTemplate(@RequestBody ExtraTemplate extra) {
+  public ExtraTemplate newExtraTemplate(@Valid @RequestBody ExtraTemplate extra) {
     log.info("Creating new extra = " + extra);
     return this.extraTemplateService.save(extra);
   }
@@ -83,11 +87,13 @@ public class ExtraTemplateController {
   @Operation(summary = "Replace an extra template")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Extra template replaced"),
-    @ApiResponse(responseCode = "500", description = "Extra template not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid extra template payload"),
+    @ApiResponse(responseCode = "404", description = "Extra template not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match extra template id")
   })
   @PutMapping("/{id}")
   public ExtraTemplate replaceExtraTemplate(
-      @PathVariable("id") Long id, @RequestBody ExtraTemplate extra) {
+      @PathVariable("id") Long id, @Valid @RequestBody ExtraTemplate extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.extraTemplateService.replace(id, extra);
   }
@@ -95,7 +101,7 @@ public class ExtraTemplateController {
   @Operation(summary = "Delete an extra template")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Extra template deleted"),
-    @ApiResponse(responseCode = "500", description = "Extra template not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Extra template not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

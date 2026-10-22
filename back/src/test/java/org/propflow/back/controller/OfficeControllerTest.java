@@ -1,5 +1,6 @@
 package org.propflow.back.controller;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -82,11 +83,30 @@ class OfficeControllerTest {
   void missingOfficeIsReportedByControllerAdvice() throws Exception {
     when(officeService.one(9L)).thenThrow(new EntityNotFoundException(9L, Office.class));
 
-    // GeneralControllerAdvice maps every handled exception to 500 with the message as body.
     mockMvc
         .perform(get("/v1/api/offices/9"))
-        .andExpect(status().isInternalServerError())
-        .andExpect(content().string("Not found EntityOffice with id: 9"));
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.type").value("urn:propflow:problem:entity-not-found"))
+        .andExpect(jsonPath("$.title").value("Entity not found"))
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.detail").value("Not found EntityOffice with id: 9"));
+  }
+
+  @Test
+  void blankOfficeFieldsAreRejectedWithFieldErrors() throws Exception {
+    mockMvc
+        .perform(
+            post("/v1/api/offices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"\",\"code\":\"\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.type").value("urn:propflow:problem:validation-failed"))
+        .andExpect(jsonPath("$.title").value("Validation failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.errors.length()").value(2))
+        .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("name", "code")));
   }
 
   @Test
@@ -120,8 +140,13 @@ class OfficeControllerTest {
             put("/v1/api/offices/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"id\":2,\"name\":\"Porto\",\"code\":\"OPO\"}"))
-        .andExpect(status().isInternalServerError())
-        .andExpect(content().string("Not coupling id1 = 1 with id2 = 2 for entity Office"));
+        .andExpect(status().isConflict())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.type").value("urn:propflow:problem:coupling-id-mismatch"))
+        .andExpect(jsonPath("$.title").value("Identifier mismatch"))
+        .andExpect(jsonPath("$.status").value(409))
+        .andExpect(
+            jsonPath("$.detail").value("Not coupling id1 = 1 with id2 = 2 for entity Office"));
   }
 
   @Test
@@ -135,6 +160,6 @@ class OfficeControllerTest {
   void deleteOfMissingOfficeIsReported() throws Exception {
     doThrow(new EntityNotFoundException(3L, Office.class)).when(officeService).delete(3L);
 
-    mockMvc.perform(delete("/v1/api/offices/3")).andExpect(status().isInternalServerError());
+    mockMvc.perform(delete("/v1/api/offices/3")).andExpect(status().isNotFound());
   }
 }

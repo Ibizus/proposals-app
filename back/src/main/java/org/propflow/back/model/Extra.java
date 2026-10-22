@@ -3,6 +3,8 @@ package org.propflow.back.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -19,11 +21,15 @@ public class Extra {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
+  @NotBlank private String name;
+
   private String description;
-  private Double amount;
-  private Double ssTaxrate;
-  private Double irsTaxrate;
+
+  @NotNull private Double amount;
+
+  @NotNull private Double ssTaxrate;
+
+  @NotNull private Double irsTaxrate;
   private Boolean isPercentage;
   private Boolean isSSTaxable;
   private Boolean isIRSTaxable;

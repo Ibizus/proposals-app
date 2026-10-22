@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +97,7 @@ public class ProposalController {
   @Operation(summary = "Get a proposal by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Proposal found"),
-    @ApiResponse(responseCode = "500", description = "Proposal not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
   })
   @GetMapping("/{id}")
   public ProposalDTO one(@PathVariable("id") Long id) {
@@ -106,9 +107,12 @@ public class ProposalController {
   }
 
   @Operation(summary = "Create a proposal")
-  @ApiResponse(responseCode = "200", description = "Proposal created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Proposal created"),
+    @ApiResponse(responseCode = "400", description = "Invalid proposal payload")
+  })
   @PostMapping({"", "/"})
-  public Proposal newProposal(@RequestBody Proposal proposal) {
+  public Proposal newProposal(@Valid @RequestBody Proposal proposal) {
     // log.info("Creating new proposal = " + proposal);
     System.out.println(proposal.getNjoyn());
     return this.proposalService.save(proposal, false);
@@ -117,10 +121,12 @@ public class ProposalController {
   @Operation(summary = "Replace a proposal")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Proposal replaced"),
-    @ApiResponse(responseCode = "500", description = "Proposal not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid proposal payload"),
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
   })
   @PutMapping("/{id}")
-  public Proposal replaceProposal(@PathVariable("id") Long id, @RequestBody Proposal proposal) {
+  public Proposal replaceProposal(
+      @PathVariable("id") Long id, @Valid @RequestBody Proposal proposal) {
     // log.info("Updated proposal with id = " + id + "\n proposal = " + proposal);
     return this.proposalService.replace(id, proposal);
   }
@@ -128,7 +134,7 @@ public class ProposalController {
   @Operation(summary = "Delete a proposal")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Proposal deleted"),
-    @ApiResponse(responseCode = "500", description = "Proposal not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

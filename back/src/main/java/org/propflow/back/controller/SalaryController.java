@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Salary;
@@ -40,7 +41,7 @@ public class SalaryController {
   @Operation(summary = "Get a salary by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Salary found"),
-    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Salary not found")
   })
   @GetMapping("/{id}")
   public Salary one(@PathVariable("id") Long id) {
@@ -48,9 +49,12 @@ public class SalaryController {
   }
 
   @Operation(summary = "Create a salary")
-  @ApiResponse(responseCode = "200", description = "Salary created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Salary created"),
+    @ApiResponse(responseCode = "400", description = "Invalid salary payload")
+  })
   @PostMapping({"", "/"})
-  public Salary newSalary(@RequestBody Salary salary) {
+  public Salary newSalary(@Valid @RequestBody Salary salary) {
     log.info("Creating new salary = " + salary);
     return this.salaryService.save(salary);
   }
@@ -58,10 +62,12 @@ public class SalaryController {
   @Operation(summary = "Replace a salary")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Salary replaced"),
-    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid salary payload"),
+    @ApiResponse(responseCode = "404", description = "Salary not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match salary id")
   })
   @PutMapping("/{id}")
-  public Salary replaceSalary(@PathVariable("id") Long id, @RequestBody Salary salary) {
+  public Salary replaceSalary(@PathVariable("id") Long id, @Valid @RequestBody Salary salary) {
     log.info("Updated salary with id = " + id + "\n Salary = " + salary);
     return this.salaryService.replace(id, salary);
   }
@@ -69,7 +75,7 @@ public class SalaryController {
   @Operation(summary = "Delete a salary")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Salary deleted"),
-    @ApiResponse(responseCode = "500", description = "Salary not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Salary not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

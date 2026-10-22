@@ -2,6 +2,8 @@ package org.propflow.back.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.*;
 
@@ -18,8 +20,9 @@ public class Parameter extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private Double value;
+  @NotBlank private String name;
+
+  @NotNull private Double value;
   private LocalDate validFrom;
   private LocalDate validUntil;
 }

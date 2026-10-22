@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import org.propflow.back.model.Office;
@@ -52,7 +53,7 @@ public class OfficeController {
   @Operation(summary = "Get an office by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Office found"),
-    @ApiResponse(responseCode = "500", description = "Office not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Office not found")
   })
   @GetMapping("/{id}")
   public Office one(@PathVariable("id") Long id) {
@@ -60,26 +61,31 @@ public class OfficeController {
   }
 
   @Operation(summary = "Create an office")
-  @ApiResponse(responseCode = "200", description = "Office created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Office created"),
+    @ApiResponse(responseCode = "400", description = "Invalid office payload")
+  })
   @PostMapping({"", "/"})
-  public Office newOffice(@RequestBody Office office) {
+  public Office newOffice(@Valid @RequestBody Office office) {
     return this.officeService.save(office);
   }
 
   @Operation(summary = "Replace an office")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Office replaced"),
-    @ApiResponse(responseCode = "500", description = "Office not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid office payload"),
+    @ApiResponse(responseCode = "404", description = "Office not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match office id")
   })
   @PutMapping("/{id}")
-  public Office replaceOffice(@PathVariable("id") Long id, @RequestBody Office office) {
+  public Office replaceOffice(@PathVariable("id") Long id, @Valid @RequestBody Office office) {
     return this.officeService.replace(id, office);
   }
 
   @Operation(summary = "Delete an office")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Office deleted"),
-    @ApiResponse(responseCode = "500", description = "Office not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Office not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

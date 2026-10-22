@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Parameter;
@@ -40,7 +41,7 @@ public class ParameterController {
   @Operation(summary = "Get a parameter by id")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Parameter found"),
-    @ApiResponse(responseCode = "500", description = "Parameter not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Parameter not found")
   })
   @GetMapping("/{id}")
   public Parameter one(@PathVariable("id") Long id) {
@@ -48,9 +49,12 @@ public class ParameterController {
   }
 
   @Operation(summary = "Create a parameter")
-  @ApiResponse(responseCode = "200", description = "Parameter created")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Parameter created"),
+    @ApiResponse(responseCode = "400", description = "Invalid parameter payload")
+  })
   @PostMapping({"", "/"})
-  public Parameter newParameter(@RequestBody Parameter Parameter) {
+  public Parameter newParameter(@Valid @RequestBody Parameter Parameter) {
     log.info("Creating new Parameter = " + Parameter);
     return this.ParameterService.save(Parameter);
   }
@@ -58,10 +62,13 @@ public class ParameterController {
   @Operation(summary = "Replace a parameter")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Parameter replaced"),
-    @ApiResponse(responseCode = "500", description = "Parameter not found or internal error")
+    @ApiResponse(responseCode = "400", description = "Invalid parameter payload"),
+    @ApiResponse(responseCode = "404", description = "Parameter not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match parameter id")
   })
   @PutMapping("/{id}")
-  public Parameter replaceParameter(@PathVariable("id") Long id, @RequestBody Parameter Parameter) {
+  public Parameter replaceParameter(
+      @PathVariable("id") Long id, @Valid @RequestBody Parameter Parameter) {
     log.info("Updated Parameter with id = " + id + "\n Parameter = " + Parameter);
     return this.ParameterService.replace(id, Parameter);
   }
@@ -69,7 +76,7 @@ public class ParameterController {
   @Operation(summary = "Delete a parameter")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Parameter deleted"),
-    @ApiResponse(responseCode = "500", description = "Parameter not found or internal error")
+    @ApiResponse(responseCode = "404", description = "Parameter not found")
   })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)

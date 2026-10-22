@@ -3,6 +3,7 @@ package org.propflow.back.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
@@ -21,8 +22,9 @@ public class Office {
   @EqualsAndHashCode.Include
   private long id;
 
-  private String name;
-  private String code;
+  @NotBlank private String name;
+
+  @NotBlank private String code;
 
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL)

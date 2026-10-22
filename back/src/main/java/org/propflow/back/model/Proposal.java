@@ -3,6 +3,9 @@ package org.propflow.back.model;
 import com.fasterxml.jackson.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,8 +30,10 @@ public class Proposal extends AuditableSuperclass {
   @Schema(description = "Reference of the job posting in the nJoyn recruiting system.")
   private String njoyn;
 
-  private String description;
-  private String role;
+  @NotBlank private String description;
+
+  @NotBlank private String role;
+
   private Boolean indefinite;
   private String contractLevel;
   private LocalDate startDate;
@@ -38,15 +43,21 @@ public class Proposal extends AuditableSuperclass {
   @JsonBackReference
   @ManyToOne
   @JoinColumn(name = "office_id")
+  @NotNull
+  @Valid
   private Office office;
 
   @JsonManagedReference
   @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinColumn(name = "salary_id")
+  @NotNull
+  @Valid
   private Salary salary;
 
   @ManyToOne
   @JoinColumn(name = "candidate_id") // Name of the foreign key column in the proposal table
+  @NotNull
+  @Valid
   private Candidate candidate;
 
   @JsonManagedReference

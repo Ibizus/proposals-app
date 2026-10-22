@@ -2,6 +2,7 @@ package org.propflow.back.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Proposal;
@@ -25,7 +26,7 @@ public class MailSenderController {
 
   @Operation(summary = "Send a candidate proposal email")
   @PostMapping(value = {"candidate", "candidate/"})
-  public void sendMail(@RequestBody Proposal proposal, @RequestParam String filename) {
+  public void sendMail(@Valid @RequestBody Proposal proposal, @RequestParam String filename) {
 
     log.info("Proposal received in backend to be sent");
     this.mailSenderService.notifyCandidateByEmail(proposal, filename);
