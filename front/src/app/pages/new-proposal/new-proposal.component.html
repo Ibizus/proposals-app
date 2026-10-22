@@ -1,203 +1,344 @@
 <div class="mt-24 px-10">
-  <h1 class="text-5xl font-bold mb-5">{{'NEW PROPOSAL'|translate}}</h1>
-  <div class="w-full bg-[#F0F9FF] border border-[#CECECE] rounded-md p-8 mx-auto shadow h-[700px] overflow-y-auto">
+  <h1 class="text-5xl font-bold mb-5">{{ 'NEW PROPOSAL' | translate }}</h1>
+  <div
+    class="w-full bg-[#F0F9FF] border border-[#CECECE] rounded-md p-8 mx-auto shadow h-[700px] overflow-y-auto"
+  >
     <form (ngSubmit)="onSubmit()" class="" (change)="updateHeaders()">
       <!-- Proposal Fields -->
       <div class="relative grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="h-[560px] overflow-y-auto">
           <p-accordion [activeIndex]="0" [multiple]="false">
-            <p-accordionTab header="{{this.candidateHeader}}" [selected]="selected">
-              <span class="mb-2 font-bold">{{'CHOOSE A CANDIDATE' | translate}}</span>
-              <p-autoComplete [dropdown]="true" [(ngModel)]="proposalForm.candidate" [suggestions]="filteredCandidates"
-                (onSelect)="onSelectedCandidate($event)" (completeMethod)="searchCandidates($event)" field="name"
-                name="candidate"></p-autoComplete>
+            <p-accordionTab header="{{ this.candidateHeader }}" [selected]="selected">
+              <span class="mb-2 font-bold">{{ 'CHOOSE A CANDIDATE' | translate }}</span>
+              <p-autoComplete
+                [dropdown]="true"
+                [(ngModel)]="proposalForm.candidate"
+                [suggestions]="filteredCandidates()"
+                (onSelect)="onSelectedCandidate($event)"
+                (completeMethod)="searchCandidates($event)"
+                field="name"
+                name="candidate"
+              ></p-autoComplete>
 
-              @if(!!selectedCandidate) {
-              <div class="mt-[22px]">
-                <app-candidate-card [candidate]="selectedCandidate" />
-              </div>
+              @if (selectedCandidate(); as candidate) {
+                <div class="mt-[22px]">
+                  <app-candidate-card [candidate]="candidate" />
+                </div>
               }
             </p-accordionTab>
-            <p-accordionTab header="{{this.proposalHeader}}" [selected]="selected">
+            <p-accordionTab header="{{ this.proposalHeader }}" [selected]="selected">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                 <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'ROLE'|translate}}</label>
-                  <input type="text" pInputText [(ngModel)]="proposalForm.role" name="role"
-                    (ngModelChange)="this.updateHeaders()" />
+                  <label class="text-gray-700 font-semibold">{{ 'ROLE' | translate }}</label>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="proposalForm.role"
+                    name="role"
+                    (ngModelChange)="this.updateHeaders()"
+                  />
                 </div>
                 <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'OFFICE'|translate}}</label>
-                  <p-autoComplete [(ngModel)]="proposalForm.office" [dropdown]="true" [suggestions]="filteredOffices"
-                    (completeMethod)="searchOffices($event)" field="code" name="office" />
+                  <label class="text-gray-700 font-semibold">{{ 'OFFICE' | translate }}</label>
+                  <p-autoComplete
+                    [(ngModel)]="proposalForm.office"
+                    [dropdown]="true"
+                    [suggestions]="filteredOffices()"
+                    (completeMethod)="searchOffices($event)"
+                    field="code"
+                    name="office"
+                  />
                 </div>
                 <div class="flex flex-col col-span-full">
-                  <label class="text-gray-700 font-semibold">{{'NJOYN'|translate}}</label>
+                  <label class="text-gray-700 font-semibold">{{ 'NJOYN' | translate }}</label>
                   <input type="text" pInputText [(ngModel)]="proposalForm.njoyn" name="njoyn" />
                 </div>
                 <div class="flex flex-col col-span-full">
-                  <label class="text-gray-700 font-semibold">{{'DESCRIPTION'|translate}}</label>
-                  <textarea rows="4" pInputTextarea [(ngModel)]="proposalForm.description" class="resize-none"
-                    name="description"></textarea>
+                  <label class="text-gray-700 font-semibold">{{ 'DESCRIPTION' | translate }}</label>
+                  <textarea
+                    rows="4"
+                    pInputTextarea
+                    [(ngModel)]="proposalForm.description"
+                    class="resize-none"
+                    name="description"
+                  ></textarea>
                 </div>
                 <div class="">
-                  <label class="text-gray-700 font-semibold">{{'CONTRACT LEVEL'|translate}}</label>
-                  <p-dropdown [options]="contractLevels" [(ngModel)]="proposalForm.contractLevel"
-                    placeholder="Select a Level" name="contractLevel"></p-dropdown>
+                  <label class="text-gray-700 font-semibold">{{
+                    'CONTRACT LEVEL' | translate
+                  }}</label>
+                  <p-dropdown
+                    [options]="contractLevels"
+                    [(ngModel)]="proposalForm.contractLevel"
+                    placeholder="Select a Level"
+                    name="contractLevel"
+                  ></p-dropdown>
                 </div>
                 <div class="">
-                  <label class="text-gray-700 font-semibold">{{'CONTRACT TYPE'|translate}}</label>
-                  <p-toggleButton [(ngModel)]="proposalForm.indefinite" [onLabel]="contractTypeOnLabel"
-                    [offLabel]="contractTypeOffLabel" name="indefinite"></p-toggleButton>
+                  <label class="text-gray-700 font-semibold">{{
+                    'CONTRACT TYPE' | translate
+                  }}</label>
+                  <p-toggleButton
+                    [(ngModel)]="proposalForm.indefinite"
+                    [onLabel]="contractTypeOnLabel"
+                    [offLabel]="contractTypeOffLabel"
+                    name="indefinite"
+                  ></p-toggleButton>
                 </div>
                 <div class="col-span-full grid grid-cols-2 gap-4">
                   <div class="">
-                    <label class="text-gray-700 font-semibold">{{'START DATE'|translate}}</label>
-                    <p-calendar [(ngModel)]="proposalForm.startDate" [minDate]="minDate" dateFormat="dd/mm/yy"
-                      [showIcon]="true" name="startDate" />
+                    <label class="text-gray-700 font-semibold">{{
+                      'START DATE' | translate
+                    }}</label>
+                    <p-calendar
+                      [(ngModel)]="proposalForm.startDate"
+                      [minDate]="minDate"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      name="startDate"
+                    />
                   </div>
-                  @if(!proposalForm.indefinite){
-                  <div class="">
-                    <label class="text-gray-700 font-semibold">{{'DUE DATE'|translate}}</label>
-                    <p-calendar [(ngModel)]="proposalForm.dueDate" [minDate]="minDate" dateFormat="dd/mm/yy"
-                      [showIcon]="true" name="dueDate" />
-                  </div>
+                  @if (!proposalForm.indefinite) {
+                    <div class="">
+                      <label class="text-gray-700 font-semibold">{{
+                        'DUE DATE' | translate
+                      }}</label>
+                      <p-calendar
+                        [(ngModel)]="proposalForm.dueDate"
+                        [minDate]="minDate"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        name="dueDate"
+                      />
+                    </div>
                   }
                 </div>
               </div>
             </p-accordionTab>
-            @if (selectedCandidate == null) {
-            <p-accordionTab header="{{ this.salaryHeader }}" [selected]="selected" [disabled]=true>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'BASE SALARY'|translate}}</label>
-                  <input pInputText type="number" (input)="calculateAll()" [(ngModel)]="proposalForm.salary.base"
-                    name="base" min="0" />
+            @if (selectedCandidate() === null) {
+              <p-accordionTab
+                header="{{ this.salaryHeader }}"
+                [selected]="selected"
+                [disabled]="true"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{
+                      'BASE SALARY' | translate
+                    }}</label>
+                    <input
+                      pInputText
+                      type="number"
+                      (input)="calculateAll()"
+                      [(ngModel)]="proposalForm.salary.base"
+                      name="base"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'EXTRAS' | translate }}</label>
+                    <p-multiSelect
+                      styleClass="extra-dropdown"
+                      [options]="extras()"
+                      placeholder="Select Extras"
+                      optionLabel="name"
+                      [filter]="true"
+                      display="chip"
+                      [(ngModel)]="selectedExtras"
+                      (ngModelChange)="calculateAll()"
+                      name="selectedExtras"
+                    >
+                    </p-multiSelect>
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'SS TAX' | translate }}%</label>
+                    <input
+                      pInputText
+                      type="number"
+                      pKeyFilter="int"
+                      [(ngModel)]="ss"
+                      (input)="calculateAll()"
+                      name="ss"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'IRS TAX' | translate }}%</label>
+                    <input
+                      pInputText
+                      type="number"
+                      pKeyFilter="int"
+                      [(ngModel)]="irs"
+                      (input)="calculateAll()"
+                      name="irs"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col col-span-full">
+                    <p-table [value]="selectedExtras" [tableStyle]="{ 'min-width': '50rem' }">
+                      <ng-template pTemplate="header">
+                        <tr>
+                          <th style="width: 25%">{{ 'NAME' | translate }}</th>
+                          <th style="width: 25%">
+                            {{ 'PERCENTAGE' | translate }}/{{ 'AMOUNT' | translate }}
+                          </th>
+                          <th style="width: 25%">{{ 'VALUE' | translate }}</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-extra let-editing="editing">
+                        <tr>
+                          <td>
+                            {{ extra.name }}
+                          </td>
+                          <td>
+                            {{ extra.isPercentage ? 'Percentage' : 'Amount' }}
+                          </td>
+                          <td [pEditableColumn]="extra.amount" pEditableColumnField="amount">
+                            <p-cellEditor>
+                              <ng-template pTemplate="input">
+                                <input
+                                  pInputText
+                                  type="text"
+                                  [(ngModel)]="extra.amount"
+                                  name="amount"
+                                  (input)="calculateAll()"
+                                />
+                              </ng-template>
+                              <ng-template pTemplate="output">
+                                {{ extra.amount }}
+                              </ng-template>
+                            </p-cellEditor>
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
                 </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'EXTRAS'|translate}}</label>
-                  <p-multiSelect styleClass="extra-dropdown" [options]="extras" placeholder="Select Extras"
-                    optionLabel="name" [filter]="true" display="chip" [(ngModel)]="selectedExtras"
-                    (ngModelChange)="calculateAll()" name="selectedExtras">
-                  </p-multiSelect>
+              </p-accordionTab>
+            } @else {
+              <p-accordionTab
+                header="{{ this.salaryHeader }}"
+                [selected]="selected"
+                [disabled]="false"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{
+                      'BASE SALARY' | translate
+                    }}</label>
+                    <input
+                      pInputText
+                      type="number"
+                      (input)="calculateAll()"
+                      [(ngModel)]="proposalForm.salary.base"
+                      name="base"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'EXTRAS' | translate }}</label>
+                    <p-multiSelect
+                      styleClass="extra-dropdown"
+                      [options]="extras()"
+                      placeholder="Select Extras"
+                      optionLabel="name"
+                      [filter]="true"
+                      display="chip"
+                      [(ngModel)]="selectedExtras"
+                      (ngModelChange)="calculateAll()"
+                      name="selectedExtras"
+                    >
+                    </p-multiSelect>
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'SS TAX' | translate }}%</label>
+                    <input
+                      pInputText
+                      type="number"
+                      pKeyFilter="int"
+                      [(ngModel)]="ss"
+                      (input)="calculateAll()"
+                      name="ss"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'IRS TAX' | translate }}%</label>
+                    <input
+                      pInputText
+                      type="number"
+                      pKeyFilter="int"
+                      [(ngModel)]="irs"
+                      (input)="calculateAll()"
+                      name="irs"
+                      min="0"
+                    />
+                  </div>
+                  <div class="flex flex-col col-span-full">
+                    <p-table [value]="selectedExtras" [tableStyle]="{ 'min-width': '50rem' }">
+                      <ng-template pTemplate="header">
+                        <tr>
+                          <th style="width: 25%">{{ 'NAME' | translate }}</th>
+                          <th style="width: 25%">
+                            {{ 'PERCENTAGE' | translate }}/{{ 'AMOUNT' | translate }}
+                          </th>
+                          <th style="width: 25%">{{ 'VALUE' | translate }}</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-extra let-editing="editing">
+                        <tr>
+                          <td>
+                            {{ extra.name }}
+                          </td>
+                          <td>
+                            {{ extra.isPercentage ? 'Percentage' : 'Amount' }}
+                          </td>
+                          <td [pEditableColumn]="extra.amount" pEditableColumnField="amount">
+                            <p-cellEditor>
+                              <ng-template pTemplate="input">
+                                <input
+                                  pInputText
+                                  type="text"
+                                  [(ngModel)]="extra.amount"
+                                  name="amount"
+                                  (input)="calculateAll()"
+                                />
+                              </ng-template>
+                              <ng-template pTemplate="output">
+                                {{ extra.amount }}
+                              </ng-template>
+                            </p-cellEditor>
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
                 </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'SS TAX'|translate}}%</label>
-                  <input pInputText type="number" pKeyFilter="int" [(ngModel)]="ss" (input)="calculateAll()" name="ss"
-                    min="0" />
-                </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'IRS TAX'|translate}}%</label>
-                  <input pInputText type="number" pKeyFilter="int" [(ngModel)]="irs" (input)="calculateAll()" name="irs"
-                    min="0" />
-                </div>
-                <div class="flex flex-col col-span-full">
-                  <p-table [value]="selectedExtras" [tableStyle]="{ 'min-width': '50rem' }">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th style="width: 25%">{{'NAME'|translate}}</th>
-                        <th style="width: 25%">{{'PERCENTAGE'|translate}}/{{'AMOUNT'|translate}}</th>
-                        <th style="width: 25%">{{'VALUE'|translate}}</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-extra let-editing="editing">
-                      <tr>
-                        <td>
-                          {{ extra.name }}
-                        </td>
-                        <td>
-                          {{ extra.isPercentage ? "Percentage" : "Amount" }}
-                        </td>
-                        <td [pEditableColumn]="extra.amount" pEditableColumnField="amount">
-                          <p-cellEditor>
-                            <ng-template pTemplate="input">
-                              <input pInputText type="text" [(ngModel)]="extra.amount" name="amount"
-                                (input)="calculateAll()" />
-                            </ng-template>
-                            <ng-template pTemplate="output">
-                              {{ extra.amount }}
-                            </ng-template>
-                          </p-cellEditor>
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-              </div>
-            </p-accordionTab>
-            }@else{
-            <p-accordionTab header="{{ this.salaryHeader }}" [selected]="selected" [disabled]=false>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'BASE SALARY'|translate}}</label>
-                  <input pInputText type="number" (input)="calculateAll()" [(ngModel)]="proposalForm.salary.base"
-                    name="base" min="0" />
-                </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'EXTRAS'|translate}}</label>
-                  <p-multiSelect styleClass="extra-dropdown" [options]="extras" placeholder="Select Extras"
-                    optionLabel="name" [filter]="true" display="chip" [(ngModel)]="selectedExtras"
-                    (ngModelChange)="calculateAll()" name="selectedExtras">
-                  </p-multiSelect>
-                </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'SS TAX'|translate}}%</label>
-                  <input pInputText type="number" pKeyFilter="int" [(ngModel)]="ss" (input)="calculateAll()" name="ss"
-                    min="0" />
-                </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'IRS TAX'|translate}}%</label>
-                  <input pInputText type="number" pKeyFilter="int" [(ngModel)]="irs" (input)="calculateAll()" name="irs"
-                    min="0" />
-                </div>
-                <div class="flex flex-col col-span-full">
-                  <p-table [value]="selectedExtras" [tableStyle]="{ 'min-width': '50rem' }">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th style="width: 25%">{{'NAME'|translate}}</th>
-                        <th style="width: 25%">{{'PERCENTAGE'|translate}}/{{'AMOUNT'|translate}}</th>
-                        <th style="width: 25%">{{'VALUE'|translate}}</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-extra let-editing="editing">
-                      <tr>
-                        <td>
-                          {{ extra.name }}
-                        </td>
-                        <td>
-                          {{ extra.isPercentage ? "Percentage" : "Amount" }}
-                        </td>
-                        <td [pEditableColumn]="extra.amount" pEditableColumnField="amount">
-                          <p-cellEditor>
-                            <ng-template pTemplate="input">
-                              <input pInputText type="text" [(ngModel)]="extra.amount" name="amount"
-                                (input)="calculateAll()" />
-                            </ng-template>
-                            <ng-template pTemplate="output">
-                              {{ extra.amount }}
-                            </ng-template>
-                          </p-cellEditor>
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-              </div>
-            </p-accordionTab>
+              </p-accordionTab>
             }
-            @if(!!this.temporalProposal) {
-            <p-accordionTab header="Status" [selected]="selected">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'STATUS'|translate}}</label>
-                  <p-dropdown [options]="this.statuses" type="text" [(ngModel)]="this.latestStatusNumber" name="value" />
+            @if (!!this.temporalProposal) {
+              <p-accordionTab header="Status" [selected]="selected">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'STATUS' | translate }}</label>
+                    <p-dropdown
+                      [options]="this.statuses"
+                      type="text"
+                      [(ngModel)]="this.latestStatusNumber"
+                      name="value"
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'COMMENT' | translate }}</label>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="this.latestStatusMessage"
+                      name="latestStatusMessage"
+                    />
+                  </div>
                 </div>
-                <div class="flex flex-col">
-                  <label class="text-gray-700 font-semibold">{{'COMMENT'|translate}}</label>
-                  <input pInputText type="text" [(ngModel)]="this.latestStatusMessage" name="latestStatusMessage" />
-                </div>
-              </div>
-            </p-accordionTab>
+              </p-accordionTab>
             }
           </p-accordion>
           <div class="h-10"></div>
@@ -207,38 +348,38 @@
           <div class="w-full bg-white rounded-md p-4 h-[560px] overflow-y-auto">
             <div class="relative w-full h-12">
               <h2 class="text-black text-3xl font-bold absolute top-0 left-0">
-                {{'SALARY ESTIMATIONS'|translate}}
+                {{ 'SALARY ESTIMATIONS' | translate }}
               </h2>
               <h2 class="text-black text-lg font-bold absolute top-2 right-0">
-                {{'SCR USED'|translate}}: {{this.scrValue}}
+                {{ 'SCR USED' | translate }}: {{ scrValue() }}
               </h2>
             </div>
-            <hr>
+            <hr />
             <div class="w-full bg-white mt-1 rounded-md p-4 grid grid-cols-2 relative">
               <div>
                 <h3 class="text-black text-3xl font-bold text-center">
-                  {{'MONTHLY'|translate}}
+                  {{ 'MONTHLY' | translate }}
                 </h3>
                 <!-- iterate through monthly map -->
-                @for (item of monthlyList; track $index) {
-                <h3 class="text-black text-md font-semibold mt-4 text-center">
-                  {{item[0]}}:
-                  <span>{{ item[1] | currency : "EUR" }}</span>
-                </h3>
-                <hr class="translate-y-1">
+                @for (item of monthlyList(); track $index) {
+                  <h3 class="text-black text-md font-semibold mt-4 text-center">
+                    {{ item[0] }}:
+                    <span>{{ item[1] | currency: 'EUR' }}</span>
+                  </h3>
+                  <hr class="translate-y-1" />
                 }
               </div>
               <div>
                 <h2 class="text-black text-3xl font-bold text-center">
-                  {{'YEARLY'|translate}}
+                  {{ 'YEARLY' | translate }}
                 </h2>
                 <!-- iterate through yarly map -->
-                @for (item of yearlyList; track $index) {
-                <h3 class="text-black text-md font-semibold mt-4 text-center">
-                  {{item[0]}}:
-                  <span>{{ item[1] | currency : "EUR" }}</span>
-                </h3>
-                <hr class="translate-y-1">
+                @for (item of yearlyList(); track $index) {
+                  <h3 class="text-black text-md font-semibold mt-4 text-center">
+                    {{ item[0] }}:
+                    <span>{{ item[1] | currency: 'EUR' }}</span>
+                  </h3>
+                  <hr class="translate-y-1" />
                 }
               </div>
             </div>
@@ -246,11 +387,12 @@
         </div>
       </div>
       <!-- Submit Button -->
-      <button type="submit"
-        class="bg-[#0056D2] text-white py-2 px-4 rounded-md hover:bg-[#200A58] mx-auto block mt-8 disabled:bg-slate-300 disabled:text-slate-600 col-span-full w-96 font-bold">
-        {{'SUBMIT'|translate}}
+      <button
+        type="submit"
+        class="bg-[#0056D2] text-white py-2 px-4 rounded-md hover:bg-[#200A58] mx-auto block mt-8 disabled:bg-slate-300 disabled:text-slate-600 col-span-full w-96 font-bold"
+      >
+        {{ 'SUBMIT' | translate }}
       </button>
     </form>
   </div>
-  <p-toast position="bottom-center" key="bc"></p-toast>
 </div>

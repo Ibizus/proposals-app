@@ -1,5 +1,9 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -23,26 +27,45 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/parameters")
+@Tag(name = "parameters", description = "Salary parameters")
 public class ParameterController {
 
   @Autowired private ParameterService ParameterService;
 
+  @Operation(summary = "List all parameters")
   @GetMapping({"", "/"})
   public List<Parameter> all() {
     return this.ParameterService.all();
   }
 
+  @Operation(summary = "Get a parameter by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Parameter found"),
+    @ApiResponse(responseCode = "404", description = "Parameter not found")
+  })
   @GetMapping("/{id}")
   public Parameter one(@PathVariable("id") Long id) {
     return this.ParameterService.one(id);
   }
 
+  @Operation(summary = "Create a parameter")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Parameter created"),
+    @ApiResponse(responseCode = "400", description = "Invalid parameter payload")
+  })
   @PostMapping({"", "/"})
   public Parameter newParameter(@Valid @RequestBody Parameter Parameter) {
     log.info("Creating new Parameter = " + Parameter);
     return this.ParameterService.save(Parameter);
   }
 
+  @Operation(summary = "Replace a parameter")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Parameter replaced"),
+    @ApiResponse(responseCode = "400", description = "Invalid parameter payload"),
+    @ApiResponse(responseCode = "404", description = "Parameter not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match parameter id")
+  })
   @PutMapping("/{id}")
   public Parameter replaceParameter(
       @PathVariable("id") Long id, @Valid @RequestBody Parameter Parameter) {
@@ -50,6 +73,11 @@ public class ParameterController {
     return this.ParameterService.replace(id, Parameter);
   }
 
+  @Operation(summary = "Delete a parameter")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Parameter deleted"),
+    @ApiResponse(responseCode = "404", description = "Parameter not found")
+  })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

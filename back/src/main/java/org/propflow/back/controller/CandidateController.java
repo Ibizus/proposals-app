@@ -1,5 +1,9 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +30,19 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/candidates")
+@Tag(name = "candidates", description = "Candidate management")
 public class CandidateController {
 
   @Autowired private CandidateService candidateService;
 
+  @Operation(summary = "List all candidates")
   @GetMapping(value = {"", "/"})
   public List<Candidate> all() {
     log.info("Accessing All Candidates");
     return candidateService.all();
   }
 
+  @Operation(summary = "List candidates paginated")
   @GetMapping(
       value = {"", "/"},
       params = {"page", "size", "!filter"})
@@ -49,6 +56,7 @@ public class CandidateController {
     return ResponseEntity.ok(responseAll);
   }
 
+  @Operation(summary = "List candidates paginated and filtered by name")
   @GetMapping(
       value = {"", "/"},
       params = {"page", "size", "filter"})
@@ -63,6 +71,7 @@ public class CandidateController {
     return ResponseEntity.ok(responseAll);
   }
 
+  @Operation(summary = "Find candidates by filter")
   @GetMapping(
       value = {"", "/"},
       params = {"!page", "!size", "filter"})
@@ -77,17 +86,34 @@ public class CandidateController {
     return ResponseEntity.ok(responseAll);
   }
 
+  @Operation(summary = "Get a candidate by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Candidate found"),
+    @ApiResponse(responseCode = "404", description = "Candidate not found")
+  })
   @GetMapping("/{id}")
   public Candidate one(@PathVariable("id") Long id) {
     return candidateService.one(id);
   }
 
+  @Operation(summary = "Create a candidate")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Candidate created"),
+    @ApiResponse(responseCode = "400", description = "Invalid candidate payload")
+  })
   @PostMapping({"", "/"})
   public Candidate newCandidate(@Valid @RequestBody Candidate candidate) {
     log.info("Creating new candidate = " + candidate);
     return this.candidateService.save(candidate);
   }
 
+  @Operation(summary = "Replace a candidate")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Candidate replaced"),
+    @ApiResponse(responseCode = "400", description = "Invalid candidate payload"),
+    @ApiResponse(responseCode = "404", description = "Candidate not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match candidate id")
+  })
   @PutMapping("/{id}")
   public Candidate replaceCandidate(
       @PathVariable("id") Long id, @Valid @RequestBody Candidate candidate) {
@@ -95,6 +121,11 @@ public class CandidateController {
     return this.candidateService.replace(id, candidate);
   }
 
+  @Operation(summary = "Delete a candidate")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Candidate deleted"),
+    @ApiResponse(responseCode = "404", description = "Candidate not found")
+  })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

@@ -1,5 +1,7 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/send/")
+@Tag(name = "mail", description = "Email sending")
 public class MailSenderController {
 
   @Autowired private MailSenderService mailSenderService;
 
+  @Operation(summary = "Send a candidate proposal email")
   @PostMapping(value = {"candidate", "candidate/"})
   public void sendMail(@Valid @RequestBody Proposal proposal, @RequestParam String filename) {
 
@@ -29,6 +33,7 @@ public class MailSenderController {
     log.info("Message processing in backend!");
   }
 
+  @Operation(summary = "Send a proposal email to an address")
   @PostMapping(
       value = {"to", "to/"},
       params = {"to", "subject", "filename"})
@@ -42,6 +47,7 @@ public class MailSenderController {
     log.info("Message processing in backend!");
   }
 
+  @Operation(summary = "Send a template-filled email")
   @PostMapping(value = {"template", "template/"})
   public void sendMail(@RequestBody Map<String, Object> data) {
 

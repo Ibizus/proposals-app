@@ -27,6 +27,7 @@ public class ProposalMapper {
         proposal.getIndefinite(),
         proposal.getStartDate(),
         proposal.getDueDate(),
+        null,
         proposal.getKnowMore(),
         officeDTO,
         proposal.getSalary(),

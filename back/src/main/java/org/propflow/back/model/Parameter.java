@@ -1,5 +1,6 @@
 package org.propflow.back.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "parameter", indexes = @Index(name = "param_name_index", columnList = "name"))
+@Schema(description = "A configurable salary parameter.")
 public class Parameter extends AuditableSuperclass {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

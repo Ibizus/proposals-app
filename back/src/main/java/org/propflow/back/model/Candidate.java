@@ -1,6 +1,7 @@
 package org.propflow.back.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,6 +18,7 @@ import org.propflow.back.serializer.ProposalSerializer;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "candidate", indexes = @Index(name = "idn_index", columnList = "idNumber"))
+@Schema(description = "A candidate considered for one or more proposals.")
 public class Candidate extends AuditableSuperclass {
 
   @Id
@@ -36,7 +38,14 @@ public class Candidate extends AuditableSuperclass {
 
   private String workerId;
 
-  @NotNull private Integer maritalStatus;
+  @Schema(
+      description =
+          "Marital status used to pick the tax bracket: 0 = single, 1 = married with one income, 2"
+              + " = married with two incomes.",
+      allowableValues = {"0", "1", "2"},
+      example = "0")
+  @NotNull
+  private Integer maritalStatus;
 
   @PositiveOrZero private Integer dependentsNumber;
 

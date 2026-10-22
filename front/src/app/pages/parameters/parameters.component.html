@@ -1,175 +1,174 @@
 <div class="mt-24 px-10">
-    <h2 class="font-bold text-5xl mb-5" i18n>Parameters</h2>
-    
+  <h2 class="font-bold text-5xl mb-5" i18n>Parameters</h2>
 
-<p-table 
+  <p-table
     #dt2
-    [value]="parameters" 
+    [value]="parameters()"
     styleClass="p-datatable-striped p-datatable-sm"
     sortMode="multiple"
     [scrollable]="true"
     scrollHeight="660px"
-    [loading]="isLoading"
+    [loading]="isLoading()"
     dataKey="id"
     editMode="row"
-    [globalFilterFields]="['id', 'name', 'value', 'validFrom','validUntil']"
-    [tableStyle]="{'min-width': '50rem'}"
-    >
- 
-
+    [globalFilterFields]="['id', 'name', 'value', 'validFrom', 'validUntil']"
+    [tableStyle]="{ 'min-width': '50rem' }"
+  >
     <ng-template pTemplate="header">
-        <tr>
-            <th pSortableColumn="name" class="header-cell">
-                <div class="header-content">Name <p-sortIcon field="name"/></div>
-            </th>
-            <th pSortableColumn="value" class="header-cell">
-                <div class="header-content">Value <p-sortIcon field="value"/></div>
-            </th>
-            <th pSortableColumn="validFrom" class="header-cell">
-                <div class="header-content">Valid From <p-sortIcon field="validFrom"/></div>
-            </th>
-            <th pSortableColumn="validUntil" class="header-cell">
-                <div class="header-content">Valid Until <p-sortIcon field="validUntil"/></div>
-            </th>
-            <th [width]="100">
-                 <div class="flex justify-center">
-                    <p-iconField iconPosition="right" class="mr-0">
-                        <p-inputIcon styleClass="pi pi-search"/>
-                        <input 
-                        pInputText 
-                        type="text" 
-                        (input)="filterParameters($event)"
-                        placeholder="Search" 
-                        class="bg-slate-200 p-2 rounded" />
-                    </p-iconField>
-                </div>
-            </th>
-        </tr>
-        <tr>
-            <div class="absolute tableGradient h-1 w-full col-span-full"></div>
-        </tr>
+      <tr>
+        <th pSortableColumn="name" class="header-cell">
+          <div class="header-content">Name <p-sortIcon field="name" /></div>
+        </th>
+        <th pSortableColumn="value" class="header-cell">
+          <div class="header-content">Value <p-sortIcon field="value" /></div>
+        </th>
+        <th pSortableColumn="validFrom" class="header-cell">
+          <div class="header-content">Valid From <p-sortIcon field="validFrom" /></div>
+        </th>
+        <th pSortableColumn="validUntil" class="header-cell">
+          <div class="header-content">Valid Until <p-sortIcon field="validUntil" /></div>
+        </th>
+        <th [width]="100">
+          <div class="flex justify-center">
+            <p-iconField iconPosition="right" class="mr-0">
+              <p-inputIcon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="text"
+                (input)="filterParameters($event)"
+                placeholder="Search"
+                class="bg-slate-200 p-2 rounded"
+              />
+            </p-iconField>
+          </div>
+        </th>
+      </tr>
+      <tr>
+        <div class="absolute tableGradient h-1 w-full col-span-full"></div>
+      </tr>
     </ng-template>
 
-    <ng-template 
-        pTemplate="body" 
-        let-parameter
-        let-editing="editing"
-        let-ri="rowIndex"
-    >
-        <tr [pEditableRow]="parameter">
-            <td>
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText type="text" [(ngModel)]="parameter.name" required>
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{ parameter.name }}
-                    </ng-template>
-                </p-cellEditor>
-            </td>
-            <td>
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText type="number" [(ngModel)]="parameter.value" required>
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{ parameter.value }}
-                    </ng-template>
-                </p-cellEditor>
-            </td>
-            <td>
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText type="date" [(ngModel)]="parameter.validFrom" required>
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{ parameter.validFrom }}
-                    </ng-template>
-                </p-cellEditor>
-            </td>
-            <td>
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText type="date" [(ngModel)]="parameter.validUntil" required>
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{ parameter.validUntil }}
-                    </ng-template>
-                </p-cellEditor>
-            </td>
-            <td>
-                <div class="flex justify-center">
-                    <div class="flex align-items-center justify-content-center gap-2">
-                        @if(!editing){
-                        <button 
-                            pButton 
-                            pRipple 
-                            type="button" 
-                            pInitEditableRow 
-                            icon="pi pi-pencil" 
-                            [pTooltip]="modifyParameterTooltip"
-                            tooltipStyleClass="custom-tooltip"
-                            class="p-button-rounded p-button-text">
-                        </button>
-                        <button 
-                            pButton 
-                            pRipple 
-                            type="button" 
-                            pDeleteEditableRow
-                            icon="pi pi-trash"
-                            [pTooltip]="deleteParameterTooltip"
-                            tooltipStyleClass="custom-tooltip"
-                            (click)="this.showDialog(parameter)"
-                            class="p-button-rounded p-button-text">
-                        </button>
-                    }@else{
-                        <button 
-                            pButton 
-                            pRipple 
-                            type="button" 
-                            pSaveEditableRow 
-                            icon="pi pi-check" 
-                            [pTooltip]="saveParameterTooltip"
-                            tooltipStyleClass="custom-tooltip"
-                            (click)="modifyParameter(parameter)"
-                            class="p-button-rounded p-button-text p-button-success mr-2">
-                        </button>
-                        <button
-                            pButton
-                            pRipple
-                            type="button"
-                            pCancelEditableRow
-                            icon="pi pi-times"
-                            [pTooltip]="cancelParameterTooltip"
-                            tooltipStyleClass="custom-tooltip"
-                            class="p-button-rounded p-button-text p-button-danger"
-                            ></button>
-                         }
-                    </div>
-                </div>
-            </td>
-        </tr>
+    <ng-template pTemplate="body" let-parameter let-editing="editing" let-ri="rowIndex">
+      <tr [pEditableRow]="parameter">
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="text" [(ngModel)]="parameter.name" required />
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{ parameter.name }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="number" [(ngModel)]="parameter.value" required />
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{ parameter.value }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="date" [(ngModel)]="parameter.validFrom" required />
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{ parameter.validFrom }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <input pInputText type="date" [(ngModel)]="parameter.validUntil" required />
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{ parameter.validUntil }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <div class="flex justify-center">
+            <div class="flex align-items-center justify-content-center gap-2">
+              @if (!editing) {
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  pInitEditableRow
+                  icon="pi pi-pencil"
+                  [pTooltip]="modifyParameterTooltip"
+                  tooltipStyleClass="custom-tooltip"
+                  class="p-button-rounded p-button-text"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  pDeleteEditableRow
+                  icon="pi pi-trash"
+                  [pTooltip]="deleteParameterTooltip"
+                  tooltipStyleClass="custom-tooltip"
+                  (click)="this.showDialog(parameter)"
+                  class="p-button-rounded p-button-text"
+                ></button>
+              } @else {
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  pSaveEditableRow
+                  icon="pi pi-check"
+                  [pTooltip]="saveParameterTooltip"
+                  tooltipStyleClass="custom-tooltip"
+                  (click)="modifyParameter(parameter)"
+                  class="p-button-rounded p-button-text p-button-success mr-2"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  pCancelEditableRow
+                  icon="pi pi-times"
+                  [pTooltip]="cancelParameterTooltip"
+                  tooltipStyleClass="custom-tooltip"
+                  class="p-button-rounded p-button-text p-button-danger"
+                ></button>
+              }
+            </div>
+          </div>
+        </td>
+      </tr>
     </ng-template>
-</p-table>
+  </p-table>
 
-
-<p-dialog header="{{'DELETE PARAMETERS'|translate}}" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }"
-    #dialog>
-    <span>{{'ARE YOU SURE'|translate}}</span>
+  <p-dialog
+    header="{{ 'DELETE PARAMETERS' | translate }}"
+    [modal]="true"
+    [(visible)]="visible"
+    [style]="{ width: '25rem' }"
+    #dialog
+  >
+    <span>{{ 'ARE YOU SURE' | translate }}</span>
     <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
       <div class="grid-flow-col col-span-2">
-        <button class="send py-2 px-5 rounded-lg float-end"
-          (click)="this.deleteParameter(currentParameter)">
-          {{'DELETE'|translate}}
+        <button
+          class="send py-2 px-5 rounded-lg float-end"
+          (click)="this.deleteParameter(currentParameter)"
+        >
+          {{ 'DELETE' | translate }}
         </button>
-        <button class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
-          (click)="this.closeDialog(dialog, $event)">
-          {{'CANCEL'|translate}}
+        <button
+          class="cancel text-[#45C5C7] py-2 px-5 rounded-lg float-end border mr-2"
+          (click)="this.closeDialog(dialog, $event)"
+        >
+          {{ 'CANCEL' | translate }}
         </button>
       </div>
     </div>
   </p-dialog>
-  <p-toast position="bottom-center" key="bc"></p-toast>
   <div class="h-12"></div>
 </div>
-

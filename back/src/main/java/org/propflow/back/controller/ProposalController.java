@@ -1,5 +1,9 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -28,17 +32,20 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/proposals")
+@Tag(name = "proposals", description = "Proposal management")
 public class ProposalController {
 
   @Autowired private ProposalMapper proposalMapper;
   @Autowired private ProposalService proposalService;
 
+  @Operation(summary = "List all proposals")
   @GetMapping({"", "/"})
   public List<ProposalDTO> all() {
     return proposalService.all();
   }
 
   // Get all proposals paginated
+  @Operation(summary = "List proposals paginated")
   @GetMapping(
       value = {"", "/"},
       params = {"page", "size", "!filter", "!candidate"})
@@ -53,6 +60,7 @@ public class ProposalController {
   }
 
   // Get all proposals filtered and paginated
+  @Operation(summary = "List proposals paginated and filtered")
   @GetMapping(
       value = {"", "/"},
       params = {"page", "size", "filter"})
@@ -68,6 +76,7 @@ public class ProposalController {
   }
 
   // Get proposals by candidate ID
+  @Operation(summary = "List proposals by candidate id")
   @GetMapping(
       value = {"", "/"},
       params = {"candidate", "!page", "!size", "!filter"})
@@ -77,6 +86,7 @@ public class ProposalController {
     return this.proposalService.findProposalsByCandidateId(candidate);
   }
 
+  @Operation(summary = "Find proposals by candidate name")
   @GetMapping(
       value = {"", "/"},
       params = {"!page", "!size", "filter"})
@@ -84,6 +94,11 @@ public class ProposalController {
     return proposalService.findByCandidate(filter);
   }
 
+  @Operation(summary = "Get a proposal by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Proposal found"),
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
+  })
   @GetMapping("/{id}")
   public ProposalDTO one(@PathVariable("id") Long id) {
     Proposal p = proposalService.one(id);
@@ -91,6 +106,11 @@ public class ProposalController {
     return proposalMapper.toDTO(p);
   }
 
+  @Operation(summary = "Create a proposal")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Proposal created"),
+    @ApiResponse(responseCode = "400", description = "Invalid proposal payload")
+  })
   @PostMapping({"", "/"})
   public Proposal newProposal(@Valid @RequestBody Proposal proposal) {
     // log.info("Creating new proposal = " + proposal);
@@ -98,6 +118,12 @@ public class ProposalController {
     return this.proposalService.save(proposal, false);
   }
 
+  @Operation(summary = "Replace a proposal")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Proposal replaced"),
+    @ApiResponse(responseCode = "400", description = "Invalid proposal payload"),
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
+  })
   @PutMapping("/{id}")
   public Proposal replaceProposal(
       @PathVariable("id") Long id, @Valid @RequestBody Proposal proposal) {
@@ -105,6 +131,11 @@ public class ProposalController {
     return this.proposalService.replace(id, proposal);
   }
 
+  @Operation(summary = "Delete a proposal")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Proposal deleted"),
+    @ApiResponse(responseCode = "404", description = "Proposal not found")
+  })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

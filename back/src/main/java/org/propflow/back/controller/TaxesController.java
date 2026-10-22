@@ -1,5 +1,9 @@
 package org.propflow.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/v1/api/taxes")
+@Tag(name = "taxes", description = "Tax brackets for salary calculations")
 public class TaxesController {
 
   @Autowired private TaxesService taxesService;
 
+  @Operation(summary = "List all tax brackets")
   @GetMapping(
       value = {"", "/"},
       params = {"!salary", "!maritalStatus"})
@@ -35,6 +41,7 @@ public class TaxesController {
     return this.taxesService.all();
   }
 
+  @Operation(summary = "Find tax bracket by salary")
   @GetMapping(
       value = {"", "/"},
       params = {"salary", "!maritalStatus"})
@@ -42,6 +49,7 @@ public class TaxesController {
     return this.taxesService.findBySalary(salary);
   }
 
+  @Operation(summary = "Find tax brackets by marital status")
   @GetMapping(
       value = {"", "/"},
       params = {"!salary", "maritalStatus"})
@@ -49,6 +57,7 @@ public class TaxesController {
     return this.taxesService.findByMaritalStatus(maritalStatus);
   }
 
+  @Operation(summary = "Find tax bracket by salary and marital status")
   @GetMapping(
       value = {"", "/"},
       params = {"salary", "maritalStatus"})
@@ -57,23 +66,45 @@ public class TaxesController {
     return this.taxesService.findBySalaryAndMaritalStatus(salary, maritalStatus);
   }
 
+  @Operation(summary = "Get a tax bracket by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Tax bracket found"),
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found")
+  })
   @GetMapping("/{id}")
   public Taxes one(@PathVariable("id") Long id) {
     return this.taxesService.one(id);
   }
 
+  @Operation(summary = "Create a tax bracket")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Tax bracket created"),
+    @ApiResponse(responseCode = "400", description = "Invalid tax bracket payload")
+  })
   @PostMapping({"", "/"})
   public Taxes newTaxes(@Valid @RequestBody Taxes extra) {
     log.info("Creating new extra = " + extra);
     return this.taxesService.save(extra);
   }
 
+  @Operation(summary = "Replace a tax bracket")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Tax bracket replaced"),
+    @ApiResponse(responseCode = "400", description = "Invalid tax bracket payload"),
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found"),
+    @ApiResponse(responseCode = "409", description = "Path id does not match tax bracket id")
+  })
   @PutMapping("/{id}")
   public Taxes replaceTaxes(@PathVariable("id") Long id, @Valid @RequestBody Taxes extra) {
     log.info("Updated extra with id = " + id + "\n Extra = " + extra);
     return this.taxesService.replace(id, extra);
   }
 
+  @Operation(summary = "Delete a tax bracket")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Tax bracket deleted"),
+    @ApiResponse(responseCode = "404", description = "Tax bracket not found")
+  })
   @ResponseBody
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

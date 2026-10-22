@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { provideTestDefaults } from '../testing/test-providers';
 
@@ -8,11 +7,7 @@ describe('AppComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: provideTestDefaults(),
-    })
-      // AppComponent imports HttpClientModule, which would shadow the testing
-      // backend with a real one; drop it so no request can leave the browser.
-      .overrideComponent(AppComponent, { remove: { imports: [HttpClientModule] } })
-      .compileComponents();
+    }).compileComponents();
   });
 
   it('should create the app', () => {

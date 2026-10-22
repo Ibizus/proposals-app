@@ -1,5 +1,6 @@
 package org.propflow.back.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "taxes", indexes = @Index(name = "maxSal_index", columnList = "salaryMax"))
+@Schema(description = "A tax bracket used for salary calculations.")
 public class Taxes extends AuditableSuperclass {
 
   @Id
@@ -28,7 +30,14 @@ public class Taxes extends AuditableSuperclass {
   @EqualsAndHashCode.Include
   private long id;
 
-  @NotNull @Positive private Double salaryMax;
+  @Schema(
+      description =
+          "Upper bound (inclusive) of the monthly gross salary covered by this bracket; a salary"
+              + " uses the bracket with the smallest salaryMax that is not below it.",
+      example = "1000")
+  @NotNull
+  @Positive
+  private Double salaryMax;
 
   @NotNull @PositiveOrZero private Double socialSecurityTax;
 
@@ -37,7 +46,15 @@ public class Taxes extends AuditableSuperclass {
   private LocalDate validFrom;
   private LocalDate validUntil;
 
-  @NotNull private Integer maritalStatus;
+  @Schema(
+      description =
+          "Marital status the bracket applies to: 0 = single, 1 = married with one income, 2 ="
+              + " married with two incomes.",
+      allowableValues = {"0", "1", "2"},
+      example = "0")
+  @NotNull
+  private Integer maritalStatus;
+
   // attributes for the IRS tax for each number of dependents
   private Double zero;
   private Double one;
