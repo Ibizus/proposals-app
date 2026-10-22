@@ -77,6 +77,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   positions = signal<Position[]>([]);
   selectedPosition: Position | null = null;
   private positionCandidates?: { positionId: number; candidates$: Observable<Candidate[]> };
+  private candidateSearch?: Subscription;
   candidate!: Candidate | null;
   selectedCandidate = signal<Candidate | null>(null);
   taxes!: Taxes[];
@@ -485,14 +486,17 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   searchCandidates(event: any) {
+    this.candidateSearch?.unsubscribe();
     if (!this.selectedPosition) {
-      this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
-        this.filteredCandidates.set(candidates.candidates);
-      });
+      this.candidateSearch = this.candidateService
+        .getFilteredCandidates(event.query)
+        .subscribe((candidates) => {
+          this.filteredCandidates.set(candidates.candidates);
+        });
       return;
     }
     const query = (event.query ?? '').toLowerCase();
-    this.candidatesOf(this.selectedPosition).subscribe((candidates) => {
+    this.candidateSearch = this.candidatesOf(this.selectedPosition).subscribe((candidates) => {
       this.filteredCandidates.set(
         candidates.filter((candidate) =>
           [
@@ -536,6 +540,8 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   onSelectedPosition() {
+    this.candidateSearch?.unsubscribe();
+    this.filteredCandidates.set([]);
     this.selectedCandidate.set(null);
     this.proposalForm.candidate = null;
     this.proposalForm.position = this.selectedPosition;

@@ -106,6 +106,32 @@ describe('NewProposalComponent', () => {
     expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([30]);
   });
 
+  it("never lets a slow position's candidates replace the newly chosen position's", () => {
+    const http = TestBed.inject(HttpTestingController);
+    const url = (id: number) => environment.API_ENDPOINT + 'candidates/' + id;
+    component.selectedPosition = makePosition({ id: 5, candidates: [21] });
+    component.searchCandidates({ query: '' });
+    const slow = http.expectOne(url(21));
+
+    component.selectedPosition = makePosition({ id: 6, candidates: [30] });
+    component.onSelectedPosition();
+    expect(component.filteredCandidates()).toEqual([]);
+    component.searchCandidates({ query: '' });
+    http.expectOne(url(30)).flush(makeCandidate({ id: 30, name: 'Rui' }));
+    slow.flush(makeCandidate({ id: 21, name: 'Marta' }));
+
+    expect(component.filteredCandidates().map((candidate) => candidate.id)).toEqual([30]);
+  });
+
+  it('clears suggestions from the previous position when the position changes', () => {
+    component.filteredCandidates.set([makeCandidate({ id: 21 })]);
+    component.selectedPosition = makePosition({ id: 6, candidates: [30] });
+
+    component.onSelectedPosition();
+
+    expect(component.filteredCandidates()).toEqual([]);
+  });
+
   it('suggests no candidates for a position without candidates', () => {
     const byId = spyOn(candidateService, 'getCandidateById');
     component.selectedPosition = makePosition({ candidates: [] });
