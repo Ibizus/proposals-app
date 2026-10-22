@@ -18,12 +18,22 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    container_name: proposals_mailpit
+    restart: always
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI and HTTP API
+
   backend:
     build: ./back
     container_name: proposals_backend
     depends_on:
       mysql:
         condition: service_healthy # Espera activamente a que MySQL acepte conexiones
+      mailpit:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
@@ -31,6 +41,10 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: user
       SPRING_PROFILES_ACTIVE: dev
+      # The backend runs in its own container, so Mailpit is reached by service
+      # name rather than localhost. No SMTP credentials are needed.
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
 
   jsreport:
     image: jsreport/jsreport:4.3.1

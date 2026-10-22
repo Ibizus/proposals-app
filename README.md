@@ -3,15 +3,32 @@
 ### Build & Execution
 
 Run the command `docker-compose build` and `docker-compose up` to build and start the containers respectively.
-This container includes the Spring Boot backend, Angular frontend, MySql database and JSReport.
+This container includes the Spring Boot backend, Angular frontend, MySql database, Mailpit and JSReport.
 
 
 ## Local development
 
-Run `./dev.sh` from the repository root. It starts MySQL and jsReport with Docker Compose, waits until the `mysql` healthcheck reports healthy (up to 120 seconds, override with `MYSQL_WAIT_TIMEOUT`), then starts the backend with the `dev` Spring profile and the Angular dev server. Mail settings and other secrets are read from a `.env` file in the repository root when present.
+Run `./dev.sh` from the repository root. It starts MySQL, Mailpit and jsReport with Docker Compose, waits until the `mysql` healthcheck reports healthy (up to 120 seconds, override with `MYSQL_WAIT_TIMEOUT`), then starts the backend with the `dev` Spring profile and the Angular dev server. Other secrets are read from a `.env` file in the repository root when present.
 
 - `./dev.sh --reset` removes the project's Docker containers and the MySQL volume before starting, so the backend comes up on an empty database and seeds fresh demo data.
 - `./dev.sh --help` prints the available options.
+
+## Mail
+
+Email is sent through Mailpit by default, the zero-secret local SMTP server that `./dev.sh` and `docker-compose.yml` start: the backend connects to `localhost:1025` (no username, no password, no `.env`), and captured messages are browsable at <http://localhost:8025>. The mail health indicator is disabled by default (`management.health.mail.enabled=false`), so a missing or misconfigured local SMTP server never takes `/actuator/health` DOWN.
+
+To send real mail, override the Spring Mail settings through environment variables — for example Resend:
+
+```bash
+SPRING_MAIL_HOST=smtp.resend.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=resend
+SPRING_MAIL_PASSWORD=<resend API key>
+SPRING_MAIL_SMTP_AUTH=true
+APP_MAIL_FROM=noreply@<your verified Resend domain>
+```
+
+Real keys belong only in the gitignored `.env` file (see `.env.example`) or in deployment environment variables.
 
 ### Demo data
 
