@@ -24,9 +24,9 @@
         <th pSortableColumn="njoyn" class="header-cell">
           <div class="header-content">{{ 'NJOYN' | translate }} <p-sortIcon field="njoyn" /></div>
         </th>
-        <th pSortableColumn="candidates" class="header-cell">
+        <th pSortableColumn="candidatesCount" class="header-cell">
           <div class="header-content">
-            {{ 'CANDIDATES' | translate }} <p-sortIcon field="candidates" />
+            {{ 'CANDIDATES' | translate }} <p-sortIcon field="candidatesCount" />
           </div>
         </th>
         <th [width]="100"></th>
@@ -40,7 +40,7 @@
         <td>{{ rowData.title }}</td>
         <td>{{ rowData.description }}</td>
         <td>{{ rowData.njoyn }}</td>
-        <td>{{ rowData.candidates?.length ?? 0 }}</td>
+        <td>{{ rowData.candidatesCount }}</td>
         <td>
           <div class="flex justify-center">
             <button

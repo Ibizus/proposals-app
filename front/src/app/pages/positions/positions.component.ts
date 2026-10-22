@@ -35,7 +35,7 @@ import { callerHandlesErrors } from '../../services/error-toast.interceptor';
   styleUrl: './positions.component.scss',
 })
 export class PositionsComponent implements OnInit {
-  positions = signal<Position[]>([]);
+  positions = signal<(Position & { candidatesCount: number })[]>([]);
   position!: Position;
   isLoading = signal(true);
 
@@ -86,7 +86,12 @@ export class PositionsComponent implements OnInit {
     this.isLoading.set(true);
     this.positionService.getPositions(page, size).subscribe({
       next: (data) => {
-        this.positions.set(data.positions);
+        this.positions.set(
+          data.positions.map((position) => ({
+            ...position,
+            candidatesCount: position.candidates?.length ?? 0,
+          })),
+        );
         this.first.set(page * size + 1);
         this.rows.set(size);
         this.currentPage = data.currentPage + 1;

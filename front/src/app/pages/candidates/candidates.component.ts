@@ -246,6 +246,7 @@ export class CandidatesComponent implements OnInit {
     this.candidateService.modifyCandidate(this.candidate).subscribe({
       next: () => {
         this.visibleCandidateModal.set(false);
+        this.getCandidates(this.demandedPage, this.rows(), this.filter);
         this.candidate = {
           '@id': 0,
           id: 0,

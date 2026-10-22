@@ -243,6 +243,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     this.candidateService.currentCandidate.subscribe((candidate) => {
       console.log(candidate);
       this.selectedCandidate.set(candidate);
+      this.defaultPositionFrom(candidate);
     });
 
     // Get current proposal from service and set it in temporalProposal
@@ -483,13 +484,43 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   searchCandidates(event: any) {
-    this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
-      const all = candidates.candidates as Candidate[];
-      const filtered = this.selectedPosition
-        ? all.filter((candidate) => candidate.position?.id === this.selectedPosition?.id)
-        : all;
-      this.filteredCandidates.set(filtered);
-    });
+    if (!this.selectedPosition) {
+      this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
+        this.filteredCandidates.set(candidates.candidates);
+      });
+      return;
+    }
+    const ids = this.selectedPosition.candidates ?? [];
+    if (ids.length === 0) {
+      this.filteredCandidates.set([]);
+      return;
+    }
+    const query = (event.query ?? '').toLowerCase();
+    forkJoin(ids.map((id) => this.candidateService.getCandidateById(id))).subscribe(
+      (candidates) => {
+        this.filteredCandidates.set(
+          candidates.filter((candidate) =>
+            [
+              candidate.name,
+              candidate.surname,
+              candidate.idNumber,
+              candidate.phone,
+              candidate.email,
+              candidate.workerId,
+            ].some((value) => value?.toLowerCase().includes(query)),
+          ),
+        );
+      },
+    );
+  }
+
+  defaultPositionFrom(candidate: Candidate | null) {
+    if (this.selectedPosition || !candidate?.position) {
+      return;
+    }
+    const linked = candidate.position;
+    this.selectedPosition =
+      this.positions().find((position) => position.id === linked.id) ?? linked;
   }
 
   onSelectedPosition() {
@@ -511,6 +542,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
 
   onSelectedCandidate($event: AutoCompleteSelectEvent) {
     this.selectedCandidate.set($event.value);
+    this.defaultPositionFrom($event.value);
     this.calculateAll();
     this.updateHeaders();
   }
