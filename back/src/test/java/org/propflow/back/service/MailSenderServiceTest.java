@@ -39,8 +39,7 @@ class MailSenderServiceTest {
     SpringTemplateEngine templateEngine = mock(SpringTemplateEngine.class);
     service = new MailSenderService(mailSender);
     ReflectionTestUtils.setField(service, "thymeleafTemplateEngine", templateEngine);
-    ReflectionTestUtils.setField(service, "emailSenderUser", "demo@propflow.local");
-    ReflectionTestUtils.setField(service, "attachPath", "target/test-uploads");
+    ReflectionTestUtils.setField(service, "emailSender", "demo@propflow.local");
     when(templateEngine.process(eq("candidateOffer.html"), any(Context.class)))
         .thenReturn("<html><body><img src=\"cid:banner\" alt=\"banner\"></body></html>");
   }

@@ -4,7 +4,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -33,11 +31,8 @@ public class MailSenderService {
   private static final String BANNER_FILENAME = "banner.jpeg";
   private static final String BANNER_CLASSPATH = "static/img/" + BANNER_FILENAME;
 
-  @Value("${spring.mail.username}")
-  private String emailSenderUser;
-
-  @Value("${app.attach-path}")
-  private String attachPath;
+  @Value("${app.mail.from}")
+  private String emailSender;
 
   @Autowired private SpringTemplateEngine thymeleafTemplateEngine;
   @Autowired private JavaMailSender mailSender;
@@ -46,14 +41,8 @@ public class MailSenderService {
     this.mailSender = mailSender;
   }
 
-  // Returns the banner image to inline in outgoing mail. A custom banner placed
-  // next to the uploaded attachments wins; otherwise the tracked classpath banner
-  // is used so sending works from a fresh checkout.
+  // Returns the tracked classpath banner image to inline in outgoing mail.
   private InputStreamSource bannerResource() {
-    Path overridden = Paths.get(attachPath, "img", BANNER_FILENAME);
-    if (Files.isRegularFile(overridden)) {
-      return new FileSystemResource(overridden);
-    }
     return new ClassPathResource(BANNER_CLASSPATH);
   }
 
@@ -135,7 +124,7 @@ public class MailSenderService {
 
     try {
       this.sendWithAttach(
-          emailSenderUser,
+          emailSender,
           to,
           subject,
           htmlBody,
@@ -187,7 +176,7 @@ public class MailSenderService {
 
     try {
       this.sendWithAttach(
-          emailSenderUser,
+          emailSender,
           proposal.getCandidate().getEmail(),
           subject,
           htmlBody,
@@ -338,7 +327,7 @@ public class MailSenderService {
         // Send mail with the banner inlined:
         try {
           this.sendWithInline(
-              emailSenderUser,
+              emailSender,
               candidateObject.get("email").toString(),
               subject,
               htmlBody,
@@ -429,7 +418,7 @@ public class MailSenderService {
         // Send mail with the banner inlined:
         try {
           this.sendWithInline(
-              emailSenderUser,
+              emailSender,
               candidateObject.get("email").toString(),
               subject,
               htmlBody,

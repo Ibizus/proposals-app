@@ -19,7 +19,7 @@ services:
       retries: 10
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.6
     container_name: proposals_mailpit
     restart: always
     ports:

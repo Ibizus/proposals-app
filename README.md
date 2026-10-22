@@ -25,6 +25,7 @@ SPRING_MAIL_PORT=587
 SPRING_MAIL_USERNAME=resend
 SPRING_MAIL_PASSWORD=<resend API key>
 SPRING_MAIL_SMTP_AUTH=true
+APP_MAIL_FROM=noreply@<your verified Resend domain>
 ```
 
 Real keys belong only in the gitignored `.env` file (see `.env.example`) or in deployment environment variables.
