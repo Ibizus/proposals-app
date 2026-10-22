@@ -26,7 +26,6 @@ export class ToastService {
   }
 
   success(message: string) {
-    console.log(message);
     this.messageService.add({
       key: 'bc',
       severity: 'success',

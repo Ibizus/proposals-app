@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Taxes } from '../utils/types';
 import { Observable, map } from 'rxjs';
 
@@ -16,41 +17,30 @@ export class TaxesService {
       map((data) => {
         data.sort((a, b) => a.salaryMax - b.salaryMax);
         return data;
-      })
+      }),
     );
   }
 
-  getTaxesForSalaryAndMaritalStatus(
-    salary: number,
-    maritalStatus: number
-  ): Observable<Taxes> {
+  getTaxesForSalaryAndMaritalStatus(salary: number, maritalStatus: number): Observable<Taxes> {
     return this.http
-      .get<Taxes>(
-        TAXESURL + '?salary=' + salary + '&maritalStatus=' + maritalStatus
-      )
+      .get<Taxes>(TAXESURL + '?salary=' + salary + '&maritalStatus=' + maritalStatus)
       .pipe(
         map((data) => {
           return data;
-        })
+        }),
       );
   }
 
   getTaxesForMaritalStatus(maritalStatus: number): Observable<Taxes[]> {
-    return this.http
-      .get<Taxes[]>(TAXESURL + '?maritalStatus=' + maritalStatus)
-      .pipe(
-        map((data) => {
-          data.sort((a, b) => a.salaryMax - b.salaryMax);
-          return data;
-        })
-      );
+    return this.http.get<Taxes[]>(TAXESURL + '?maritalStatus=' + maritalStatus).pipe(
+      map((data) => {
+        data.sort((a, b) => a.salaryMax - b.salaryMax);
+        return data;
+      }),
+    );
   }
 
-  getTaxBracket(
-    base: number,
-    maritalStatus: number,
-    numberOfDependents: number
-  ): Observable<any> {
+  getTaxBracket(base: number, maritalStatus: number, numberOfDependents: number): Observable<any> {
     return new Observable<any>((observer) => {
       this.getTaxesForSalaryAndMaritalStatus(base, maritalStatus).subscribe({
         next: (data) => {
@@ -74,10 +64,7 @@ export class TaxesService {
             taxBracket.irs = tax.five;
           }
 
-          console.log(
-            'Tax bracket calculated inside Taxes Service: ' +
-              JSON.stringify(taxBracket)
-          );
+          console.log('Tax bracket calculated inside Taxes Service: ' + JSON.stringify(taxBracket));
           observer.next(taxBracket);
           observer.complete();
         },
@@ -89,11 +76,11 @@ export class TaxesService {
     });
   }
 
-  modifyTaxes(tax: Taxes): Observable<Object> {
-    return this.http.put<Taxes>(TAXESURL + tax.id, tax);
+  modifyTaxes(tax: Taxes, context?: HttpContext): Observable<unknown> {
+    return this.http.put<Taxes>(TAXESURL + tax.id, tax, { context });
   }
 
-  deleteTaxes(id: number): Observable<Taxes> {
-    return this.http.delete<Taxes>(TAXESURL + id);
+  deleteTaxes(id: number, context?: HttpContext): Observable<Taxes> {
+    return this.http.delete<Taxes>(TAXESURL + id, { context });
   }
 }

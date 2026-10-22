@@ -1,24 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { PrimeNGConfig } from 'primeng/api';
 import { TabMenuModule } from 'primeng/tabmenu';
+import { ToastModule } from 'primeng/toast';
 import { MenuItem } from 'primeng/api';
-import {
-  TranslateService,
-  TranslateStore,
-  TranslateModule,
-} from '@ngx-translate/core';
+import { TranslateService, TranslateStore, TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    HttpClientModule,
     RouterOutlet,
     NavbarComponent,
     TabMenuModule,
+    ToastModule,
     TranslateModule,
     // BrowserAnimationsModule
   ],
@@ -26,6 +22,7 @@ import {
   template: `
     <app-navbar />
     <router-outlet />
+    <p-toast position="bottom-center" key="bc"></p-toast>
   `,
   styleUrl: './app.component.scss',
 })
@@ -36,16 +33,14 @@ export class AppComponent implements OnInit {
 
   activeItem!: MenuItem;
 
-  isLoginFormVisible: boolean = false;
+  isLoginFormVisible = false;
 
   constructor(
     private router: Router,
     private primengConfig: PrimeNGConfig,
-    private translate: TranslateService
+    private translate: TranslateService,
   ) {
     this.translate.addLangs(['en', 'es', 'de', 'pt']);
-    const userLang = navigator.language.split('-')[0];
-    // console.log(userLang);
 
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {

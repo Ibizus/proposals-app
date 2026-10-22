@@ -20,13 +20,16 @@
     scrollHeight="666px"
     dataKey="id"
     editMode="row"
+    [loading]="isLoading()"
     [tableStyle]="{ 'min-width': '50rem' }"
   >
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th *ngFor="let col of columns" style="width: fit-content">
-          {{ col.header }}
-        </th>
+        @for (col of columns; track col.field) {
+          <th style="width: fit-content">
+            {{ col.header }}
+          </th>
+        }
         <th></th>
       </tr>
       <tr>
@@ -197,6 +200,5 @@
       </div>
     </div>
   </p-dialog>
-  <p-toast position="bottom-center" key="bc"></p-toast>
   <div class="h-20"></div>
 </div>

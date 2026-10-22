@@ -1,21 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+/* eslint-disable @typescript-eslint/no-explicit-any -- legacy proposal-form state is untyped */
+import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavigationStart, Router } from '@angular/router';
-import {
-  Candidate,
-  Extra,
-  Office,
-  Taxes,
-  Status,
-  EmptyProposalForm,
-} from '../../utils/types';
+import { Candidate, Extra, Office, Taxes, Status, EmptyProposalForm } from '../../utils/types';
 import { matCloseOutline } from '@ng-icons/material-icons/outline';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { MultiSelectModule } from 'primeng/multiselect';
-import {
-  AutoCompleteModule,
-  AutoCompleteSelectEvent,
-} from 'primeng/autocomplete';
+import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
@@ -25,21 +16,16 @@ import { TableModule } from 'primeng/table';
 import { forkJoin, Subscription } from 'rxjs';
 import { CurrencyPipe } from '@angular/common';
 import { CandidateCardComponent } from '../../components/candidate-card/candidate-card.component';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { CandidateService } from '../../services/candidate.service';
 import { ProposalService } from '../../services/proposal.service';
 import { AccordionModule } from 'primeng/accordion';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { TaxesService } from '../../services/taxes.service';
 import { OfficeService } from '../../services/office.service';
 import { ExtrasService } from '../../services/extras.service';
 import { ToastService } from '../../services/toast.service';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 @Component({
   selector: 'app-new-proposal',
   standalone: true,
@@ -57,48 +43,47 @@ import { sleep } from '../../utils/functions';
     TableModule,
     CurrencyPipe,
     CandidateCardComponent,
-    ToastModule,
     AccordionModule,
     TranslateModule,
   ],
   viewProviders: [provideIcons({ matCloseOutline })],
-  providers: [MessageService, TranslateService, TranslateStore, ToastService],
+  providers: [TranslateService, TranslateStore],
   templateUrl: './new-proposal.component.html',
   styleUrl: './new-proposal.component.scss',
 })
-export class NewProposalComponent implements OnInit {
+export class NewProposalComponent implements OnInit, OnDestroy {
   proposalForm: any = EmptyProposalForm();
   role: string | undefined;
   njoyn: string | undefined;
   date: Date | undefined;
   minDate: Date = new Date();
   offices: Office[] = [];
-  extras: Extra[] = [];
+  extras = signal<Extra[]>([]);
   parameters: any[] = [];
   selectedExtras: any[] = [];
   searchTextOffices = '';
   searchTextCandidates = '';
-  filteredOffices: Office[] = [];
-  filteredCandidates: Candidate[] = [];
+  filteredOffices = signal<Office[]>([]);
+  filteredCandidates = signal<Candidate[]>([]);
   candidate!: Candidate | null;
-  selectedCandidate!: Candidate | null;
+  selectedCandidate = signal<Candidate | null>(null);
   taxes!: Taxes[];
   contractLevels = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
   yearlyGross!: number;
-  monthlyNet: number = 0;
-  yearlyNet: number = 0;
-  monthlyCompanyCost: number = 0;
-  yearlyCompanyCost: number = 0;
+  monthlyNet = 0;
+  yearlyNet = 0;
+  monthlyCompanyCost = 0;
+  yearlyCompanyCost = 0;
   // Salary calculations variables:
   iht!: number;
   spp!: number;
   scr!: number;
   ss!: number;
   irs!: number;
-  monthlySalaryCalculations = new Map<string, number>();
-  yearlySalaryCalculations = new Map<string, number>();
-  monthlyList!: [string, number][];
-  yearlyList!: [string, number][];
+  monthlySalaryCalculations = signal(new Map<string, number>());
+  yearlySalaryCalculations = signal(new Map<string, number>());
+  monthlyList = computed(() => Array.from(this.monthlySalaryCalculations()));
+  yearlyList = computed(() => Array.from(this.yearlySalaryCalculations()));
   temporalProposal!: any;
   candidateHeaderTemplate = '';
   proposalHeaderTemplate = '';
@@ -106,12 +91,12 @@ export class NewProposalComponent implements OnInit {
   candidateHeader = this.candidateHeaderTemplate;
   proposalHeader = this.proposalHeaderTemplate;
   salaryHeader = this.salaryHeaderTemplate;
-  scrValue!: Number;
+  scrValue = signal<number | undefined>(undefined);
 
   subscription!: Subscription;
 
-  contractTypeOnLabel: string = '';
-  contractTypeOffLabel: string = '';
+  contractTypeOnLabel = '';
+  contractTypeOffLabel = '';
 
   routerSubscription!: Subscription;
 
@@ -131,7 +116,7 @@ export class NewProposalComponent implements OnInit {
     private taxesService: TaxesService,
     private officeService: OfficeService,
     private extrasService: ExtrasService,
-    private t: TranslateService
+    private t: TranslateService,
   ) {
     // Get all translated strings
     this.t.use(localStorage.getItem('lang') || 'en');
@@ -163,7 +148,7 @@ export class NewProposalComponent implements OnInit {
         this.candidateHeader = candidateHeaderTemplate;
         this.proposalHeader = proposalHeaderTemplate;
         this.salaryHeader = salaryHeaderTemplate;
-      }
+      },
     );
 
     // All the possible statuses
@@ -179,11 +164,11 @@ export class NewProposalComponent implements OnInit {
     // Fetch extras into this.extras mapped by the method mapJsonToExtra
     this.extrasService.getExtras(0, 100).subscribe({
       next: (data) => {
-        this.extras = data.extras.map(this.mapJsonToExtra);
+        const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
 
         // If it's a new proposal, add the default extras to it
         if (this.selectedExtras.length === 0) {
-          this.extras.forEach((ex) => {
+          extras.forEach((ex) => {
             if (ex.isDefault) {
               this.selectedExtras.push(ex);
             }
@@ -192,13 +177,12 @@ export class NewProposalComponent implements OnInit {
 
         // Find matching extras and update the selectedExtras.
         this.selectedExtras.forEach((ex) => {
-          const matchingExtraIndex = this.extras.findIndex(
-            (extra) => extra.name === ex.name
-          );
+          const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
           if (matchingExtraIndex !== -1) {
-            this.extras[matchingExtraIndex] = ex;
+            extras[matchingExtraIndex] = ex;
           }
         });
+        this.extras.set(extras);
       },
       error: (error) => {
         console.error('Error while fetching extras:', error);
@@ -231,7 +215,7 @@ export class NewProposalComponent implements OnInit {
     // Get current candidate
     this.candidateService.currentCandidate.subscribe((candidate) => {
       console.log(candidate);
-      this.selectedCandidate = candidate;
+      this.selectedCandidate.set(candidate);
     });
 
     // Get current proposal from service and set it in temporalProposal
@@ -239,8 +223,7 @@ export class NewProposalComponent implements OnInit {
       if (Object.keys(proposal).length !== 0) {
         this.temporalProposal = proposal;
         const statuses = proposal.statuses.sort(
-          (a: any, b: any) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         );
         this.latestStatus = statuses[statuses.length - 1];
         this.latestStatusNumber = this.latestStatus.status;
@@ -253,10 +236,10 @@ export class NewProposalComponent implements OnInit {
 
     // TODO: The proposal Form needs to be filled properly before submitting
     // The proposal form should be filled with the current proposal from the service
-    if (!!this.temporalProposal) {
+    if (this.temporalProposal) {
       // This function sets the id to the field attribute extra.templateId and adds 3 more fields to be properly shown on the
       // dropdown menu of the multiselect component
-      function mapInputToOutput(input: any): any {
+      const mapInputToOutput = (input: any): any => {
         return {
           amount: input.amount,
           createdAt: null, // Set createdAt to null
@@ -270,24 +253,22 @@ export class NewProposalComponent implements OnInit {
           multiplyYearly: input.multiplyYearly,
           name: input.name,
         };
-      }
+      };
 
       this.proposalForm = this.temporalProposal;
       this.proposalForm.startDate = new Date(this.temporalProposal.startDate);
       this.proposalForm.dueDate = new Date(this.temporalProposal.dueDate);
 
-      this.selectedCandidate = this.temporalProposal.candidate;
+      this.selectedCandidate.set(this.temporalProposal.candidate);
 
-      const extras: any[] = this.proposalForm.salary.extras.map((e: any) =>
-        mapInputToOutput(e)
-      );
+      const extras: any[] = this.proposalForm.salary.extras.map((e: any) => mapInputToOutput(e));
       this.selectedExtras = extras;
     } else {
       this.proposalForm = EmptyProposalForm();
     }
 
-    if (!!this.selectedCandidate) {
-      this.proposalForm.candidate = this.selectedCandidate;
+    if (this.selectedCandidate()) {
+      this.proposalForm.candidate = this.selectedCandidate();
     }
   }
 
@@ -307,7 +288,7 @@ export class NewProposalComponent implements OnInit {
 
   clearFormFields() {
     this.candidateService.changeCandidate(null);
-    this.selectedCandidate = null;
+    this.selectedCandidate.set(null);
     this.candidate = null;
     this.proposalForm = EmptyProposalForm();
   }
@@ -321,11 +302,9 @@ export class NewProposalComponent implements OnInit {
     this.salaryHeader =
       this.salaryHeaderTemplate +
       ': ' +
-      this.formatCurrency(
-        this.yearlySalaryCalculations.get('Estimated Net Salary')
-      );
+      this.formatCurrency(this.yearlySalaryCalculations().get('Estimated Net Salary'));
   }
- 
+
   mapJsonToExtra(json: any): Extra {
     return {
       id: json.id,
@@ -358,32 +337,26 @@ export class NewProposalComponent implements OnInit {
   }
 
   calculateAll() {
-    this.monthlySalaryCalculations.clear();
-    this.yearlySalaryCalculations.clear();
     this.proposalForm.salary.extras = this.selectedExtras;
     let irs, ss;
-    if (!!this.ss) {
+    if (this.ss) {
       ss = this.ss;
     }
-    if (!!this.irs) {
+    if (this.irs) {
       irs = this.irs;
     }
-    this.proposalService
-      .salaryCalculations(this.proposalForm, irs, ss)
-      .subscribe((result) => {
-        this.monthlyList = Array.from(result.get('monthly') ?? new Map());
-        this.yearlyList = Array.from(result.get('yearly') ?? new Map());
-        this.monthlySalaryCalculations = result.get('monthly') ?? new Map();
-        this.yearlySalaryCalculations = result.get('yearly') ?? new Map();
-        this.scrValue = this.proposalService.getScrValue();
-      });
+    this.proposalService.salaryCalculations(this.proposalForm, irs, ss).subscribe((result) => {
+      this.monthlySalaryCalculations.set(result.get('monthly') ?? new Map());
+      this.yearlySalaryCalculations.set(result.get('yearly') ?? new Map());
+      this.scrValue.set(Number(this.proposalService.getScrValue()));
+    });
   }
 
   getTaxBracket(base: number): Taxes {
     let taxBracket!: Taxes;
     let min = 0;
     let max = 0;
-    for (let tax of this.taxes) {
+    for (const tax of this.taxes) {
       max = tax.salaryMax;
       if (base >= min && base < max) {
         taxBracket = tax;
@@ -395,9 +368,7 @@ export class NewProposalComponent implements OnInit {
 
   onSubmit() {
     // Map office proposals to ids
-    this.proposalForm.office.proposals = this.proposalForm.office.proposals.map(
-      (p: any) => p.id
-    );
+    this.proposalForm.office.proposals = this.proposalForm.office.proposals.map((p: any) => p.id);
     // Add selectedExtras list to salary.extras
     this.proposalForm.salary.extras = this.selectedExtras;
     // Format startDate
@@ -409,13 +380,13 @@ export class NewProposalComponent implements OnInit {
     }
 
     // Add selectedCandidate if not null
-    if (this.selectedCandidate != null) {
-      this.proposalForm.candidate = this.selectedCandidate;
+    if (this.selectedCandidate() != null) {
+      this.proposalForm.candidate = this.selectedCandidate();
     }
 
     // If temporalProposal is not null, it means that we are editing an existing proposal,
     // and if it's null, it means that we are creating a new one.
-    if (!!this.temporalProposal) {
+    if (this.temporalProposal) {
       if (this.latestStatusNumber !== this.latestStatus.status) {
         const status: Status = {
           id: 0,
@@ -430,20 +401,20 @@ export class NewProposalComponent implements OnInit {
         statusList.push(status);
         console.log(statusList);
       }
-      this.proposalService.modifyProposal(this.proposalForm).subscribe({
-        next: (response) => {
+      this.proposalService.modifyProposal(this.proposalForm, callerHandlesErrors()).subscribe({
+        next: () => {
           this.toastService.success(
             'The proposal for ' +
-              this.selectedCandidate?.name +
-              ' has been modified successfully!'
+              this.selectedCandidate()?.name +
+              ' has been modified successfully!',
           );
           sleep(1000).then(() => {
             this.router.navigate(['/proposals']);
           });
         },
-        error: (error) => {
+        error: () => {
           this.toastService.error(
-            "The proposal couldn't be modified, please check the form for errors or missing fields!"
+            "The proposal couldn't be modified, please check the form for errors or missing fields!",
           );
         },
       });
@@ -458,20 +429,20 @@ export class NewProposalComponent implements OnInit {
         modifiedBy: '',
       };
       this.proposalForm.statuses[0] = status;
-      this.proposalService.createProposal(this.proposalForm).subscribe({
-        next: (response) => {
+      this.proposalService.createProposal(this.proposalForm, callerHandlesErrors()).subscribe({
+        next: () => {
           this.toastService.success(
             'The proposal for ' +
-              this.selectedCandidate?.name +
-              ' has been created successfully!'
+              this.selectedCandidate()?.name +
+              ' has been created successfully!',
           );
           sleep(1000).then(() => {
             this.router.navigate(['/proposals']);
           });
         },
-        error: (error) => {
+        error: () => {
           this.toastService.error(
-            "The proposal couldn't be created, please check the form for errors or missing fields!"
+            "The proposal couldn't be created, please check the form for errors or missing fields!",
           );
         },
       });
@@ -480,16 +451,14 @@ export class NewProposalComponent implements OnInit {
   }
 
   searchCandidates(event: any) {
-    this.candidateService
-      .getFilteredCandidates(event.query)
-      .subscribe((candidates) => {
-        this.filteredCandidates = candidates.candidates;
-      });
+    this.candidateService.getFilteredCandidates(event.query).subscribe((candidates) => {
+      this.filteredCandidates.set(candidates.candidates);
+    });
   }
 
   searchOffices(event: any) {
     this.officeService.getOffices(event).subscribe((offices) => {
-      this.filteredOffices = offices;
+      this.filteredOffices.set(offices);
     });
   }
 
@@ -498,7 +467,7 @@ export class NewProposalComponent implements OnInit {
   }
 
   onSelectedCandidate($event: AutoCompleteSelectEvent) {
-    this.selectedCandidate = $event.value;
+    this.selectedCandidate.set($event.value);
     this.calculateAll();
     this.updateHeaders();
   }
@@ -520,5 +489,3 @@ export class NewProposalComponent implements OnInit {
     }).format(amount);
   }
 }
-
-
