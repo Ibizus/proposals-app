@@ -26,10 +26,13 @@ public class MailSenderController {
 
   @Operation(summary = "Send a candidate proposal email")
   @PostMapping(value = {"candidate", "candidate/"})
-  public void sendMail(@Valid @RequestBody Proposal proposal, @RequestParam String filename) {
+  public void sendMail(
+      @Valid @RequestBody Proposal proposal,
+      @RequestParam String filename,
+      @RequestParam(required = false, defaultValue = "en") String language) {
 
     log.info("Proposal received in backend to be sent");
-    this.mailSenderService.notifyCandidateByEmail(proposal, filename);
+    this.mailSenderService.notifyCandidateByEmail(proposal, filename, language);
     log.info("Message processing in backend!");
   }
 
