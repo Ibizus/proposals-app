@@ -15,8 +15,8 @@ public class OpenApiConfig {
             new Info()
                 .title("Proposals API")
                 .description(
-                    "REST API for the Proposals application: candidates, offices, proposals, "
-                        + "salaries, extras, tax brackets and reporting.")
+                    "REST API for the Proposals application: candidates, offices, positions, "
+                        + "proposals, salaries, extras, tax brackets and reporting.")
                 .version("v1"));
   }
 }

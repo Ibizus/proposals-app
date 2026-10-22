@@ -32,6 +32,7 @@ public class ProposalMapper {
         officeDTO,
         proposal.getSalary(),
         proposal.getCandidate(),
+        proposal.getPosition(),
         proposal.getStatuses(),
         proposal.getNjoyn(),
         proposal.getCreatedAt(),

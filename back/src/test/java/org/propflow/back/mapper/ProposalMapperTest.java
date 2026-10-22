@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.propflow.back.dto.ProposalDTO;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Office;
+import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
 import org.propflow.back.model.Salary;
 
@@ -37,6 +38,9 @@ class ProposalMapperTest {
     proposal.setOffice(office);
     proposal.setSalary(salary);
     proposal.setCandidate(candidate);
+    Position position = new Position();
+    position.setId(5);
+    proposal.setPosition(position);
 
     ProposalDTO dto = mapper.toDTO(proposal);
 
@@ -51,6 +55,7 @@ class ProposalMapperTest {
     assertThat(dto.knowMore()).isEqualTo("More info");
     assertThat(dto.salary()).isSameAs(salary);
     assertThat(dto.candidate()).isSameAs(candidate);
+    assertThat(dto.position()).isSameAs(position);
     assertThat(dto.createdAt()).isEqualTo(proposal.getCreatedAt());
     assertThat(dto.office().id()).isEqualTo(3);
     assertThat(dto.office().name()).isEqualTo("Lisbon");
