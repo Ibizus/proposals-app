@@ -86,16 +86,16 @@ class MailTemplateI18nTest {
     assertThat(render("proposal.html", "pt", offerModel("sem termo")))
         .contains(
             "Na sequência da conversa efetuada, apresentamos de seguida as condições propostas"
-                + " para a tua admissão na PropFlowTI Portugal, SA:");
+                + " para a tua admissão na PropFlow SA:");
   }
 
   @ParameterizedTest(name = "offer terms in {0} match the Portuguese terms")
   @CsvSource(
       delimiter = ';',
       value = {
-        "en; admission to PropFlowTI Portugal, SA:|€5.5 monthly|€200.0 net per month",
-        "es; admisión en PropFlowTI Portugal, SA:|€5.5 mensuales|€200.0 neto al mes",
-        "de; Aufnahme bei der PropFlowTI Portugal, SA:|€5.5 monatlich|€200.0 netto pro Monat",
+        "en; admission to PropFlow SA:|€5.5 monthly|€200.0 net per month",
+        "es; admisión en PropFlow SA:|€5.5 mensuales|€200.0 neto al mes",
+        "de; Aufnahme bei der PropFlow SA:|€5.5 monatlich|€200.0 netto pro Monat",
       })
   void offerTermsMatchPortugueseTerms(String lang, String expected) {
     String html = render("proposal.html", lang, offerModel("indefinite"));
