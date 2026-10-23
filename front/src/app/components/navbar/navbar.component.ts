@@ -250,13 +250,14 @@ export class NavbarComponent implements OnInit {
 
     const proposals$ = this.t.get('PROPOSALS');
     const candidates$ = this.t.get('CANDIDATES');
+    const positions$ = this.t.get('POSITIONS');
     const extras$ = this.t.get('EXTRAS');
     const taxes$ = this.t.get('TAXES');
     const parameters$ = this.t.get('PARAMETERS');
     const logout$ = this.t.get('LOGOUT');
 
-    forkJoin([proposals$, candidates$, extras$, taxes$, parameters$]).subscribe(
-      ([proposals, candidates, extras, taxes, parameters]) => {
+    forkJoin([proposals$, candidates$, positions$, extras$, taxes$, parameters$]).subscribe(
+      ([proposals, candidates, positions, extras, taxes, parameters]) => {
         this.items = [
           {
             label: proposals,
@@ -267,6 +268,11 @@ export class NavbarComponent implements OnInit {
             label: candidates,
             icon: 'pi pi-fw pi-user',
             routerLink: ['/candidates'],
+          },
+          {
+            label: positions,
+            icon: 'pi pi-fw pi-briefcase',
+            routerLink: ['/positions'],
           },
           { label: extras, icon: 'pi pi-fw pi-plus', routerLink: ['/extras'] },
           { label: taxes, icon: 'pi pi-fw pi-euro', routerLink: ['/taxes'] },

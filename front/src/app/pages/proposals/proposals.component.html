@@ -37,6 +37,11 @@
             {{ 'CANDIDATE' | translate }} <p-sortIcon field="candidate.name" />
           </div>
         </th>
+        <th pSortableColumn="position.title" class="header-cell">
+          <div class="header-content">
+            {{ 'POSITION' | translate }} <p-sortIcon field="position.title" />
+          </div>
+        </th>
         <th [width]="100">
           <div class="flex justify-center float-right">
             <p-iconField iconPosition="right" class="mr-0">
@@ -70,6 +75,7 @@
           </p-tag>
         </td>
         <td>{{ rowData.candidate.name }}</td>
+        <td>{{ rowData.position?.title }}</td>
         <td [width]="100">
           <div class="flex justify-center">
             <button

@@ -2,6 +2,7 @@ package org.propflow.back.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,7 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.propflow.back.mapper.ProposalMapper;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Office;
 import org.propflow.back.model.Proposal;
@@ -23,6 +26,10 @@ import org.propflow.back.model.Salary;
 import org.propflow.back.model.Status;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ProposalRepository;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class ProposalServiceTest {
@@ -31,6 +38,8 @@ class ProposalServiceTest {
 
   @Mock private ProposalRepository proposalRepository;
   @Mock private CandidateRepository candidateRepository;
+
+  @Spy private ProposalMapper proposalMapper = new ProposalMapper();
 
   @InjectMocks private ProposalService proposalService;
 
@@ -125,6 +134,33 @@ class ProposalServiceTest {
     assertThat(candidate.getProposals()).containsExactly(other);
     assertThat(candidate.getProposalsCount()).isEqualTo(1);
     verify(proposalRepository).delete(proposal);
+  }
+
+  // Office and Salary point back at the proposal, like JPA-loaded entities do.
+  private static Proposal linkedProposal(long id) {
+    Proposal proposal = new Proposal();
+    proposal.setId(id);
+    proposal.setOffice(new Office(1, "Lisbon", "LIS", new HashSet<>(Set.of(proposal))));
+    proposal.setSalary(new Salary(1, 1000d, proposal, new HashSet<>()));
+    return proposal;
+  }
+
+  @Test
+  void paginatedListHandlesEntityReferenceCycles() {
+    when(proposalRepository.findAll(any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(linkedProposal(1))));
+
+    assertThat(proposalService.all(0, 10)).containsEntry("totalItems", 1L);
+  }
+
+  @Test
+  void filteredListHandlesEntityReferenceCycles() {
+    when(proposalRepository
+            .findProposalByNjoynOrDescriptionContainingIgnoreCaseOrRoleContainingIgnoreCaseOrCandidate_NameContainingIgnoreCaseOrCandidate_SurnameContainingIgnoreCaseOrCandidate_EmailContainingIgnoreCase(
+                "a", "a", "a", "a", "a", "a", PageRequest.of(0, 10, Sort.by("id").ascending())))
+        .thenReturn(new PageImpl<>(List.of(linkedProposal(1))));
+
+    assertThat(proposalService.findByFilter(0, 10, "a")).containsEntry("totalItems", 1L);
   }
 
   @Test

@@ -1,4 +1,4 @@
-import { Candidate, Extra, Proposal, Taxes } from '../app/utils/types';
+import { Candidate, Extra, Position, Proposal, Taxes } from '../app/utils/types';
 
 export function makeCandidate(overrides: Partial<Candidate> = {}): Candidate {
   return {
@@ -14,6 +14,24 @@ export function makeCandidate(overrides: Partial<Candidate> = {}): Candidate {
     dependentsNumber: 0,
     nJoynSet: [],
     proposals: [],
+    position: null,
+    ...overrides,
+  };
+}
+
+export function makePosition(overrides: Partial<Position> = {}): Position {
+  const at = new Date('2024-01-01T00:00:00Z');
+  return {
+    id: 1,
+    title: 'Backend Developer',
+    description: 'Develops backend services',
+    njoyn: 'NJ-1',
+    knowMore: 'https://example.com/positions/backend',
+    candidates: [1, 2],
+    createdAt: at,
+    createdBy: 'test',
+    modifiedAt: at,
+    modifiedBy: 'test',
     ...overrides,
   };
 }
@@ -81,6 +99,7 @@ export function makeProposal(overrides: Partial<Proposal> = {}): Proposal {
     office: { id: 1, name: 'Lisbon', code: 'LIS' },
     salary: { id: 1, base: 1000, extras: [] },
     candidate: makeCandidate(),
+    position: null,
     statuses: [],
     createdAt: at,
     createdBy: 'test',

@@ -1,14 +1,11 @@
 package org.propflow.back.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,36 +34,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
 @Service
 public class ProposalService {
 
-  @Autowired
-  private CandidateService candidateService;
-  @Autowired
-  private CandidateRepository candidateRepository;
+  @Autowired private CandidateService candidateService;
+  @Autowired private CandidateRepository candidateRepository;
+
   @SuppressWarnings("unused")
   @Autowired
   private OfficeRepository officeRepository;
-  @Autowired
-  private ProposalRepository proposalRepository;
-  @Autowired
-  private ProposalMapper proposalMapper;
-  @Autowired
-  private SalaryRepository salaryRepository;
-  @Autowired
-  private ExtraRepository extraRepository;
-  @PersistenceContext
-  EntityManager entityManager;
+
+  @Autowired private ProposalRepository proposalRepository;
+  @Autowired private ProposalMapper proposalMapper;
+  @Autowired private SalaryRepository salaryRepository;
+  @Autowired private ExtraRepository extraRepository;
+  @PersistenceContext EntityManager entityManager;
 
   public List<ProposalDTO> all() {
     List<Proposal> proposals = this.proposalRepository.findAll();
 
-    return proposals.stream()
-        .map(proposalMapper::toDTO)
-        .collect(Collectors.toList());
+    return proposals.stream().map(proposalMapper::toDTO).collect(Collectors.toList());
   }
 
   // Pagination:
@@ -77,10 +64,9 @@ public class ProposalService {
     Map<String, Object> response = new HashMap<>();
 
     // Map Proposals to ProposalsDTO before inserting data into Response Map:
-    response.put("proposals", pageAll.getContent().stream()
-        .map(proposalMapper::toDTO)
-        .collect(Collectors.toList()));
-    System.out.println("Returning proposal map: " + response.get("proposals"));
+    response.put(
+        "proposals",
+        pageAll.getContent().stream().map(proposalMapper::toDTO).collect(Collectors.toList()));
     response.put("currentPage", pageAll.getNumber());
     response.put("totalItems", pageAll.getTotalElements());
     response.put("totalPages", pageAll.getTotalPages());
@@ -97,16 +83,16 @@ public class ProposalService {
   // Find a Proposal by some fields (paginated):
   public Map<String, Object> findByFilter(int page, int size, String filter) {
     Pageable paginator = PageRequest.of(page, size, Sort.by("id").ascending());
-    Page<Proposal> pageFiltered = this.proposalRepository
-        .findProposalByNjoynOrDescriptionContainingIgnoreCaseOrRoleContainingIgnoreCaseOrCandidate_NameContainingIgnoreCaseOrCandidate_SurnameContainingIgnoreCaseOrCandidate_EmailContainingIgnoreCase(
-            filter, filter, filter, filter, filter, filter, paginator);
+    Page<Proposal> pageFiltered =
+        this.proposalRepository
+            .findProposalByNjoynOrDescriptionContainingIgnoreCaseOrRoleContainingIgnoreCaseOrCandidate_NameContainingIgnoreCaseOrCandidate_SurnameContainingIgnoreCaseOrCandidate_EmailContainingIgnoreCase(
+                filter, filter, filter, filter, filter, filter, paginator);
 
     Map<String, Object> response = new HashMap<>();
     // Map Proposals to ProposalsDTO before inserting data into Response Map:
-    response.put("proposals", pageFiltered.getContent().stream()
-        .map(proposalMapper::toDTO)
-        .collect(Collectors.toList()));
-    System.out.println("Returning proposal map: " + response.get("proposals"));
+    response.put(
+        "proposals",
+        pageFiltered.getContent().stream().map(proposalMapper::toDTO).collect(Collectors.toList()));
     response.put("currentPage", pageFiltered.getNumber());
     response.put("totalItems", pageFiltered.getTotalElements());
     response.put("totalPages", pageFiltered.getTotalPages());
@@ -117,15 +103,17 @@ public class ProposalService {
   public List<ProposalDTO> findProposalsByCandidateId(Long id) {
     System.out.println("WE ARE NOW INSIDE PROPOSAL SERVICE");
     Candidate candidate = this.candidateService.one(id);
-    System.out
-        .println("Candidate found: " + candidate.getName() + " has " + candidate.getProposalsCount() + " proposals.");
+    System.out.println(
+        "Candidate found: "
+            + candidate.getName()
+            + " has "
+            + candidate.getProposalsCount()
+            + " proposals.");
 
     // Map Proposals to ProposalsDTO before returning:
-    List<ProposalDTO> resultList = candidate.getProposals().stream()
-        .map(proposalMapper::toDTO)
-        .collect(Collectors.toList());
+    List<ProposalDTO> resultList =
+        candidate.getProposals().stream().map(proposalMapper::toDTO).collect(Collectors.toList());
 
-    System.out.println("Proposals mapped into ProposalDTO List: " + resultList);
     return resultList;
   }
 
@@ -135,11 +123,8 @@ public class ProposalService {
     Salary salary = proposal.getSalary();
     Office office = proposal.getOffice();
 
-    UtilLazy.initializeLazyOneToManyByJoinFetch(entityManager,
-        Office.class,
-        Proposal.class,
-        office.getId(),
-        office::setProposals);
+    UtilLazy.initializeLazyOneToManyByJoinFetch(
+        entityManager, Office.class, Proposal.class, office.getId(), office::setProposals);
 
     Candidate persistedCandidate = candidateService.save(candidate);
     // Update proposal counter:
@@ -172,7 +157,8 @@ public class ProposalService {
   }
 
   public Proposal one(Long id) {
-    return this.proposalRepository.findById(id)
+    return this.proposalRepository
+        .findById(id)
         .orElseThrow(() -> new EntityNotFoundException(id, Proposal.class));
   }
 
@@ -191,8 +177,10 @@ public class ProposalService {
   }
 
   public void delete(long proposalId) {
-    Proposal proposal = proposalRepository.findById(proposalId)
-        .orElseThrow(() -> new IllegalArgumentException("Proposal not found"));
+    Proposal proposal =
+        proposalRepository
+            .findById(proposalId)
+            .orElseThrow(() -> new IllegalArgumentException("Proposal not found"));
 
     // Disassociate related entities
     if (proposal.getOffice() != null) {

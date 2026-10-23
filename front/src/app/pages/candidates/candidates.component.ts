@@ -1,13 +1,15 @@
 import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import { TableModule, Table } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-import { Candidate, Proposal } from '../../utils/types';
+import { Candidate, Position, Proposal } from '../../utils/types';
 import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { NewCandidateButtonComponent } from '../../components/new-candidate-button/new-candidate-button.component';
 import { CandidateService } from '../../services/candidate.service';
+import { PositionService } from '../../services/position.service';
 import { Dialog, DialogModule } from 'primeng/dialog';
 import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast.service';
@@ -32,6 +34,7 @@ import { callerHandlesErrors } from '../../services/error-toast.interceptor';
     FormsModule,
     InputIconModule,
     CommonModule,
+    DropdownModule,
     TranslateModule,
   ],
   providers: [TranslateService, TranslateStore],
@@ -40,6 +43,7 @@ import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 })
 export class CandidatesComponent implements OnInit {
   candidates = signal<Candidate[]>([]);
+  positions = signal<Position[]>([]);
   candidate!: Candidate;
   modifyCandidateString: string = this.t.instant('MODIFY CANDIDATE');
   isLoading = signal(true);
@@ -70,6 +74,7 @@ export class CandidatesComponent implements OnInit {
   constructor(
     private router: Router,
     private candidateService: CandidateService,
+    private positionService: PositionService,
     private toastService: ToastService,
     private t: TranslateService,
   ) {
@@ -97,6 +102,11 @@ export class CandidatesComponent implements OnInit {
   ngOnInit() {
     // Fetch paginated canidates
     this.getCandidates(this.demandedPage, this.rows(), '');
+    // Fetch all positions for the edit dialog picker
+    this.positionService.getAllPositions().subscribe({
+      next: (positions) => this.positions.set(positions),
+      error: () => this.positions.set([]),
+    });
     // Reset candidate
     this.candidate = {
       '@id': 0,
@@ -111,6 +121,7 @@ export class CandidatesComponent implements OnInit {
       dependentsNumber: 0,
       nJoynSet: [''],
       proposals: [0],
+      position: null,
     };
   }
 
@@ -126,7 +137,9 @@ export class CandidatesComponent implements OnInit {
   onInputChange(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.filter = filterValue;
-    this.getCandidates(0, this.rows(), this.filter);
+    this.demandedPage = 0;
+    this.first.set(0);
+    this.getCandidates(this.demandedPage, this.rows(), this.filter);
   }
 
   goToCandidateDetail(candidate: Candidate): void {
@@ -145,7 +158,12 @@ export class CandidatesComponent implements OnInit {
 
   goToModifyCandidate(candidate: Candidate) {
     this.visibleCandidateModal.set(true);
-    this.candidate = candidate;
+    this.candidate = { ...candidate };
+    if (candidate.position) {
+      this.candidate.position =
+        this.positions().find((position) => position.id === candidate.position?.id) ??
+        candidate.position;
+    }
   }
 
   getCandidates(page: number, size: number, filter: string) {
@@ -230,6 +248,7 @@ export class CandidatesComponent implements OnInit {
     this.candidateService.modifyCandidate(this.candidate).subscribe({
       next: () => {
         this.visibleCandidateModal.set(false);
+        this.getCandidates(this.demandedPage, this.rows(), this.filter);
         this.candidate = {
           '@id': 0,
           id: 0,
@@ -243,6 +262,7 @@ export class CandidatesComponent implements OnInit {
           dependentsNumber: 0,
           nJoynSet: [''],
           proposals: [0],
+          position: null,
         };
       },
       error: () => undefined,
