@@ -5,13 +5,14 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.propflow.back.model.Proposal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamSource;
@@ -31,11 +32,15 @@ public class MailSenderService {
   private static final String BANNER_FILENAME = "banner.jpeg";
   private static final String BANNER_CLASSPATH = "static/img/" + BANNER_FILENAME;
 
+  private static final String OFFER_TEMPLATE = "proposal.html";
+  private static final String CANDIDATE_OFFER_TEMPLATE = "candidateOffer.html";
+
   @Value("${app.mail.from}")
   private String emailSender;
 
   @Autowired private SpringTemplateEngine thymeleafTemplateEngine;
   @Autowired private JavaMailSender mailSender;
+  @Autowired private MessageSource messageSource;
 
   public MailSenderService(JavaMailSender mailSender) {
     this.mailSender = mailSender;
@@ -111,9 +116,9 @@ public class MailSenderService {
 
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("body", body);
-    Context thymeleafContext = new Context();
+    Context thymeleafContext = new Context(Locale.ENGLISH);
     thymeleafContext.setVariables(templateModel);
-    String htmlBody = thymeleafTemplateEngine.process("proposal.html", thymeleafContext);
+    String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
     byte[] attachment = new byte[0];
 
     try {
@@ -140,31 +145,18 @@ public class MailSenderService {
 
   // USES CANDIDATE-OFFER TEMPLATE:
   @Async
-  public void notifyCandidateByEmail(Proposal proposal, String fileName) {
+  public void notifyCandidateByEmail(Proposal proposal, String fileName, String language) {
 
     String subject = "PropFlow " + proposal.getDescription();
+    Locale locale = localeFor(language);
     Map<String, Object> templateModel = new HashMap<>();
-    templateModel.put("greeting", "Dear " + proposal.getCandidate().getName() + ",");
-    templateModel.put(
-        "introduction",
-        "I am pleased to extend a formal offer for the position of "
-            + proposal.getRole()
-            + " of PropFlow at "
-            + proposal.getOffice().getName()
-            + " branch. After careful consideration of your qualifications and performance throughout the selection process, we are confident that you are the ideal candidate for this role.");
-    templateModel.put(
-        "body",
-        "Please find attached the official offer letter outlining the terms and conditions of your employment, including salary, benefits, and start date."
-            + "<br/><br/>"
-            + "We believe that your skills and experience will make a valuable contribution to our team, and we are excited about the prospect of you joining us. If you have any questions or require further information, please do not hesitate to contact me."
-            + "<br/><br/>"
-            + "We look forward to welcoming you aboard and to a successful collaboration."
-            + "<br/><br/>"
-            + "Best regards.");
+    templateModel.put("candidate", proposal.getCandidate().getName());
+    templateModel.put("role", proposal.getRole());
+    templateModel.put("office", proposal.getOffice().getName());
 
-    Context thymeleafContext = new Context();
+    Context thymeleafContext = new Context(locale);
     thymeleafContext.setVariables(templateModel);
-    String htmlBody = thymeleafTemplateEngine.process("candidateOffer.html", thymeleafContext);
+    String htmlBody = thymeleafTemplateEngine.process(CANDIDATE_OFFER_TEMPLATE, thymeleafContext);
 
     byte[] attachment = new byte[0];
 
@@ -190,251 +182,91 @@ public class MailSenderService {
     }
   }
 
-  // final String for Portuguese Email:
-  private final String GREETING = "Olá ";
-  private final String INTRO =
-      "Na sequência da conversa efetuada, apresentamos de seguida as condições propostas para a tua admissão na PropFlowTI Portugal, SA:";
-  private final String CONTRACT = "Tipo de Contrato: Contrato ";
-  private final String CONTRACT2 = ", com um período experimental de 180 dias, nos termos legais.";
-  private final String DATE = "Data de Admissão: ";
-  private final String SALARY = "Remuneração Mensal: ";
-  private final String SALARY2 = "€ ilíquidos mensais (";
-  private final String SALARY3 =
-      "€ ilíquidos anuais), sendo constituída pelas seguintes parcelas: ";
-  private final String BASE = "Remuneração Base Mensal: ";
-  private final String BASE2 =
-      "€ ilíquidos, a pagar em catorze prestações mensais, sujeitas aos descontos legais em vigor.";
-  private final String IHT = "Retribuição por Isenção de Horário de Trabalho Mensal: ";
-  private final String IHT2 =
-      "€ ilíquidos, a pagar em catorze prestações mensais, sujeitas aos descontos legais em vigor.";
-  private final String FOOD = "Subsídio de Alimentação correspondente ao montante de ";
-  private final String FOOD2 =
-      "€ mensais, com uma estimação de 20 dias de trabalho efetivo por cada mês, pago nos termos definidos pela política vigente na empresa.";
-  private final String BENEFITS = "Regalias Sociais Suplementares:";
-  private final String HEALTH =
-      "Seguro de Saúde - Extensível de forma gratuita a 3 elementos do agregado familiar: cônjuge ou equiparado (com idade inferior a 65 anos) e filhos, com idade inferior a 25 anos, nos termos e condições definidos, de acordo com os regulamentos internos em vigor na empresa.";
-  private final String LIFE =
-      "Seguro de Vida e Seguro de Acidentes Pessoais, nos termos e condições definidos, de acordo com os regulamentos internos em vigor na empresa.";
-  private final String CAR = "Car Allowance no valor de ";
-  private final String CAR2 =
-      "€ líquidos mensais a pagar em catorze prestações mensais, valor estimado depois aos descontos legais em vigor; Este valor começa a ser pago no mês N+1 e corresponde a ";
-  private final String CAR3 = "€ líquidos anuais estimados.";
-  private final String FUEL = "Cartão de Combustível: Galp Frota - plafond de ";
-  private final String FUEL2 = "€ líquidos/ano que corresponde a ";
-  private final String FUEL3 =
-      "€ líquidos/mês. O valor é renovado anualmente e tem que ser gasto no ano a que corresponde não podendo ser transferido para o próximo ano.";
-  private final String PHONE = "Telemóvel e cartão Vodafone com plafond Internet.";
-  private final String LAPTOP =
-      "Computador portátil com licença da Microsoft e todos os softwares necessários.";
-  private final String SPP =
-      "Programas Corporativos: elegível para “SPP - Share Purchase Plan” e “PPP - Profit Participation Plan de até 3%”";
-  private final String FLEX =
-      "Programa Flex: 1% do ordenado adicionado no programa Flex que corresponde a ";
-  private final String FLEX2 = "€ anuais.";
-
-  // FILLS PROPOSAL-PT:
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  // FILLS THE SHARED OFFER TEMPLATE WITH THE CALLER'S LANGUAGE:
   @Async
   public void sendTemplateToCandidate(Map<String, Object> data) {
 
+    Map<String, Object> proposal = asMap(data.get("proposal"));
+    Map<String, Object> candidate = asMap(proposal.get("candidate"));
+    Map<String, Double> monthly = asNumberMap(data.get("monthly"));
+    Map<String, Double> yearly = asNumberMap(data.get("yearly"));
+    Locale locale = localeFor((String) data.get("language"));
+
+    String subject = "PropFlow " + proposal.get("description");
+    Map<String, Object> templateModel = new HashMap<>();
+    templateModel.put("candidate", candidate.get("name"));
+    templateModel.put("contract", contractType(proposal, locale));
+    templateModel.put("date", stringValue(proposal.get("startDate")));
+    templateModel.put("monthlyGross", stringValue(monthly.get("Gross Salary")));
+    templateModel.put("yearlyGross", stringValue(yearly.get("Gross Salary")));
+    templateModel.put("base", stringValue(monthly.get("Base Salary")));
+    templateModel.put("iht", stringValue(monthly.get("IHT")));
+
+    if (monthly.get("Food Allowance") != null) {
+      templateModel.put("food", stringValue(monthly.get("Food Allowance")));
+    }
+    if (monthly.get("Car Allowance") != null) {
+      templateModel.put("carMonthly", stringValue(monthly.get("Car Allowance")));
+      templateModel.put("carYearly", stringValue(yearly.get("Car Allowance")));
+    }
+    if (monthly.get("Fuel Allowance") != null) {
+      templateModel.put("fuelYearly", stringValue(yearly.get("Fuel Allowance")));
+      templateModel.put("fuelMonthly", stringValue(monthly.get("Fuel Allowance")));
+    }
+    if (yearly.get("Flex") != null) {
+      templateModel.put("yearlyFlex", stringValue(yearly.get("Flex")));
+    }
+
+    Context thymeleafContext = new Context(locale);
+    thymeleafContext.setVariables(templateModel);
+    String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
+
     try {
-      // Access to data Map:
-      HashMap proposalObject = (HashMap) data.get("proposal");
-      HashMap candidateObject = (HashMap) proposalObject.get("candidate");
-      ArrayList<ArrayList<String>> monthlyList = (ArrayList<ArrayList<String>>) data.get("monthly");
-      ArrayList<ArrayList<String>> yearlyList = (ArrayList<ArrayList<String>>) data.get("yearly");
-
-      Map<String, Double> monthlyMap = new HashMap<>();
-      for (ArrayList<String> pair : monthlyList) {
-        String key = pair.get(0);
-        Double value = Double.parseDouble(String.valueOf(pair.get(1)));
-        monthlyMap.put(key, value);
-      }
-
-      Map<String, Double> yearlyMap = new HashMap<>();
-      for (ArrayList<String> pair : yearlyList) {
-        String key = pair.get(0);
-        Double value = Double.parseDouble(String.valueOf(pair.get(1)));
-        yearlyMap.put(key, value);
-      }
-
-      try {
-        // Initialize template:
-        String subject = "PropFlow " + proposalObject.get("description");
-        String contractType = proposalObject.get("indefinite") != null ? "sin termo" : "temporário";
-        Map<String, Object> templateModel = new HashMap<>();
-        // Use data to fill template:
-        templateModel.put("greeting", GREETING + candidateObject.get("name") + ",");
-        templateModel.put("introduction", INTRO); // proposalObject.get("office").toString()
-        templateModel.put("contractType", "<li>" + CONTRACT + contractType + CONTRACT2 + "</li>");
-        templateModel.put("startDate", "<li>" + DATE + proposalObject.get("startDate") + "</li>");
-        templateModel.put(
-            "grossSalary",
-            "<li>"
-                + SALARY
-                + "\n\t"
-                + monthlyMap.get("Gross Salary")
-                + SALARY2
-                + yearlyMap.get("Gross Salary")
-                + SALARY3
-                + "</li>");
-        templateModel.put(
-            "monthlyBase", "<li>" + BASE + monthlyMap.get("Base Salary") + BASE2 + "</li>");
-        templateModel.put("monthlyIH", "<li>" + IHT + monthlyMap.get("IHT") + IHT2 + "</li></ol>");
-
-        if (monthlyMap.get("Food Allowance") != null) {
-          templateModel.put(
-              "foodAllowance", "<li>" + FOOD + monthlyMap.get("Food Allowance") + FOOD2 + "</li>");
-        }
-        templateModel.put("socialBenefits", "<li>" + BENEFITS + "</li>");
-        templateModel.put("healthInsurance", "<li>" + HEALTH + "</li>");
-        templateModel.put("lifeInsurance", "<li>" + LIFE + "</li></ol>");
-
-        if (monthlyMap.get("Car Allowance") != null) {
-          templateModel.put(
-              "carAllowance",
-              "<li>"
-                  + CAR
-                  + monthlyMap.get("Car Allowance")
-                  + CAR2
-                  + yearlyMap.get("Car Allowance")
-                  + CAR3
-                  + "</li>");
-        }
-        if (monthlyMap.get("Fuel Allowance") != null) {
-          templateModel.put(
-              "fuelAllowance",
-              "<li>"
-                  + FUEL
-                  + yearlyMap.get("Fuel Allowance")
-                  + FUEL2
-                  + monthlyMap.get("Fuel Allowance")
-                  + FUEL3
-                  + "</li>");
-        }
-        templateModel.put("phone", "<li>" + PHONE + "</li>");
-        templateModel.put("laptop", "<li>" + LAPTOP + "</li>");
-        templateModel.put("spp", "<li>" + SPP + "</li>");
-
-        if (yearlyMap.get("Flex") != null) {
-          templateModel.put("flex", "<li>" + FLEX + yearlyMap.get("Flex") + FLEX2 + "</li>");
-        }
-
-        Context thymeleafContext = new Context();
-        thymeleafContext.setVariables(templateModel);
-        String htmlBody = thymeleafTemplateEngine.process("proposalPT.html", thymeleafContext);
-
-        // Send mail with the banner inlined:
-        try {
-          this.sendWithInline(
-              emailSender,
-              candidateObject.get("email").toString(),
-              subject,
-              htmlBody,
-              BANNER_CONTENT_ID,
-              bannerResource(),
-              BANNER_CONTENT_TYPE);
-        } catch (Exception e) {
-          throw new RuntimeException("Error sending email: " + e);
-        }
-      } catch (Exception ex) {
-        System.out.println("Could not find some values");
-        throw new Exception(ex);
-      }
-    } catch (Exception ex) {
-      System.out.println("Could not access to data map");
-      ex.printStackTrace();
+      this.sendWithInline(
+          emailSender,
+          candidate.get("email").toString(),
+          subject,
+          htmlBody,
+          BANNER_CONTENT_ID,
+          bannerResource(),
+          BANNER_CONTENT_TYPE);
+    } catch (MessagingException e) {
+      throw new RuntimeException("Error sending email: " + e);
     }
   }
 
-  // SEND MAIL USING messages.properties, DEFAULT LOCALE AND proposal.html
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  @Async
-  public void sendMailToCandidate(Map<String, Object> data) {
-
-    try {
-      // Access to data Map:
-      HashMap proposalObject = (HashMap) data.get("proposal");
-      HashMap candidateObject = (HashMap) proposalObject.get("candidate");
-      ArrayList<ArrayList<String>> monthlyList = (ArrayList<ArrayList<String>>) data.get("monthly");
-      ArrayList<ArrayList<String>> yearlyList = (ArrayList<ArrayList<String>>) data.get("yearly");
-
-      Map<String, Double> monthlyMap = new HashMap<>();
-      for (ArrayList<String> pair : monthlyList) {
-        String key = pair.get(0);
-        Double value = Double.parseDouble(String.valueOf(pair.get(1)));
-        monthlyMap.put(key, value);
-      }
-
-      Map<String, Double> yearlyMap = new HashMap<>();
-      for (ArrayList<String> pair : yearlyList) {
-        String key = pair.get(0);
-        Double value = Double.parseDouble(String.valueOf(pair.get(1)));
-        yearlyMap.put(key, value);
-      }
-
-      try {
-        // Initialize template:
-        String subject = "PropFlow " + proposalObject.get("description");
-        String contractType = proposalObject.get("indefinite") != null ? "sin termo" : "temporário";
-        Map<String, Object> templateModel = new HashMap<>();
-        // Use data to fill template:
-        templateModel.put("candidate", candidateObject.get("name"));
-        templateModel.put("office", proposalObject.get("office").toString());
-        templateModel.put("contract", contractType);
-        templateModel.put("date", proposalObject.get("startDate"));
-        templateModel.put("monthlyGross", monthlyMap.get("Gross Salary"));
-        templateModel.put("yearlyGross", yearlyMap.get("Gross Salary"));
-        templateModel.put("base", monthlyMap.get("Base Salary"));
-        templateModel.put("iht", monthlyMap.get("IHT"));
-
-        if (monthlyMap.get("Food Allowance") != null) {
-          templateModel.put("food", monthlyMap.get("Food Allowance"));
-        }
-        // templateModel.put("socialBenefits");
-        // templateModel.put("healthInsurance", "<li>" + HEALTH + "</li>");
-        // templateModel.put("lifeInsurance", "<li>" + LIFE + "</li></ol>");
-
-        if (monthlyMap.get("Car Allowance") != null) {
-          templateModel.put("monthlyCar", monthlyMap.get("Car Allowance"));
-          templateModel.put("monthlyCar", yearlyMap.get("Car Allowance"));
-        }
-        if (monthlyMap.get("Fuel Allowance") != null) {
-          templateModel.put("monthlyFuel", monthlyMap.get("Car Allowance"));
-          templateModel.put("monthlyFuel", yearlyMap.get("Car Allowance"));
-        }
-        // templateModel.put("phone", "<li>" + PHONE + "</li>");
-        // templateModel.put("laptop", "<li>" + LAPTOP + "</li>");
-        // templateModel.put("spp", "<li>" + SPP + "</li>");
-
-        if (yearlyMap.get("Flex") != null) {
-          templateModel.put("yearlyFlex", yearlyMap.get("Flex"));
-        }
-
-        Context thymeleafContext = new Context(Locale.getDefault());
-        thymeleafContext.setVariables(templateModel);
-        String htmlBody = thymeleafTemplateEngine.process("proposal.html", thymeleafContext);
-
-        // Send mail with the banner inlined:
-        try {
-          this.sendWithInline(
-              emailSender,
-              candidateObject.get("email").toString(),
-              subject,
-              htmlBody,
-              BANNER_CONTENT_ID,
-              bannerResource(),
-              BANNER_CONTENT_TYPE);
-        } catch (Exception e) {
-          throw new RuntimeException("Error sending email: " + e);
-        }
-      } catch (Exception ex) {
-        System.out.println("Could not find some values");
-        throw new Exception(ex);
-      }
-    } catch (Exception ex) {
-      System.out.println("Could not access to data map");
-      ex.printStackTrace();
+  private Locale localeFor(String language) {
+    if (language == null || language.isBlank()) {
+      return Locale.ENGLISH;
     }
+    return Locale.forLanguageTag(language);
+  }
+
+  private String contractType(Map<String, Object> proposal, Locale locale) {
+    boolean indefinite = Boolean.TRUE.equals(proposal.get("indefinite"));
+    String key = indefinite ? "contract.indefinite" : "contract.temporary";
+    return messageSource.getMessage(key, null, locale);
+  }
+
+  private static String stringValue(Object value) {
+    return value == null ? null : String.valueOf(value);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> asMap(Object value) {
+    return (Map<String, Object>) value;
+  }
+
+  private static Map<String, Double> asNumberMap(Object value) {
+    Map<String, Double> map = new HashMap<>();
+    if (!(value instanceof List<?> list)) {
+      return map;
+    }
+    for (Object item : list) {
+      if (item instanceof List<?> pair && pair.size() >= 2) {
+        map.put(String.valueOf(pair.get(0)), Double.parseDouble(String.valueOf(pair.get(1))));
+      }
+    }
+    return map;
   }
 }

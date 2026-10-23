@@ -87,6 +87,7 @@ describe('HTTP services', () => {
         proposal,
         monthly,
         yearly,
+        language: 'en',
       });
     });
 
@@ -96,7 +97,7 @@ describe('HTTP services', () => {
       let completed = false;
       service.notifyByEmail(proposal, 'p7.pdf').subscribe({ complete: () => (completed = true) });
 
-      const req = http.expectOne(API + 'send/candidate/?filename=p7.pdf');
+      const req = http.expectOne(API + 'send/candidate/?filename=p7.pdf&language=en');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(proposal);
       req.flush({});
