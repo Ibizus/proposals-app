@@ -130,20 +130,7 @@ public class SalaryService {
     setIHT(monthlySalaryCalculations, yearlySalaryCalculations, salary, iht);
     setSharePurchasePlan(monthlySalaryCalculations, yearlySalaryCalculations, salary, spp);
     setNetSalary(
-        monthlySalaryCalculations,
-        yearlySalaryCalculations,
-        salary,
-        selectedTaxes,
-        monthlyNetSalary,
-        yearlyNetSalary);
-    setExtraSalaryComponents(
-        proposal,
-        monthlySalaryCalculations,
-        yearlySalaryCalculations,
-        selectedTaxes,
-        monthlyNetSalary,
-        yearlyNetSalary,
-        salary);
+        proposal, monthlySalaryCalculations, yearlySalaryCalculations, salary, selectedTaxes);
 
     this.scrValue = this.calculateSCR(monthlySalaryCalculations, scr);
 
@@ -193,64 +180,83 @@ public class SalaryService {
   }
 
   private void setNetSalary(
+      Proposal proposal,
       Map<String, Double> monthlySalaryCalculations,
       Map<String, Double> yearlySalaryCalculations,
       double salary,
-      TaxesDTO taxBracket,
-      double monthlyNetSalary,
-      double yearlyNetSalary) {
+      TaxesDTO taxBracket) {
     double netSalary =
         salary - ((salary * taxBracket.ss()) / 100 + (salary * taxBracket.irs()) / 100);
-    monthlyNetSalary = netSalary;
-    yearlyNetSalary = netSalary * 14;
+    double monthlyNetSalary = netSalary;
+    double yearlyNetSalary = netSalary * 14;
+
+    double[] totals =
+        setExtraSalaryComponents(
+            proposal,
+            monthlySalaryCalculations,
+            yearlySalaryCalculations,
+            monthlyNetSalary,
+            yearlyNetSalary,
+            salary,
+            taxBracket);
+
+    monthlyNetSalary = totals[0];
+    yearlyNetSalary = totals[1];
+
     monthlySalaryCalculations.put("Estimated Net Salary", monthlyNetSalary);
     yearlySalaryCalculations.put("Estimated Net Salary", yearlyNetSalary);
   }
 
-  private void setExtraSalaryComponents(
+  private double[] setExtraSalaryComponents(
       Proposal proposal,
       Map<String, Double> monthlySalaryCalculations,
       Map<String, Double> yearlySalaryCalculations,
-      TaxesDTO taxBracket,
       double monthlyNetSalary,
       double yearlyNetSalary,
-      double salary) {
+      double salary,
+      TaxesDTO taxBracket) {
     for (Extra extra : proposal.getSalary().getExtras()) {
       double amount = extra.getAmount();
       double value = extra.getIsPercentage() ? (salary * amount) / 100 : amount;
 
       // Extra amount is added to net salary
-      if (extra.getAddToSalary()) {
-        monthlyNetSalary += extra.getAmount() * extra.getMultiplyMonthly();
-        yearlyNetSalary +=
-            extra.getAmount() * (extra.getMultiplyMonthly() * extra.getMultiplyYearly());
-      }
-
-      // Multiply montlhy and yearly ( If the extra isn't multiplied monthly it always get
-      // mutliplied yearly)
-      if (extra.getMultiplyMonthly() != -1) {
-        value *= extra.getMultiplyMonthly();
-        double monthlyExtraSSTax = (value * taxBracket.ss()) / 100;
-        double monthlyExtraIRSTax = (value * taxBracket.irs()) / 100;
+      if (Boolean.TRUE.equals(extra.getAddToSalary())) {
+        double monthlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double monthlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
         double monthlyNetExtraValue =
             value
-                - (monthlyExtraSSTax * (extra.getIsSSTaxable() ? 1 : 0)
-                    + monthlyExtraIRSTax * (extra.getIsIRSTaxable() ? 1 : 0));
+                - (monthlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)
+                    + monthlyExtraIRSTax * (Boolean.TRUE.equals(extra.getIsIRSTaxable()) ? 1 : 0));
+        monthlyNetSalary += monthlyNetExtraValue * extra.getMultiplyMonthly();
+        yearlyNetSalary +=
+            monthlyNetExtraValue * (extra.getMultiplyMonthly() * extra.getMultiplyYearly());
+      }
+
+      // Multiply monthly and yearly (If the extra isn't multiplied monthly it is only yearly)
+      if (extra.getMultiplyMonthly() != -1) {
+        value *= extra.getMultiplyMonthly();
+        double monthlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double monthlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
+        double monthlyNetExtraValue =
+            value
+                - (monthlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)
+                    + monthlyExtraIRSTax * (Boolean.TRUE.equals(extra.getIsIRSTaxable()) ? 1 : 0));
 
         monthlySalaryCalculations.put(extra.getName(), monthlyNetExtraValue);
         yearlySalaryCalculations.put(
             extra.getName(), monthlyNetExtraValue * extra.getMultiplyYearly());
       } else {
         value *= extra.getMultiplyYearly();
-        double yearlyExtraSSTax = (value * taxBracket.ss()) / 100;
-        double yearlyExtraIRSTax = (value * taxBracket.irs()) / 100;
+        double yearlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double yearlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
         double yearlyNetExtraValue =
             value
-                - (yearlyExtraSSTax * (extra.getIsSSTaxable() ? 1 : 0)
-                    + yearlyExtraIRSTax * (extra.getIsIRSTaxable() ? 1 : 0));
+                - (yearlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)
+                    + yearlyExtraIRSTax * (Boolean.TRUE.equals(extra.getIsIRSTaxable()) ? 1 : 0));
         yearlySalaryCalculations.put(extra.getName(), yearlyNetExtraValue);
       }
     }
+    return new double[] {monthlyNetSalary, yearlyNetSalary};
   }
 
   // Calculates the SCR value using the predefined formula (GrossMonthlySalary*12/1000)/SCRvalue)

@@ -11,5 +11,13 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
   public Candidate findCandidateByIdNumber(String idNumber);
 
-  public Page<Candidate> findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(String name, String surname, String id, String phone, String email, String workerId, Pageable pageable);
+  public Page<Candidate>
+      findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(
+          String name,
+          String surname,
+          String id,
+          String phone,
+          String email,
+          String workerId,
+          Pageable pageable);
 }

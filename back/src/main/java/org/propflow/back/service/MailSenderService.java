@@ -2,9 +2,6 @@ package org.propflow.back.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +38,7 @@ public class MailSenderService {
   @Autowired private SpringTemplateEngine thymeleafTemplateEngine;
   @Autowired private JavaMailSender mailSender;
   @Autowired private MessageSource messageSource;
+  @Autowired private ProposalDocumentRenderer proposalDocumentRenderer;
 
   public MailSenderService(JavaMailSender mailSender) {
     this.mailSender = mailSender;
@@ -112,20 +110,18 @@ public class MailSenderService {
 
   // SEND PROPOSAL BUILDING EMAIL FROM A FRONTEND FORM:
   @Async
-  public void sendProposalTo(String to, String subject, String body, String fileName) {
+  public void sendProposalTo(
+      String to, String subject, String body, Long proposalId, String language) {
 
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("body", body);
-    Context thymeleafContext = new Context(Locale.ENGLISH);
+    Locale locale = localeFor(language);
+    Context thymeleafContext = new Context(locale);
     thymeleafContext.setVariables(templateModel);
     String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
-    byte[] attachment = new byte[0];
 
-    try {
-      attachment = Files.readAllBytes(Paths.get(fileName));
-    } catch (IOException e) {
-      throw new RuntimeException("Error reading file to be attached: " + e);
-    }
+    byte[] attachment = proposalDocumentRenderer.render(proposalId, locale);
+    String fileName = "proposal-" + proposalId + ".pdf";
 
     try {
       this.sendWithAttach(
@@ -145,7 +141,7 @@ public class MailSenderService {
 
   // USES CANDIDATE-OFFER TEMPLATE:
   @Async
-  public void notifyCandidateByEmail(Proposal proposal, String fileName, String language) {
+  public void notifyCandidateByEmail(Proposal proposal, String language) {
 
     String subject = "PropFlow " + proposal.getDescription();
     Locale locale = localeFor(language);
@@ -158,13 +154,9 @@ public class MailSenderService {
     thymeleafContext.setVariables(templateModel);
     String htmlBody = thymeleafTemplateEngine.process(CANDIDATE_OFFER_TEMPLATE, thymeleafContext);
 
-    byte[] attachment = new byte[0];
+    byte[] attachment = proposalDocumentRenderer.render(proposal.getId(), locale);
 
-    try {
-      attachment = Files.readAllBytes(Paths.get(fileName));
-    } catch (IOException e) {
-      throw new RuntimeException("Error reading file to be attached: " + e);
-    }
+    String fileName = "proposal-" + proposal.getId() + ".pdf";
 
     try {
       this.sendWithAttach(

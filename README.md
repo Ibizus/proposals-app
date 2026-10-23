@@ -3,12 +3,12 @@
 ### Build & Execution
 
 Run the command `docker-compose build` and `docker-compose up` to build and start the containers respectively.
-This container includes the Spring Boot backend, Angular frontend, MySql database, Mailpit and JSReport.
+This container includes the Spring Boot backend, Angular frontend, MySql database and Mailpit.
 
 
 ## Local development
 
-Run `./dev.sh` from the repository root. It starts MySQL, Mailpit and jsReport with Docker Compose, waits until the `mysql` healthcheck reports healthy (up to 120 seconds, override with `MYSQL_WAIT_TIMEOUT`), then starts the backend with the `dev` Spring profile and the Angular dev server. Other secrets are read from a `.env` file in the repository root when present.
+Run `./dev.sh` from the repository root. It starts MySQL and Mailpit with Docker Compose, waits until the `mysql` healthcheck reports healthy (up to 120 seconds, override with `MYSQL_WAIT_TIMEOUT`), then starts the backend with the `dev` Spring profile and the Angular dev server. Other secrets are read from a `.env` file in the repository root when present.
 
 - `./dev.sh --reset` removes the project's Docker containers and the MySQL volume before starting, so the backend comes up on an empty database and seeds fresh demo data.
 - `./dev.sh --help` prints the available options.
@@ -39,7 +39,7 @@ Real keys belong only in the gitignored `.env` file (see `.env.example`) or in d
 
 ## Backend tests
 
-Run `./mvnw test` from `back/`. The tests need no MySQL, SMTP or jsReport: `back/src/test/resources/application.properties` points them at an in-memory H2 database and sets `app.seed-demo-data=false` and `app.reset-pdf-folder=false` so no startup runner touches data or files.
+Run `./mvnw test` from `back/`. The tests need no MySQL or SMTP: `back/src/test/resources/application.properties` points them at an in-memory H2 database and sets `app.seed-demo-data=false` and `app.reset-pdf-folder=false` so no startup runner touches data or files.
 
 ## API documentation and observability
 

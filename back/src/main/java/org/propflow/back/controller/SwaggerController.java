@@ -9,7 +9,7 @@ import org.springframework.web.servlet.view.RedirectView;
 @RequestMapping("/openapi")
 public class SwaggerController {
 
-  @GetMapping({ "", "/" })
+  @GetMapping({"", "/"})
   public RedirectView openApi() {
     return new RedirectView("http://localhost:8080/swagger-ui/index.html");
   }

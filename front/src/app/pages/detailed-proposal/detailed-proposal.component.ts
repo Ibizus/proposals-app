@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProposalService } from '../../services/proposal.service';
+import { environment } from '../../../environments/environment';
 import { TaxesService } from '../../services/taxes.service';
 import { Dialog, DialogModule } from 'primeng/dialog';
 import { Proposal, Taxes } from '../../utils/types';
@@ -137,30 +138,16 @@ export class DetailedProposalComponent {
     //     ' - '
     // );
 
-    this.proposalService.renderPdf(data.proposalId, 'create').subscribe({
-      next: (fileName) => {
-        console.log(
-          'Filename received in front before trying to send email: ' + fileName
-        );
-
-        // Once we´ve got the filename, the email can be sent:
-        this.mailService
-          .newEmail(data.email, data.subject, data.message, fileName)
-          .subscribe({
-            next: () => {
-              console.log(
-                'Posting email to backend inside new-email event listener'
-              );
-            },
-            error: (error) => {
-              console.log(error);
-            },
-          }); //End mail sending
-      },
-      error: (error) => {
-        console.error('rendered fileName not received:', error);
-      },
-    }); // End pdf rendering
+    this.mailService
+      .newEmail(data.email, data.subject, data.message, data.proposalId)
+      .subscribe({
+        next: () => {
+          console.log('Posting email to backend inside new-email event listener');
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
   }
 
   numberToStatus(n: number): string {
@@ -191,33 +178,19 @@ export class DetailedProposalComponent {
   }
 
   notifyCandidate(proposalId: number) {
-    this.proposalService.renderPdf(proposalId, 'create').subscribe({
-      next: (fileName) => {
-        console.log(fileName);
-        // Once I have the created pdf fileName, find the proposal to attach to email:
-        this.proposalService.getProposal(proposalId).subscribe({
-          next: (proposal) => {
-            // Once we´ve got proposal, the email can be sent:
-            this.mailService.notifyByEmail(proposal, fileName).subscribe({
-              next: () => {
-                // console.log(
-                //   'Posting email to backend inside NotifyCandidate method'
-                // );
-              },
-              error: (error) => {
-                console.log(error);
-              },
-            }); //End mail sending
-          },
+    this.proposalService.getProposal(proposalId).subscribe({
+      next: (proposal) => {
+        this.mailService.notifyByEmail(proposal).subscribe({
+          next: () => {},
           error: (error) => {
-            console.log('Error finding proposal: ', error);
+            console.log(error);
           },
-        }); //End proposal finding
+        });
       },
       error: (error) => {
-        console.error('rendered fileName not received:', error);
+        console.log('Error finding proposal: ', error);
       },
-    }); // End pdf rendering
+    });
   }
 
   // Creates the html template in backend:
@@ -237,22 +210,8 @@ export class DetailedProposalComponent {
 
   // METHOD RENDERED IN FRONTEND: (need to be refactorized or sent to Service)
   async downloadPdf(): Promise<void> {
-    const pdfData = {
-      proposal: this.proposal,
-      monthly: this.monthlyList,
-      yearly: this.yearlyList,
-    };
-
-    fetch('http://localhost:5488/api/report', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        template: { name: 'proposalTemplate' },
-        data: pdfData,
-      }),
-    })
+    const lang = localStorage.getItem('lang') || 'en';
+    fetch(environment.API_ENDPOINT + 'pdf/' + this.proposal.id + '?lang=' + lang)
       .then((response) => response.blob())
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);

@@ -43,6 +43,9 @@ class MailSenderServiceTest {
     mailSender = mock(JavaMailSender.class);
     SpringTemplateEngine templateEngine = mock(SpringTemplateEngine.class);
     service = new MailSenderService(mailSender);
+    ProposalDocumentRenderer renderer = mock(ProposalDocumentRenderer.class);
+    when(renderer.render(any(), any())).thenReturn("fake pdf content".getBytes());
+    ReflectionTestUtils.setField(service, "proposalDocumentRenderer", renderer);
     ReflectionTestUtils.setField(service, "thymeleafTemplateEngine", templateEngine);
     ReflectionTestUtils.setField(service, "emailSender", "demo@propflow.local");
     when(templateEngine.process(eq("candidateOffer.html"), any(Context.class)))
@@ -57,7 +60,7 @@ class MailSenderServiceTest {
     Path pdf = Files.createTempFile("propflow-offer", ".pdf");
     Files.writeString(pdf, "fake pdf content");
     try {
-      service.notifyCandidateByEmail(proposal(), pdf.toString(), "en");
+      service.notifyCandidateByEmail(proposal(), "en");
 
       ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
       verify(mailSender).send(captor.capture());
@@ -218,6 +221,7 @@ class MailSenderServiceTest {
     proposal.setRole("Backend Engineer");
     proposal.setOffice(office);
     proposal.setCandidate(candidate);
+    proposal.setId(1);
     return proposal;
   }
 }
