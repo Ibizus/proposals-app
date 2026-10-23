@@ -195,7 +195,6 @@ public class MailSenderService {
     String subject = "PropFlow " + proposal.get("description");
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("candidate", candidate.get("name"));
-    templateModel.put("office", officeName(proposal.get("office")));
     templateModel.put("contract", contractType(proposal, locale));
     templateModel.put("date", stringValue(proposal.get("startDate")));
     templateModel.put("monthlyGross", stringValue(monthly.get("Gross Salary")));
@@ -247,14 +246,6 @@ public class MailSenderService {
     boolean indefinite = Boolean.TRUE.equals(proposal.get("indefinite"));
     String key = indefinite ? "contract.indefinite" : "contract.temporary";
     return messageSource.getMessage(key, null, locale);
-  }
-
-  private static String officeName(Object office) {
-    if (office instanceof Map<?, ?> map) {
-      Object name = map.get("name");
-      return name != null ? name.toString() : "";
-    }
-    return office != null ? office.toString() : "";
   }
 
   private static String stringValue(Object value) {

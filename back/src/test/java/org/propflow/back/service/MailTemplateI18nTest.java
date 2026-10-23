@@ -41,13 +41,13 @@ class MailTemplateI18nTest {
 
   @ParameterizedTest(name = "offer template in {0}")
   @CsvSource({
-    "en, indefinite, Hello Ada|Contract Type: indefinite contract|Monthly Remuneration: 1000.0"
+    "en, indefinite, Hello Ada|Contract Type: indefinite contract|Monthly Remuneration: €1000.0"
         + " gross monthly",
     "pt, sem termo, Olá Ada|Tipo de Contrato: Contrato sem termo|Remuneração Mensal: 1000.0€"
         + " ilíquidos mensais",
-    "de, Unbefristeter, Hallo Ada|Vertragstyp: Unbefristeter Vertrag|Monatliche Vergütung: 1000.0"
+    "de, Unbefristeter, Hallo Ada|Vertragstyp: Unbefristeter Vertrag|Monatliche Vergütung: €1000.0"
         + " brutto pro Monat",
-    "es, indefinido, Hola Ada|Tipo de Contrato: contrato indefinido|Remuneración Mensual: 1000.0"
+    "es, indefinido, Hola Ada|Tipo de Contrato: contrato indefinido|Remuneración Mensual: €1000.0"
         + " bruto mensual",
   })
   void offerTemplateRendersInEachLanguage(String lang, String contract, String expected) {
@@ -89,10 +89,26 @@ class MailTemplateI18nTest {
                 + " para a tua admissão na PropFlowTI Portugal, SA:");
   }
 
+  @ParameterizedTest(name = "offer terms in {0} match the Portuguese terms")
+  @CsvSource(
+      delimiter = ';',
+      value = {
+        "en; admission to PropFlowTI Portugal, SA:|€5.5 monthly|€200.0 net per month",
+        "es; admisión en PropFlowTI Portugal, SA:|€5.5 mensuales|€200.0 neto al mes",
+        "de; Aufnahme bei der PropFlowTI Portugal, SA:|€5.5 monatlich|€200.0 netto pro Monat",
+      })
+  void offerTermsMatchPortugueseTerms(String lang, String expected) {
+    String html = render("proposal.html", lang, offerModel("indefinite"));
+
+    for (String phrase : expected.split("\\|")) {
+      assertThat(html).contains(phrase);
+    }
+  }
+
   @Test
   void userEnteredNamesAreHtmlEscaped() {
     Map<String, Object> offer = offerModel("indefinite");
-    offer.put("office", "<a href=\"https://evil.example\">x</a>");
+    offer.put("candidate", "<a href=\"https://evil.example\">x</a>");
     Map<String, Object> candidate = candidateModel();
     candidate.put("role", "<b>Engineer</b>");
     candidate.put("office", "<a href=\"https://evil.example\">x</a>");
@@ -114,7 +130,6 @@ class MailTemplateI18nTest {
   private static Map<String, Object> offerModel(String contract) {
     Map<String, Object> model = new HashMap<>();
     model.put("candidate", "Ada");
-    model.put("office", "Lisbon Oriente");
     model.put("contract", contract);
     model.put("date", "2025-01-15");
     model.put("monthlyGross", "1000.0");
