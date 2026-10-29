@@ -15,8 +15,17 @@ import { Extra } from '../../utils/types';
 
 type NewExtraForm = Omit<
   Extra,
-  'id' | 'createdAt' | 'createdBy' | 'modifiedAt' | 'modifiedBy' | 'isDefault'
->;
+  | 'id'
+  | 'createdAt'
+  | 'createdBy'
+  | 'modifiedAt'
+  | 'modifiedBy'
+  | 'isDefault'
+  | 'ssTaxrate'
+  | 'irsTaxrate'
+  | 'addToSalary'
+> &
+  Partial<Pick<Extra, 'ssTaxrate' | 'irsTaxrate' | 'addToSalary'>>;
 
 @Component({
   selector: 'app-new-extra-button',
@@ -243,11 +252,8 @@ export class NewExtraButtonComponent {
       isPercentage: false,
       isSSTaxable: false,
       isIRSTaxable: false,
-      ssTaxrate: 0,
-      irsTaxrate: 0,
       multiplyYearly: 0,
       multiplyMonthly: 0,
-      addToSalary: false,
     };
 
     this.t.use(localStorage.getItem('lang') || 'en');
@@ -272,12 +278,9 @@ export class NewExtraButtonComponent {
           isPercentage: false,
           isSSTaxable: false,
           isIRSTaxable: false,
-          ssTaxrate: 0,
-          irsTaxrate: 0,
-          multiplyYearly: 0,
+                  multiplyYearly: 0,
           multiplyMonthly: 0,
-          addToSalary: false,
-        };
+            };
       },
     });
   }
