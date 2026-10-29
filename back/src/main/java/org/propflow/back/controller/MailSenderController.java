@@ -40,7 +40,7 @@ public class MailSenderController {
       @RequestParam String to,
       @RequestParam String subject,
       @RequestBody String body,
-      @RequestParam(required = false) Long proposalId,
+      @RequestParam Long proposalId,
       @RequestParam(required = false, defaultValue = "en") String language) {
 
     this.mailSenderService.sendProposalTo(to, subject, body, proposalId, language);

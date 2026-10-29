@@ -113,7 +113,7 @@ public class MailSenderService {
 
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("body", body);
-    Locale locale = localeFor(language);
+    Locale locale = ProposalDocumentRenderer.localeFor(language);
     Context thymeleafContext = new Context(locale);
     thymeleafContext.setVariables(templateModel);
     String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
@@ -144,7 +144,7 @@ public class MailSenderService {
     Proposal resolved = proposalService.one(proposal.getId());
 
     String subject = "PropFlow " + resolved.getDescription();
-    Locale locale = localeFor(language);
+    Locale locale = ProposalDocumentRenderer.localeFor(language);
     Map<String, Object> templateModel = new HashMap<>();
     templateModel.put("candidate", resolved.getCandidate().getName());
     templateModel.put("role", resolved.getRole());
@@ -172,12 +172,5 @@ public class MailSenderService {
     } catch (MessagingException e) {
       throw new RuntimeException("Error sending email: " + e);
     }
-  }
-
-  private Locale localeFor(String language) {
-    if (language == null || language.isBlank()) {
-      return Locale.ENGLISH;
-    }
-    return Locale.forLanguageTag(language);
   }
 }

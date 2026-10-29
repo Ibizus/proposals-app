@@ -1,6 +1,6 @@
 package org.propflow.back.service;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.propflow.back.dto.TaxesDTO;
@@ -100,9 +100,9 @@ public class SalaryService {
   public Map<String, Map<String, Double>> salaryCalculations(
       Proposal proposal, Double irs, Double ss) {
 
-    Map<String, Map<String, Double>> calculations = new HashMap<>();
-    Map<String, Double> monthlySalaryCalculations = new HashMap<>();
-    Map<String, Double> yearlySalaryCalculations = new HashMap<>();
+    Map<String, Map<String, Double>> calculations = new LinkedHashMap<>();
+    Map<String, Double> monthlySalaryCalculations = new LinkedHashMap<>();
+    Map<String, Double> yearlySalaryCalculations = new LinkedHashMap<>();
     double salary = proposal.getSalary().getBase();
 
     double monthlyNetSalary = 0;
@@ -125,10 +125,10 @@ public class SalaryService {
     double scr = parameters.getOrDefault("scr", 0.0);
 
     // Methods setting all the salary parameters
-    setGrossSalary(monthlySalaryCalculations, yearlySalaryCalculations, salary);
     setBaseSalary(monthlySalaryCalculations, yearlySalaryCalculations, salary, iht, scr);
     setIHT(monthlySalaryCalculations, yearlySalaryCalculations, salary, iht);
     setSharePurchasePlan(monthlySalaryCalculations, yearlySalaryCalculations, salary, spp);
+    setGrossSalary(monthlySalaryCalculations, yearlySalaryCalculations, salary);
     setNetSalary(
         proposal, monthlySalaryCalculations, yearlySalaryCalculations, salary, selectedTaxes);
 
@@ -221,8 +221,11 @@ public class SalaryService {
 
       // Extra amount is added to net salary
       if (Boolean.TRUE.equals(extra.getAddToSalary())) {
-        double monthlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
-        double monthlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
+        double monthlyExtraSSTax =
+            (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double monthlyExtraIRSTax =
+            (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate()))
+                / 100;
         double monthlyNetExtraValue =
             value
                 - (monthlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)
@@ -235,8 +238,11 @@ public class SalaryService {
       // Multiply monthly and yearly (If the extra isn't multiplied monthly it is only yearly)
       if (extra.getMultiplyMonthly() != -1) {
         value *= extra.getMultiplyMonthly();
-        double monthlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
-        double monthlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
+        double monthlyExtraSSTax =
+            (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double monthlyExtraIRSTax =
+            (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate()))
+                / 100;
         double monthlyNetExtraValue =
             value
                 - (monthlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)
@@ -247,8 +253,11 @@ public class SalaryService {
             extra.getName(), monthlyNetExtraValue * extra.getMultiplyYearly());
       } else {
         value *= extra.getMultiplyYearly();
-        double yearlyExtraSSTax = (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
-        double yearlyExtraIRSTax = (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate())) / 100;
+        double yearlyExtraSSTax =
+            (value * (extra.getSsTaxrate() == null ? taxBracket.ss() : extra.getSsTaxrate())) / 100;
+        double yearlyExtraIRSTax =
+            (value * (extra.getIrsTaxrate() == null ? taxBracket.irs() : extra.getIrsTaxrate()))
+                / 100;
         double yearlyNetExtraValue =
             value
                 - (yearlyExtraSSTax * (Boolean.TRUE.equals(extra.getIsSSTaxable()) ? 1 : 0)

@@ -150,4 +150,25 @@ class SalaryServiceTest {
     assertThat(monthly.get("IHT")).isCloseTo(0, CENT);
     assertThat(monthly.get("Share Purchase Plan")).isCloseTo(0, CENT);
   }
+
+  @Test
+  void rowsKeepTheBreakdownOrderWithExtrasBeforeNetSalary() {
+    when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
+    Extra food = extra("Food Allowance", 15, false, false, true, 11, 21);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, 0, food), null, null);
+
+    assertThat(result.keySet()).containsExactly("monthly", "yearly");
+    for (Map<String, Double> table : result.values()) {
+      assertThat(table.keySet())
+          .containsExactly(
+              "Base Salary",
+              "IHT",
+              "Share Purchase Plan",
+              "Gross Salary",
+              "Food Allowance",
+              "Estimated Net Salary");
+    }
+  }
 }

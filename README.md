@@ -39,7 +39,7 @@ Real keys belong only in the gitignored `.env` file (see `.env.example`) or in d
 
 ## Backend tests
 
-Run `./mvnw test` from `back/`. The tests need no MySQL or SMTP: `back/src/test/resources/application.properties` points them at an in-memory H2 database and sets `app.seed-demo-data=false` and `app.reset-pdf-folder=false` so no startup runner touches data or files.
+Run `./mvnw test` from `back/`. The tests need no MySQL or SMTP: `back/src/test/resources/application.properties` points them at an in-memory H2 database and sets `app.seed-demo-data=false` so no startup runner touches data.
 
 ## API documentation and observability
 

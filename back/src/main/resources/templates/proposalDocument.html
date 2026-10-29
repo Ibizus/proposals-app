@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -32,10 +32,12 @@
       .details {
         margin-bottom: 5px;
         color: #666;
-        display: flex;
-        justify-content: space-between;
+        display: table;
+        width: 100%;
+        table-layout: fixed;
       }
       .details span {
+        display: table-cell;
         color: #333;
         width: 45%;
       }
@@ -43,10 +45,13 @@
         font-weight: bold;
       }
       .columns {
-        display: flex;
+        display: table;
+        width: 100%;
+        table-layout: fixed;
       }
       .column {
-        flex: 1;
+        display: table-cell;
+        vertical-align: top;
       }
       .proposal-details {
         width: 50%;
@@ -134,7 +139,7 @@
             <div class="details">
               <span class="label" th:text="#{pdf.dueDate}">Due Date:</span>
               <span
-                th:text="${proposal.indefinite} ? 'NA' : ${#temporals.format(proposal.dueDate, 'dd/MM/yyyy')}"
+                th:text="${proposal.indefinite} ? #{pdf.notApplicable} : ${#temporals.format(proposal.dueDate, 'dd/MM/yyyy')}"
               ></span>
             </div>
             <div class="details">

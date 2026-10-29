@@ -190,7 +190,12 @@ export class DetailedProposalComponent {
   async downloadPdf(): Promise<void> {
     const lang = localStorage.getItem('lang') || 'en';
     fetch(environment.API_ENDPOINT + 'pdf/' + this.proposal.id + '?lang=' + lang)
-      .then((response) => response.blob())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('PDF download failed with status ' + response.status);
+        }
+        return response.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');

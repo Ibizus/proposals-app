@@ -46,22 +46,7 @@ public class ReportController {
   }
 
   private Locale resolveLocale(String lang, String acceptLanguage) {
-    String tag = lang;
-    if (tag == null || tag.isBlank()) {
-      tag = acceptLanguage;
-    }
-    if (tag == null || tag.isBlank()) {
-      tag = "en";
-    } else {
-      tag = tag.split(",")[0].split(";")[0].trim();
-      if (tag.contains("-")) {
-        tag = tag.split("-")[0];
-      }
-    }
-    tag = tag.toLowerCase();
-    if (!tag.equals("es") && !tag.equals("pt") && !tag.equals("de") && !tag.equals("en")) {
-      tag = "en";
-    }
-    return Locale.forLanguageTag(tag);
+    return ProposalDocumentRenderer.localeFor(
+        lang == null || lang.isBlank() ? acceptLanguage : lang);
   }
 }

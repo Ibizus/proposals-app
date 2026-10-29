@@ -43,7 +43,9 @@ export class MailService {
             '&subject=' +
             subject +
             '&proposalId=' +
-            proposalId,
+            proposalId +
+            '&language=' +
+            (localStorage.getItem('lang') || 'en'),
           message,
         )
         .subscribe({
