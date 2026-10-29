@@ -1,6 +1,11 @@
 import { Injectable } from "@angular/core";
 import { Proposal } from "../utils/types";
 
+interface TaxBracket {
+  ss: number;
+  irs: number;
+}
+
 
 @Injectable({
   providedIn: 'root',
@@ -56,16 +61,16 @@ export class SalaryService {
     monthlySalaryCalculations: Map<string, number>,
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
-    taxBracket: any,
+    taxBracket: TaxBracket,
     monthlyNetSalary: number,
     yearlyNetSalary: number
   ): void {
-    let netSalary =
+    const netSalary =
       salary -
       ((salary * taxBracket.ss) / 100 +
         (salary * taxBracket.irs) / 100);
-    let monthlyNetSalaryNoExtras = netSalary;
-    let yearlyNetSalaryNoExtras = netSalary * 14;
+    const monthlyNetSalaryNoExtras = netSalary;
+    const yearlyNetSalaryNoExtras = netSalary * 14;
     [monthlyNetSalary, yearlyNetSalary] = this.setExtraSalaryComponents(
       proposal,
       monthlySalaryCalculations,
@@ -96,7 +101,7 @@ export class SalaryService {
     yearlyNetSalary: number,
     salary: number
   ): [number, number] {
-    for (let extra of proposal.salary.extras) {
+    for (const extra of proposal.salary.extras) {
       let value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
 
       console.log("AddToSalary -> " + extra.addToSalary);

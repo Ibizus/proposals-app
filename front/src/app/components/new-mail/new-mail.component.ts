@@ -24,21 +24,24 @@ import {
 })
 export class NewMailComponent {
   @Input() proposalId!: number;
-  @Output() sendEmailClicked: EventEmitter<any> = new EventEmitter<{
+  @Output() sendEmailClicked: EventEmitter<{
+    email: string;
+    subject: string;
+    message: string;
+    proposalId: number;
+  }> = new EventEmitter<{
     email: string;
     subject: string;
     message: string;
     proposalId: number;
   }>();
 
-  visible: boolean = false;
-  position: string = 'right';
-  emailPlaceholder: string = '';
-  emailInput: string = '';
-  subjectInput: string = '';
-  messageInput: string = '';
-
-  constructor() {}
+  visible = false;
+  position = 'right';
+  emailPlaceholder = '';
+  emailInput = '';
+  subjectInput = '';
+  messageInput = '';
 
   showDialog() {
     this.visible = true;

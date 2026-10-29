@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Office } from "../utils/types";
+import { AutoCompleteCompleteEvent } from "primeng/autocomplete";
 import { Observable, map } from "rxjs";
 import { environment } from "../../environments/environment";
 
@@ -19,7 +20,7 @@ export class OfficeService {
    * Method that retrieves Offices from API
    * @returns Office[] (data)
    */
-  getOffices(event: any): Observable<Office[]>{
+  getOffices(event: AutoCompleteCompleteEvent): Observable<Office[]>{
     return this.http.get<Office[]>(OFFICEURL + 'offices/', { params: { filter: event.query },}).pipe(
       map(data => {
         data.sort();

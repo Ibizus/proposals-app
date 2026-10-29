@@ -231,10 +231,10 @@ import {
 export class LoginFormComponent {
   loginForm!: NgForm;
 
-  username: string = '';
-  password: string = '';
+  username = '';
+  password = '';
 
-  showPassword: boolean = false;
+  showPassword = false;
 
   router: Router = new Router();
 
@@ -253,7 +253,7 @@ export class LoginFormComponent {
   togglePassword(): void {
     this.showPassword = !this.showPassword;
 
-    let togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
 
     if (togglePasswordIcon) {
       if (this.showPassword) {

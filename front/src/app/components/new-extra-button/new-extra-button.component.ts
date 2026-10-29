@@ -11,6 +11,12 @@ import {
   TranslateStore,
 } from '@ngx-translate/core';
 import { ExtrasService } from '../../services/extras.service';
+import { Extra } from '../../utils/types';
+
+type NewExtraForm = Omit<
+  Extra,
+  'id' | 'createdAt' | 'createdBy' | 'modifiedAt' | 'modifiedBy' | 'isDefault'
+>;
 
 @Component({
   selector: 'app-new-extra-button',
@@ -222,8 +228,8 @@ import { ExtrasService } from '../../services/extras.service';
 })
 export class NewExtraButtonComponent {
   @Output() extraSaved: EventEmitter<void> = new EventEmitter<void>();
-  visible: boolean = false;
-  extra!: any;
+  visible = false;
+  extra!: NewExtraForm;
 
   newExtraLabel!: string;
 
@@ -237,8 +243,11 @@ export class NewExtraButtonComponent {
       isPercentage: false,
       isSSTaxable: false,
       isIRSTaxable: false,
+      ssTaxrate: 0,
+      irsTaxrate: 0,
       multiplyYearly: 0,
       multiplyMonthly: 0,
+      addToSalary: false,
     };
 
     this.t.use(localStorage.getItem('lang') || 'en');
@@ -248,15 +257,13 @@ export class NewExtraButtonComponent {
       .subscribe((newExtraLabel) => (this.newExtraLabel = newExtraLabel));
   }
 
-  ngOnInit() {}
-
   newExtra() {
     this.visible = true;
   }
 
   onSaveExtra() {
-    this.extrasService.createExtra(this.extra).subscribe({
-      next: (response) => {
+    this.extrasService.createExtra(this.extra as Extra).subscribe({
+      next: () => {
         this.visible = false;
         this.extraSaved.emit();
         this.extra = {
@@ -265,11 +272,13 @@ export class NewExtraButtonComponent {
           isPercentage: false,
           isSSTaxable: false,
           isIRSTaxable: false,
+          ssTaxrate: 0,
+          irsTaxrate: 0,
           multiplyYearly: 0,
           multiplyMonthly: 0,
+          addToSalary: false,
         };
       },
-      error: (error) => {},
     });
   }
 }
