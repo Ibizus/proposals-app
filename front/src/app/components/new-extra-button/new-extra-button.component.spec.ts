@@ -26,9 +26,7 @@ describe('NewExtraButtonComponent', () => {
 
   it('creates and resets a new extra without default tax rates or addToSalary', () => {
     const extrasService = TestBed.inject(ExtrasService);
-    const createExtraSpy = spyOn(extrasService, 'createExtra').and.returnValue(
-      of({}),
-    );
+    const createExtraSpy = spyOn(extrasService, 'createExtra').and.returnValue(of({}));
 
     component.onSaveExtra();
     expect(createExtraSpy).toHaveBeenCalledTimes(1);
