@@ -74,6 +74,30 @@ class OpenHtmlToPdfProposalDocumentRendererTest {
   }
 
   @Test
+  void longDescriptionIsRenderedInFullBesideItsLabel() throws IOException {
+    String description =
+        "Design and maintain the backend services that power proposal management,"
+            + " collaborating with product and frontend teams";
+    Proposal proposal = proposal();
+    proposal.setDescription(description);
+    when(proposalService.one(1L)).thenReturn(proposal);
+    when(salaryService.salaryCalculations(proposal, null, null)).thenReturn(salaryBreakdown());
+
+    byte[] pdf = renderer.render(1L, Locale.ENGLISH);
+
+    try (PDDocument document = PDDocument.load(pdf)) {
+      PDFTextStripper stripper = new PDFTextStripper();
+      stripper.setSortByPosition(true);
+      String text = stripper.getText(document);
+      String descriptionLine =
+          text.lines().filter(line -> line.contains("Description:")).findFirst().orElseThrow();
+      assertThat(descriptionLine).contains("Design and");
+      String unsortedText = new PDFTextStripper().getText(document).replaceAll("\\s+", " ");
+      assertThat(unsortedText).contains(description);
+    }
+  }
+
+  @Test
   void renderedPdfIsPdfA2uAndEmbedsFonts() throws IOException {
     when(proposalService.one(1L)).thenReturn(proposal());
     when(salaryService.salaryCalculations(proposal(), null, null)).thenReturn(salaryBreakdown());

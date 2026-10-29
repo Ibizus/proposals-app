@@ -88,10 +88,8 @@
         top: 20px;
         left: 20px;
       }
-      .overflow-hidden {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .wrap {
+        word-wrap: break-word;
       }
     </style>
   </head>
@@ -117,10 +115,7 @@
               <span class="label" th:text="#{pdf.description}"
                 >Description:</span
               >
-              <span
-                class="overflow-hidden"
-                th:text="${proposal.description}"
-              ></span>
+              <span class="wrap" th:text="${proposal.description}"></span>
             </div>
             <div class="details">
               <span class="label" th:text="#{pdf.contractType}"
