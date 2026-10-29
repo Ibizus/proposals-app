@@ -3,21 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 @Component({
   selector: 'app-new-mail',
   standalone: true,
-  imports: [
-    FormsModule,
-    DialogModule,
-    TooltipModule,
-    ButtonModule,
-    TranslateModule,
-  ],
+  imports: [FormsModule, DialogModule, TooltipModule, ButtonModule, TranslateModule],
   providers: [TranslateService, TranslateStore],
   templateUrl: './new-mail.component.html',
   styleUrl: './new-mail.component.scss',

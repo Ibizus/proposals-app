@@ -67,7 +67,12 @@ describe('HTTP services', () => {
     it('passes the autocomplete query as a filter and sorts results', () => {
       const service = TestBed.inject(OfficeService);
       let offices: unknown;
-      service.getOffices({ originalEvent: new Event('input'), query: 'lis' } as AutoCompleteCompleteEvent).subscribe((o) => (offices = o));
+      service
+        .getOffices({
+          originalEvent: new Event('input'),
+          query: 'lis',
+        } as AutoCompleteCompleteEvent)
+        .subscribe((o) => (offices = o));
 
       const req = http.expectOne((r) => r.url === API + 'offices/');
       expect(req.request.params.get('filter')).toBe('lis');

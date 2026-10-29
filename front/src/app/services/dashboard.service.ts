@@ -18,20 +18,18 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
 
   getSumary(): Observable<DashboardSummary> {
-    return this.http.get<DashboardSummary>(
-      `${environment.API_ENDPOINT}dashboard/summary`
-    );
+    return this.http.get<DashboardSummary>(`${environment.API_ENDPOINT}dashboard/summary`);
   }
 
   getProposalsByStatus(): Observable<ProposalsByStatus> {
     return this.http.get<ProposalsByStatus>(
-      `${environment.API_ENDPOINT}dashboard/proposals/status`
+      `${environment.API_ENDPOINT}dashboard/proposals/status`,
     );
   }
 
   getProposalsByDate(): Observable<ProposalsByDate> {
     return this.http.get<ProposalsByDate>(
-      `${environment.API_ENDPOINT}dashboard/proposals/createdat`
+      `${environment.API_ENDPOINT}dashboard/proposals/createdat`,
     );
   }
 }
