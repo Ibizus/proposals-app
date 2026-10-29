@@ -11,19 +11,6 @@ import { environment } from '../../environments/environment';
 export class MailService {
   constructor(private http: HttpClient) {}
 
-  createPDFDataBody(
-    proposal: Proposal,
-    monthly: [string, number][],
-    yearly: [string, number][],
-  ): any {
-    return {
-      proposal: proposal,
-      monthly: monthly,
-      yearly: yearly,
-      language: localStorage.getItem('lang') || 'en',
-    };
-  }
-
   notifyByEmail(proposal: Proposal): Observable<any> {
     return new Observable<any>((observer) => {
       this.http

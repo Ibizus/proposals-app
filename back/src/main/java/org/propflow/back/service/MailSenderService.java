@@ -3,13 +3,11 @@ package org.propflow.back.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.propflow.back.model.Proposal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamSource;
@@ -37,7 +35,7 @@ public class MailSenderService {
 
   @Autowired private SpringTemplateEngine thymeleafTemplateEngine;
   @Autowired private JavaMailSender mailSender;
-  @Autowired private MessageSource messageSource;
+  @Autowired private ProposalService proposalService;
   @Autowired private ProposalDocumentRenderer proposalDocumentRenderer;
 
   public MailSenderService(JavaMailSender mailSender) {
@@ -143,25 +141,27 @@ public class MailSenderService {
   @Async
   public void notifyCandidateByEmail(Proposal proposal, String language) {
 
-    String subject = "PropFlow " + proposal.getDescription();
+    Proposal resolved = proposalService.one(proposal.getId());
+
+    String subject = "PropFlow " + resolved.getDescription();
     Locale locale = localeFor(language);
     Map<String, Object> templateModel = new HashMap<>();
-    templateModel.put("candidate", proposal.getCandidate().getName());
-    templateModel.put("role", proposal.getRole());
-    templateModel.put("office", proposal.getOffice().getName());
+    templateModel.put("candidate", resolved.getCandidate().getName());
+    templateModel.put("role", resolved.getRole());
+    templateModel.put("office", resolved.getOffice().getName());
 
     Context thymeleafContext = new Context(locale);
     thymeleafContext.setVariables(templateModel);
     String htmlBody = thymeleafTemplateEngine.process(CANDIDATE_OFFER_TEMPLATE, thymeleafContext);
 
-    byte[] attachment = proposalDocumentRenderer.render(proposal.getId(), locale);
+    byte[] attachment = proposalDocumentRenderer.render(resolved.getId(), locale);
 
-    String fileName = "proposal-" + proposal.getId() + ".pdf";
+    String fileName = "proposal-" + resolved.getId() + ".pdf";
 
     try {
       this.sendWithAttach(
           emailSender,
-          proposal.getCandidate().getEmail(),
+          resolved.getCandidate().getEmail(),
           subject,
           htmlBody,
           BANNER_CONTENT_ID,
@@ -174,91 +174,10 @@ public class MailSenderService {
     }
   }
 
-  // FILLS THE SHARED OFFER TEMPLATE WITH THE CALLER'S LANGUAGE:
-  @Async
-  public void sendTemplateToCandidate(Map<String, Object> data) {
-
-    Map<String, Object> proposal = asMap(data.get("proposal"));
-    Map<String, Object> candidate = asMap(proposal.get("candidate"));
-    Map<String, Double> monthly = asNumberMap(data.get("monthly"));
-    Map<String, Double> yearly = asNumberMap(data.get("yearly"));
-    Locale locale = localeFor((String) data.get("language"));
-
-    String subject = "PropFlow " + proposal.get("description");
-    Map<String, Object> templateModel = new HashMap<>();
-    templateModel.put("candidate", candidate.get("name"));
-    templateModel.put("contract", contractType(proposal, locale));
-    templateModel.put("date", stringValue(proposal.get("startDate")));
-    templateModel.put("monthlyGross", stringValue(monthly.get("Gross Salary")));
-    templateModel.put("yearlyGross", stringValue(yearly.get("Gross Salary")));
-    templateModel.put("base", stringValue(monthly.get("Base Salary")));
-    templateModel.put("iht", stringValue(monthly.get("IHT")));
-
-    if (monthly.get("Food Allowance") != null) {
-      templateModel.put("food", stringValue(monthly.get("Food Allowance")));
-    }
-    if (monthly.get("Car Allowance") != null) {
-      templateModel.put("carMonthly", stringValue(monthly.get("Car Allowance")));
-      templateModel.put("carYearly", stringValue(yearly.get("Car Allowance")));
-    }
-    if (monthly.get("Fuel Allowance") != null) {
-      templateModel.put("fuelYearly", stringValue(yearly.get("Fuel Allowance")));
-      templateModel.put("fuelMonthly", stringValue(monthly.get("Fuel Allowance")));
-    }
-    if (yearly.get("Flex") != null) {
-      templateModel.put("yearlyFlex", stringValue(yearly.get("Flex")));
-    }
-
-    Context thymeleafContext = new Context(locale);
-    thymeleafContext.setVariables(templateModel);
-    String htmlBody = thymeleafTemplateEngine.process(OFFER_TEMPLATE, thymeleafContext);
-
-    try {
-      this.sendWithInline(
-          emailSender,
-          candidate.get("email").toString(),
-          subject,
-          htmlBody,
-          BANNER_CONTENT_ID,
-          bannerResource(),
-          BANNER_CONTENT_TYPE);
-    } catch (MessagingException e) {
-      throw new RuntimeException("Error sending email: " + e);
-    }
-  }
-
   private Locale localeFor(String language) {
     if (language == null || language.isBlank()) {
       return Locale.ENGLISH;
     }
     return Locale.forLanguageTag(language);
-  }
-
-  private String contractType(Map<String, Object> proposal, Locale locale) {
-    boolean indefinite = Boolean.TRUE.equals(proposal.get("indefinite"));
-    String key = indefinite ? "contract.indefinite" : "contract.temporary";
-    return messageSource.getMessage(key, null, locale);
-  }
-
-  private static String stringValue(Object value) {
-    return value == null ? null : String.valueOf(value);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> asMap(Object value) {
-    return (Map<String, Object>) value;
-  }
-
-  private static Map<String, Double> asNumberMap(Object value) {
-    Map<String, Double> map = new HashMap<>();
-    if (!(value instanceof List<?> list)) {
-      return map;
-    }
-    for (Object item : list) {
-      if (item instanceof List<?> pair && pair.size() >= 2) {
-        map.put(String.valueOf(pair.get(0)), Double.parseDouble(String.valueOf(pair.get(1))));
-      }
-    }
-    return map;
   }
 }

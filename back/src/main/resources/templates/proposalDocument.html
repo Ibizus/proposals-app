@@ -1,80 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title th:text="#{pdf.title}">Job Proposal</title>
     <style>
-        body { font-family: 'Noto Sans', sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
-        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #ddd; }
-        .header h1 { color: #333; }
-        .section { margin-bottom: 20px; }
-        .section-title { font-size: 18px; color: #333; margin-bottom: 10px; margin-top: 10px; font-weight: bold; text-decoration: underline; }
-        .details { margin-bottom: 5px; color: #666; display: flex; justify-content: space-between; }
-        .details span { color: #333; width: 45%; }
-        .label { font-weight: bold; }
-        .columns { display: flex; }
-        .column { flex: 1; }
-        .proposal-details { width: 50%; }
-        .candidate-details { width: 50%; }
-        .salary-details { margin-top: 30px; position: relative; min-height: 200px; }
-        table { width: 45%; border-collapse: collapse; margin-top: 10px; }
-        table.monthly { float: left; }
-        table.yearly { float: right; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background-color: #f2f2f2; }
-        .logo { position: absolute; top: 20px; left: 20px; }
-        .overflow-hidden { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      body {
+        font-family: "Noto Sans", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .header {
+        text-align: center;
+        padding: 20px 0;
+        border-bottom: 1px solid #ddd;
+      }
+      .header h1 {
+        color: #333;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 10px;
+        margin-top: 10px;
+        font-weight: bold;
+        text-decoration: underline;
+      }
+      .details {
+        margin-bottom: 5px;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+      }
+      .details span {
+        color: #333;
+        width: 45%;
+      }
+      .label {
+        font-weight: bold;
+      }
+      .columns {
+        display: flex;
+      }
+      .column {
+        flex: 1;
+      }
+      .proposal-details {
+        width: 50%;
+      }
+      .candidate-details {
+        width: 50%;
+      }
+      .salary-details {
+        margin-top: 30px;
+        position: relative;
+        min-height: 200px;
+      }
+      table {
+        width: 45%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      table.monthly {
+        float: left;
+      }
+      table.yearly {
+        float: right;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .logo {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+      }
+      .overflow-hidden {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="logo">
-            <img src="logo.png" alt="Logo" width="175" th:src="@{/img/logo.png}" />
-        </div>
-        <div class="header">
-            <h1 th:text="#{pdf.title}">Job Proposal</h1>
-        </div>
-        <div class="section">
-            <div class="columns">
-                <div class="column proposal-details">
-                    <div class="section-title" th:text="#{pdf.proposalDetails}">Proposal Details</div>
-                    <div class="details"><span class="label" th:text="#{pdf.role}">Role:</span> <span th:text="${proposal.role}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.description}">Description:</span> <span class="overflow-hidden" th:text="${proposal.description}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.contractType}">Contract Type:</span> <span th:text="${proposal.indefinite} ? #{contract.indefinite} : #{contract.temporary}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.startDate}">Start Date:</span> <span th:text="${#temporals.format(proposal.startDate, 'dd/MM/yyyy')}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.dueDate}">Due Date:</span> <span th:text="${proposal.indefinite} ? 'NA' : ${#temporals.format(proposal.dueDate, 'dd/MM/yyyy')}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.contractLevel}">Contract Level:</span> <span th:text="${proposal.contractLevel}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.office}">Office:</span> <span th:text="${proposal.office.name} + ' (' + ${proposal.office.code} + ')'"></span></div>
-                </div>
-                <div class="column candidate-details">
-                    <div class="section-title" th:text="#{pdf.candidateDetails}">Candidate Details</div>
-                    <div class="details"><span class="label" th:text="#{pdf.name}">Name:</span> <span th:text="${proposal.candidate.name} + ' ' + ${proposal.candidate.surname}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.idNumber}">ID Number:</span> <span th:text="${proposal.candidate.idNumber}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.phone}">Phone:</span> <span th:text="${proposal.candidate.phone}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.email}">Email:</span> <span th:text="${proposal.candidate.email}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.workerId}">Worker ID:</span> <span th:text="${proposal.candidate.workerId}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.maritalStatus}">Marital Status:</span> <span th:text="${proposal.candidate.maritalStatus}"></span></div>
-                    <div class="details"><span class="label" th:text="#{pdf.dependents}">Dependents:</span> <span th:text="${proposal.candidate.dependentsNumber}"></span></div>
-                </div>
+      <div class="logo">
+        <img src="logo.png" alt="Logo" width="175" th:src="${logoDataUri}" />
+      </div>
+      <div class="header">
+        <h1 th:text="#{pdf.title}">Job Proposal</h1>
+      </div>
+      <div class="section">
+        <div class="columns">
+          <div class="column proposal-details">
+            <div class="section-title" th:text="#{pdf.proposalDetails}">
+              Proposal Details
             </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.role}">Role:</span>
+              <span th:text="${proposal.role}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.description}"
+                >Description:</span
+              >
+              <span
+                class="overflow-hidden"
+                th:text="${proposal.description}"
+              ></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.contractType}"
+                >Contract Type:</span
+              >
+              <span
+                th:text="${proposal.indefinite} ? #{contract.indefinite} : #{contract.temporary}"
+              ></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.startDate}">Start Date:</span>
+              <span
+                th:text="${#temporals.format(proposal.startDate, 'dd/MM/yyyy')}"
+              ></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.dueDate}">Due Date:</span>
+              <span
+                th:text="${proposal.indefinite} ? 'NA' : ${#temporals.format(proposal.dueDate, 'dd/MM/yyyy')}"
+              ></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.contractLevel}"
+                >Contract Level:</span
+              >
+              <span th:text="${proposal.contractLevel}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.office}">Office:</span>
+              <span
+                th:text="${proposal.office.name} + ' (' + ${proposal.office.code} + ')'"
+              ></span>
+            </div>
+          </div>
+          <div class="column candidate-details">
+            <div class="section-title" th:text="#{pdf.candidateDetails}">
+              Candidate Details
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.name}">Name:</span>
+              <span
+                th:text="${proposal.candidate.name} + ' ' + ${proposal.candidate.surname}"
+              ></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.idNumber}">ID Number:</span>
+              <span th:text="${proposal.candidate.idNumber}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.phone}">Phone:</span>
+              <span th:text="${proposal.candidate.phone}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.email}">Email:</span>
+              <span th:text="${proposal.candidate.email}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.workerId}">Worker ID:</span>
+              <span th:text="${proposal.candidate.workerId}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.maritalStatus}"
+                >Marital Status:</span
+              >
+              <span th:text="${proposal.candidate.maritalStatus}"></span>
+            </div>
+            <div class="details">
+              <span class="label" th:text="#{pdf.dependents}">Dependents:</span>
+              <span th:text="${proposal.candidate.dependentsNumber}"></span>
+            </div>
+          </div>
         </div>
-        <div class="section salary-details">
-            <div class="section-title" th:text="#{pdf.salaryDetails}">Salary Details</div>
-            <table class="monthly">
-                <tr><th th:text="#{pdf.monthly}">Monthly</th><th th:text="#{pdf.amount}">Amount</th></tr>
-                <tr th:each="row : ${monthly}">
-                    <td th:text="${row[0]}"></td>
-                    <td th:text="${#numbers.formatDecimal(row[1], 1, 2)}"></td>
-                </tr>
-            </table>
-            <table class="yearly">
-                <tr><th th:text="#{pdf.yearly}">Yearly</th><th th:text="#{pdf.amount}">Amount</th></tr>
-                <tr th:each="row : ${yearly}">
-                    <td th:text="${row[0]}"></td>
-                    <td th:text="${#numbers.formatDecimal(row[1], 1, 2)}"></td>
-                </tr>
-            </table>
+      </div>
+      <div class="section salary-details">
+        <div class="section-title" th:text="#{pdf.salaryDetails}">
+          Salary Details
         </div>
+        <table class="monthly">
+          <tr>
+            <th th:text="#{pdf.monthly}">Monthly</th>
+            <th th:text="#{pdf.amount}">Amount</th>
+          </tr>
+          <tr th:each="row : ${monthly}">
+            <td
+              th:text="${#messages.msgOrNull('pdf.salary.' + row.labelKey) ?: row.rawLabel}"
+            ></td>
+            <td th:text="${#numbers.formatDecimal(row.amount, 1, 2)}"></td>
+          </tr>
+        </table>
+        <table class="yearly">
+          <tr>
+            <th th:text="#{pdf.yearly}">Yearly</th>
+            <th th:text="#{pdf.amount}">Amount</th>
+          </tr>
+          <tr th:each="row : ${yearly}">
+            <td
+              th:text="${#messages.msgOrNull('pdf.salary.' + row.labelKey) ?: row.rawLabel}"
+            ></td>
+            <td th:text="${#numbers.formatDecimal(row.amount, 1, 2)}"></td>
+          </tr>
+        </table>
+      </div>
     </div>
-</body>
+  </body>
 </html>

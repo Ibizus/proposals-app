@@ -36,7 +36,10 @@
         </div>
         <div class="w-full grid grid-cols-2 gap-x-14 mt-10">
           <div class="grid-flow-col col-span-2">
-            <button class="send py-2 px-5 rounded-lg float-end" (click)="sendTemplate(proposal.id)">
+            <button
+              class="send py-2 px-5 rounded-lg float-end"
+              (click)="notifyCandidate(proposal.id)"
+            >
               {{ 'SUBMIT' | translate }}
             </button>
             <button
