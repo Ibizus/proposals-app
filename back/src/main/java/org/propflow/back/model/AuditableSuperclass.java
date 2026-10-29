@@ -1,7 +1,7 @@
 package org.propflow.back.model;
 
-import java.time.LocalDateTime;
 import jakarta.persistence.MappedSuperclass;
+import java.time.LocalDateTime;
 
 @MappedSuperclass
 @SuppressWarnings("unused")

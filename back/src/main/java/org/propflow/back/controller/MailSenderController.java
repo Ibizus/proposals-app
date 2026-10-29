@@ -3,7 +3,6 @@ package org.propflow.back.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Proposal;
 import org.propflow.back.service.MailSenderService;
@@ -28,33 +27,23 @@ public class MailSenderController {
   @PostMapping(value = {"candidate", "candidate/"})
   public void sendMail(
       @Valid @RequestBody Proposal proposal,
-      @RequestParam String filename,
       @RequestParam(required = false, defaultValue = "en") String language) {
 
     log.info("Proposal received in backend to be sent");
-    this.mailSenderService.notifyCandidateByEmail(proposal, filename, language);
+    this.mailSenderService.notifyCandidateByEmail(proposal, language);
     log.info("Message processing in backend!");
   }
 
   @Operation(summary = "Send a proposal email to an address")
-  @PostMapping(
-      value = {"to", "to/"},
-      params = {"to", "subject", "filename"})
+  @PostMapping(value = {"to", "to/"})
   public void sendMail(
       @RequestParam String to,
       @RequestParam String subject,
       @RequestBody String body,
-      @RequestParam String filename) {
+      @RequestParam Long proposalId,
+      @RequestParam(required = false, defaultValue = "en") String language) {
 
-    this.mailSenderService.sendProposalTo(to, subject, body, filename);
+    this.mailSenderService.sendProposalTo(to, subject, body, proposalId, language);
     log.info("Message processing in backend!");
-  }
-
-  @Operation(summary = "Send a template-filled email")
-  @PostMapping(value = {"template", "template/"})
-  public void sendMail(@RequestBody Map<String, Object> data) {
-
-    log.info("Data received in backend to fill html template");
-    this.mailSenderService.sendTemplateToCandidate(data);
   }
 }

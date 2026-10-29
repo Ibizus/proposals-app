@@ -5,7 +5,6 @@ import { BehaviorSubject, map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Proposal } from '../utils/types';
 import { TaxesService } from './taxes.service';
-import { MailService } from './mail.service';
 import { SalaryService } from './salary.service';
 
 @Injectable({
@@ -19,7 +18,6 @@ export class ProposalService {
   constructor(
     private http: HttpClient,
     private taxesService: TaxesService,
-    private mailService: MailService,
     private salaryService: SalaryService,
   ) {}
 
@@ -49,79 +47,6 @@ export class ProposalService {
           observer.error(error);
         },
       );
-    });
-  }
-
-  renderPdf(proposalId: number, action: string): Observable<string> {
-    return new Observable<string>((observer) => {
-      let createdFileName!: string;
-      // First get the specified proposal:
-      this.http.get<Proposal>(environment.API_ENDPOINT + 'proposals/' + proposalId).subscribe({
-        next: (proposal) => {
-          console.log('proposal found: ' + proposal);
-
-          // Once we´ve got proposal, make calculations:
-          this.salaryCalculations(proposal).subscribe((dataMap) => {
-            const monthlySalaryCalculations: Map<string, number> =
-              dataMap.get('monthly') ?? new Map<string, number>();
-            const yearlySalaryCalculations: Map<string, number> =
-              dataMap.get('yearly') ?? new Map<string, number>();
-            const body: any = this.mailService.createPDFDataBody(
-              proposal,
-              Array.from(monthlySalaryCalculations),
-              Array.from(yearlySalaryCalculations),
-            );
-
-            // Once Calculations succeed, post PDF renderization
-            this.http
-              .post<any>(environment.API_ENDPOINT + 'pdf/' + action, body)
-              .subscribe((fileName) => {
-                console.log('Post done');
-                console.log('File name received:', fileName);
-                createdFileName = fileName;
-                observer.next(createdFileName);
-                observer.complete();
-              });
-          });
-        },
-        error: (error) => {
-          console.error('Error while posting PDF creation: ', error);
-        },
-      });
-    });
-  }
-
-  sendTemplate(proposalId: number): Observable<string> {
-    return new Observable<string>((observer) => {
-      // First get the specified proposal:
-      this.http.get<Proposal>(environment.API_ENDPOINT + 'proposals/' + proposalId).subscribe({
-        next: (proposal) => {
-          console.log('proposal found: ' + proposal);
-
-          // Once we´ve got proposal, make calculations:
-          this.salaryCalculations(proposal).subscribe((dataMap) => {
-            const monthlySalaryCalculations: Map<string, number> =
-              dataMap.get('monthly') ?? new Map<string, number>();
-            const yearlySalaryCalculations: Map<string, number> =
-              dataMap.get('yearly') ?? new Map<string, number>();
-            const body: any = this.mailService.createPDFDataBody(
-              proposal,
-              Array.from(monthlySalaryCalculations),
-              Array.from(yearlySalaryCalculations),
-            );
-
-            // Once Calculations succeed, send data to back to create email:
-            this.http.post<any>(environment.API_ENDPOINT + 'send/template', body).subscribe(() => {
-              console.log('Post done to fill template');
-              observer.next();
-              observer.complete();
-            });
-          });
-        },
-        error: (error) => {
-          console.error('Error while posting template creation: ', error);
-        },
-      });
     });
   }
 

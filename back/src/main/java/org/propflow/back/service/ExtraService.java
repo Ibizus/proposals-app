@@ -11,32 +11,46 @@ import org.springframework.stereotype.Service;
 @Service
 public class ExtraService {
 
-    @Autowired
-    private ExtraRepository extraRepository;
+  @Autowired private ExtraRepository extraRepository;
 
-    public List<Extra> all(){return this.extraRepository.findAll();}
+  public List<Extra> all() {
+    return this.extraRepository.findAll();
+  }
 
-    public List<Extra> findByNameAndDescription(String input){
-        return extraRepository.findExtrasByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(input, input);
-    }
+  public List<Extra> findByNameAndDescription(String input) {
+    return extraRepository.findExtrasByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+        input, input);
+  }
 
-    public Extra save(Extra extra){return this.extraRepository.save(extra);}
+  public Extra save(Extra extra) {
+    return this.extraRepository.save(extra);
+  }
 
-    public Extra one(Long id){
-        return this.extraRepository.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException(id, Extra.class));
-    }
+  public Extra one(Long id) {
+    return this.extraRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException(id, Extra.class));
+  }
 
-    public Extra replace(Long id, Extra extra){
-        return this.extraRepository.findById(id).map( b -> {
-            if (id.equals(extra.getId())) return this.extraRepository.save(extra);
-            else throw new NotCouplingIdException(id, extra.getId(), Extra.class);
-        }).orElseThrow(()-> new EntityNotFoundException(id, Extra.class));
-    }
+  public Extra replace(Long id, Extra extra) {
+    return this.extraRepository
+        .findById(id)
+        .map(
+            b -> {
+              if (id.equals(extra.getId())) return this.extraRepository.save(extra);
+              else throw new NotCouplingIdException(id, extra.getId(), Extra.class);
+            })
+        .orElseThrow(() -> new EntityNotFoundException(id, Extra.class));
+  }
 
-    public void delete(Long id){
-        this.extraRepository.findById(id).map( b -> {this.extraRepository.delete(b);
-        return b;})
-                .orElseThrow(()-> new EntityNotFoundException(id, Extra.class));
-    }
+  public void delete(Long id) {
+    this.extraRepository
+        .findById(id)
+        .map(
+            b -> {
+              this.extraRepository.delete(b);
+              return b;
+            })
+        .orElseThrow(() -> new EntityNotFoundException(id, Extra.class));
+  }
 }

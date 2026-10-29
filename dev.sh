@@ -5,7 +5,7 @@ MYSQL_WAIT_TIMEOUT=${MYSQL_WAIT_TIMEOUT:-120}
 usage() {
     echo "Usage: ./dev.sh [--reset]"
     echo ""
-    echo "Starts MySQL and jsreport in Docker, then the backend (dev profile) and the frontend."
+    echo "Starts MySQL in Docker, then the backend (dev profile) and the frontend."
     echo ""
     echo "Options:"
     echo "  --reset    Remove the project's Docker containers and MySQL volume first, so the"
@@ -28,7 +28,7 @@ cleanup() {
     echo ""
     echo "🛑 Stopping local servers and Docker containers..."
     kill $(jobs -p) 2>/dev/null
-    docker compose stop mysql mailpit jsreport
+    docker compose stop mysql mailpit
     exit "$status"
 }
 
@@ -103,7 +103,7 @@ fi
 trap cleanup INT TERM EXIT
 
 echo "🚀 Starting Docker infrastructure..."
-if ! docker compose up -d mysql mailpit jsreport; then
+if ! docker compose up -d mysql mailpit; then
     echo "❌ docker compose up failed. If it reports a container name conflict, a container"
     echo "   with that name belongs to another compose project (for example an older checkout"
     echo "   in a differently named folder): remove it with 'docker rm -f <name>' and re-run."

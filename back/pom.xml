@@ -106,11 +106,27 @@
         <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         <version>2.2.0</version>
         </dependency>
-		<!--jsReport Default Access: http://localhost:5488 -->
+		<!-- OpenHTMLtoPDF: in-JVM HTML/CSS to PDF rendering -->
 		<dependency>
-			<groupId>io.github.hedoncz</groupId>
-			<artifactId>jsreport-javaclient</artifactId>
-			<version>1.0.13</version>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-core</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-pdfbox</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-slf4j</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+		<!-- PDFBox for PDF text extraction in tests; keep the 2.x line that OpenHTMLtoPDF 1.0.10 was built against. -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.27</version>
 		</dependency>
 
 	</dependencies>

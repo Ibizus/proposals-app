@@ -11,27 +11,12 @@ import { environment } from '../../environments/environment';
 export class MailService {
   constructor(private http: HttpClient) {}
 
-  createPDFDataBody(
-    proposal: Proposal,
-    monthly: [string, number][],
-    yearly: [string, number][],
-  ): any {
-    return {
-      proposal: proposal,
-      monthly: monthly,
-      yearly: yearly,
-      language: localStorage.getItem('lang') || 'en',
-    };
-  }
-
-  notifyByEmail(proposal: Proposal, fileName: string): Observable<any> {
+  notifyByEmail(proposal: Proposal): Observable<any> {
     return new Observable<any>((observer) => {
       this.http
         .post<any>(
           environment.API_ENDPOINT +
-            'send/candidate/?filename=' +
-            fileName +
-            '&language=' +
+            'send/candidate/?language=' +
             (localStorage.getItem('lang') || 'en'),
           proposal,
         )
@@ -48,7 +33,7 @@ export class MailService {
     });
   }
 
-  newEmail(email: string, subject: string, message: string, fileName: string): Observable<any> {
+  newEmail(email: string, subject: string, message: string, proposalId: number): Observable<any> {
     return new Observable<any>((observer) => {
       this.http
         .post<any>(
@@ -57,8 +42,10 @@ export class MailService {
             email +
             '&subject=' +
             subject +
-            '&filename=' +
-            fileName,
+            '&proposalId=' +
+            proposalId +
+            '&language=' +
+            (localStorage.getItem('lang') || 'en'),
           message,
         )
         .subscribe({

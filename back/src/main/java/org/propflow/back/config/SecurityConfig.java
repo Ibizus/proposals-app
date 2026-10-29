@@ -12,13 +12,19 @@ public class SecurityConfig {
   @SuppressWarnings("deprecation")
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .authorizeRequests(authorizeRequests -> authorizeRequests
-            .requestMatchers("/auth").permitAll()
-            .requestMatchers("/").permitAll()
-            .requestMatchers("/program/").hasRole("USER")
-            .requestMatchers("/admin").hasRole("ADMIN")
-            .anyRequest().permitAll())
+    http.authorizeRequests(
+            authorizeRequests ->
+                authorizeRequests
+                    .requestMatchers("/auth")
+                    .permitAll()
+                    .requestMatchers("/")
+                    .permitAll()
+                    .requestMatchers("/program/")
+                    .hasRole("USER")
+                    .requestMatchers("/admin")
+                    .hasRole("ADMIN")
+                    .anyRequest()
+                    .permitAll())
         .csrf(AbstractHttpConfigurer::disable); // Disable CSRF
     return http.build();
   }

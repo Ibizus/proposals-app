@@ -46,18 +46,11 @@ services:
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
 
-  jsreport:
-    image: jsreport/jsreport:4.3.1
-    container_name: proposals_jsreport
-    ports:
-      - "5488:5488"
-
   frontend:
     build: ./front
     container_name: proposals_frontend
     depends_on:
       - backend
-      - jsreport
     ports:
       - "4200:4200"
 

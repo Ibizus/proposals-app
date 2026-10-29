@@ -1,51 +1,52 @@
 package org.propflow.back.controller;
 
-import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.Map;
+import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
-import org.propflow.back.service.ReportService;
+import org.propflow.back.service.ProposalDocumentRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
-// @CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET,
-// RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RestController
 @RequestMapping("/v1/api/pdf")
 @Tag(name = "reports", description = "PDF report generation")
 public class ReportController {
 
-  @Autowired private ReportService reportService;
-  private static final Gson gson = new Gson();
+  @Autowired private ProposalDocumentRenderer renderer;
 
-  @Operation(summary = "Create a PDF from data")
-  @PostMapping(value = {"create", "create/"})
-  public ResponseEntity<String> createPDF(@RequestBody Map<String, Object> data) {
+  @Operation(summary = "Download a generated proposal PDF")
+  @GetMapping("/{id}")
+  public ResponseEntity<byte[]> downloadPdf(
+      @PathVariable("id") Long id,
+      @RequestParam(value = "lang", required = false) String lang,
+      @org.springframework.web.bind.annotation.RequestHeader(
+              value = "Accept-Language",
+              required = false)
+          String acceptLanguage) {
 
-    log.info("Data received in backend to create PDF");
-    String fileName = this.reportService.create(data);
-
-    return ResponseEntity.status(HttpStatus.OK).body(gson.toJson(fileName));
-  }
-
-  @Operation(summary = "Download a generated PDF")
-  @PostMapping(value = {"download", "download/"})
-  @ResponseBody
-  public ResponseEntity<Resource> downloadPDF(@RequestBody Map<String, Object> data) {
-
-    log.info("Data received in backend to download PDF");
-    Resource file = this.reportService.download(data);
+    Locale locale = resolveLocale(lang, acceptLanguage);
+    byte[] pdf = renderer.render(id, locale);
+    String fileName = "proposal-" + id + ".pdf";
 
     return ResponseEntity.ok()
-        .header(
-            HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-        .body(file);
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+        .contentType(MediaType.APPLICATION_PDF)
+        .body(pdf);
+  }
+
+  private Locale resolveLocale(String lang, String acceptLanguage) {
+    return ProposalDocumentRenderer.localeFor(
+        lang == null || lang.isBlank() ? acceptLanguage : lang);
   }
 }

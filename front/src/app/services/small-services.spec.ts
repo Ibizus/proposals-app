@@ -77,27 +77,13 @@ describe('HTTP services', () => {
   });
 
   describe('MailService', () => {
-    it('builds the PDF body from a proposal and its calculations', () => {
-      const service = TestBed.inject(MailService);
-      const proposal = makeProposal();
-      const monthly: [string, number][] = [['Gross Salary', 1000]];
-      const yearly: [string, number][] = [['Gross Salary', 14000]];
-
-      expect(service.createPDFDataBody(proposal, monthly, yearly)).toEqual({
-        proposal,
-        monthly,
-        yearly,
-        language: 'en',
-      });
-    });
-
-    it('posts the candidate notification with the file name', () => {
+    it('posts the candidate notification with the current language', () => {
       const service = TestBed.inject(MailService);
       const proposal = makeProposal();
       let completed = false;
-      service.notifyByEmail(proposal, 'p7.pdf').subscribe({ complete: () => (completed = true) });
+      service.notifyByEmail(proposal).subscribe({ complete: () => (completed = true) });
 
-      const req = http.expectOne(API + 'send/candidate/?filename=p7.pdf&language=en');
+      const req = http.expectOne(API + 'send/candidate/?language=en');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(proposal);
       req.flush({});

@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProposalService } from '../../services/proposal.service';
+import { environment } from '../../../environments/environment';
 import { TaxesService } from '../../services/taxes.service';
 import { Dialog, DialogModule } from 'primeng/dialog';
-import { Proposal, Taxes } from '../../utils/types';
+import { Proposal, Status, Taxes } from '../../utils/types';
 import { CandidateCardComponent } from '../../components/candidate-card/candidate-card.component';
 import { CurrencyPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -11,11 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { StepperModule } from 'primeng/stepper';
 import { NewMailComponent } from '../../components/new-mail/new-mail.component';
 import { MailService } from '../../services/mail.service';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 @Component({
   selector: 'app-detailed-proposal',
   standalone: true,
@@ -37,7 +34,7 @@ export class DetailedProposalComponent {
   proposals!: Proposal[];
   proposalId: number;
   proposal!: Proposal;
-  visible: boolean = false;
+  visible = false;
   monthlySalaryCalculations = new Map<string, number>();
   yaearlySalaryCalculations = new Map<string, number>();
   calculations = new Map<string, Map<string, number>>();
@@ -54,11 +51,11 @@ export class DetailedProposalComponent {
     private proposalService: ProposalService,
     private taxesService: TaxesService,
     private mailService: MailService,
-    private t: TranslateService
+    private t: TranslateService,
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
     this.proposalId = 0;
-    this.route.params.subscribe((params: { [x: string]: string | number }) => {
+    this.route.params.subscribe((params: Record<string, string | number>) => {
       this.getProposal(+params['id']);
     });
 
@@ -71,8 +68,8 @@ export class DetailedProposalComponent {
         this.proposalId = id;
         this.proposal = data;
         const statuses = this.proposal.statuses.sort(
-          (a: any, b: any) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          (a: Status, b: Status) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         );
         this.proposal.statuses = statuses;
         this.getTaxes();
@@ -137,30 +134,14 @@ export class DetailedProposalComponent {
     //     ' - '
     // );
 
-    this.proposalService.renderPdf(data.proposalId, 'create').subscribe({
-      next: (fileName) => {
-        console.log(
-          'Filename received in front before trying to send email: ' + fileName
-        );
-
-        // Once we´ve got the filename, the email can be sent:
-        this.mailService
-          .newEmail(data.email, data.subject, data.message, fileName)
-          .subscribe({
-            next: () => {
-              console.log(
-                'Posting email to backend inside new-email event listener'
-              );
-            },
-            error: (error) => {
-              console.log(error);
-            },
-          }); //End mail sending
+    this.mailService.newEmail(data.email, data.subject, data.message, data.proposalId).subscribe({
+      next: () => {
+        console.log('Posting email to backend inside new-email event listener');
       },
       error: (error) => {
-        console.error('rendered fileName not received:', error);
+        console.log(error);
       },
-    }); // End pdf rendering
+    });
   }
 
   numberToStatus(n: number): string {
@@ -191,69 +172,30 @@ export class DetailedProposalComponent {
   }
 
   notifyCandidate(proposalId: number) {
-    this.proposalService.renderPdf(proposalId, 'create').subscribe({
-      next: (fileName) => {
-        console.log(fileName);
-        // Once I have the created pdf fileName, find the proposal to attach to email:
-        this.proposalService.getProposal(proposalId).subscribe({
-          next: (proposal) => {
-            // Once we´ve got proposal, the email can be sent:
-            this.mailService.notifyByEmail(proposal, fileName).subscribe({
-              next: () => {
-                // console.log(
-                //   'Posting email to backend inside NotifyCandidate method'
-                // );
-              },
-              error: (error) => {
-                console.log(error);
-              },
-            }); //End mail sending
-          },
+    this.proposalService.getProposal(proposalId).subscribe({
+      next: (proposal) => {
+        this.mailService.notifyByEmail(proposal).subscribe({
           error: (error) => {
-            console.log('Error finding proposal: ', error);
+            console.log(error);
           },
-        }); //End proposal finding
+        });
       },
       error: (error) => {
-        console.error('rendered fileName not received:', error);
-      },
-    }); // End pdf rendering
-  }
-
-  // Creates the html template in backend:
-  sendTemplate(proposalId: number) {
-    this.proposalService.sendTemplate(proposalId).subscribe({
-      next: () => {
-        console.log(
-          'Sending info to front Service in order send html template'
-        );
-        this.visible = false;
-      },
-      error: (error) => {
-        console.error('Error fetching the "Send Template method":', error);
+        console.log('Error finding proposal: ', error);
       },
     });
   }
 
   // METHOD RENDERED IN FRONTEND: (need to be refactorized or sent to Service)
   async downloadPdf(): Promise<void> {
-    const pdfData = {
-      proposal: this.proposal,
-      monthly: this.monthlyList,
-      yearly: this.yearlyList,
-    };
-
-    fetch('http://localhost:5488/api/report', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        template: { name: 'proposalTemplate' },
-        data: pdfData,
-      }),
-    })
-      .then((response) => response.blob())
+    const lang = localStorage.getItem('lang') || 'en';
+    fetch(environment.API_ENDPOINT + 'pdf/' + this.proposal.id + '?lang=' + lang)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('PDF download failed with status ' + response.status);
+        }
+        return response.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -270,16 +212,12 @@ export class DetailedProposalComponent {
   calculateAll(proposal: Proposal) {
     this.proposalService.salaryCalculations(proposal).subscribe((result) => {
       this.calculations = result;
-      this.monthlyList = Array.from(
-        this.calculations.get('monthly') ?? new Map()
-      );
-      this.yearlyList = Array.from(
-        this.calculations.get('yearly') ?? new Map()
-      );
+      this.monthlyList = Array.from(this.calculations.get('monthly') ?? new Map());
+      this.yearlyList = Array.from(this.calculations.get('yearly') ?? new Map());
     });
   }
 
-  showDialog(): any {
+  showDialog(): void {
     this.visible = true;
     setTimeout(() => {
       const element = document.getElementById('focusableDiv');
@@ -289,7 +227,7 @@ export class DetailedProposalComponent {
     }, 0);
   }
 
-  closeDialog(dialog: Dialog, event: any) {
+  closeDialog(dialog: Dialog, event: Event) {
     dialog.close(event);
   }
 }

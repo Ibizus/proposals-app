@@ -1,8 +1,8 @@
 package org.propflow.back.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 import org.propflow.back.exception.EntityNotFoundException;
 import org.propflow.back.exception.NotCouplingIdException;
@@ -22,19 +22,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class CandidateService {
 
-  @Autowired
-  private CandidateRepository candidateRepository;
-  @Autowired
-  private ProposalRepository proposalRepository;
-  @Autowired
-  private OfficeRepository officeRepository;
+  @Autowired private CandidateRepository candidateRepository;
+  @Autowired private ProposalRepository proposalRepository;
+  @Autowired private OfficeRepository officeRepository;
 
   public List<Candidate> all() {
     return this.candidateRepository.findAll();
   }
-  
+
   // Pagination of All data:
-  public Map<String, Object> all(int page, int size){
+  public Map<String, Object> all(int page, int size) {
     Pageable paginator = PageRequest.of(page, size, Sort.by("id").ascending());
     Page<Candidate> pageAll = this.candidateRepository.findAll(paginator);
 
@@ -47,10 +44,12 @@ public class CandidateService {
   }
 
   // Find a Candidate by some fields (paginated):
-  public Map<String, Object> findByFilter(int page, int size, String filter){
+  public Map<String, Object> findByFilter(int page, int size, String filter) {
     Pageable paginator = PageRequest.of(page, size, Sort.by("id").ascending());
-    Page<Candidate> pageFiltered = this.candidateRepository
-    .findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(filter, filter, filter, filter, filter, filter, paginator);
+    Page<Candidate> pageFiltered =
+        this.candidateRepository
+            .findCandidatesByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrIdNumberContainingIgnoreCaseOrPhoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrWorkerIdContainingIgnoreCase(
+                filter, filter, filter, filter, filter, filter, paginator);
 
     Map<String, Object> response = new HashMap<>();
     response.put("candidates", pageFiltered.getContent());
@@ -61,8 +60,9 @@ public class CandidateService {
   }
 
   public Candidate save(Candidate candidate) {
-    Candidate existingCandidate = candidateRepository.findCandidateByIdNumber(candidate.getIdNumber());
-    
+    Candidate existingCandidate =
+        candidateRepository.findCandidateByIdNumber(candidate.getIdNumber());
+
     if (existingCandidate != null) {
       candidate = existingCandidate;
     }
@@ -72,23 +72,25 @@ public class CandidateService {
   }
 
   public Candidate one(Long id) {
-    return this.candidateRepository.findById(id)
+    return this.candidateRepository
+        .findById(id)
         .orElseThrow(() -> new EntityNotFoundException(id, Candidate.class));
   }
 
   public Candidate replace(Long id, Candidate candidate) {
-    return this.candidateRepository.findById(id).map(b -> {
-      if (id.equals(candidate.getId()))
-        return this.candidateRepository.save(candidate);
-      else
-        throw new NotCouplingIdException(id, candidate.getId(), Candidate.class);
-    }).orElseThrow(() -> new EntityNotFoundException(id, Candidate.class));
+    return this.candidateRepository
+        .findById(id)
+        .map(
+            b -> {
+              if (id.equals(candidate.getId())) return this.candidateRepository.save(candidate);
+              else throw new NotCouplingIdException(id, candidate.getId(), Candidate.class);
+            })
+        .orElseThrow(() -> new EntityNotFoundException(id, Candidate.class));
   }
 
   public void delete(Long id) {
     Set<Proposal> p = this.candidateRepository.findById(id).get().getProposals();
     Candidate c = this.candidateRepository.findById(id).get();
-
 
     if (c.getProposals() != null) {
       this.candidateRepository.findById(id).get().setProposals(null);
@@ -99,11 +101,10 @@ public class CandidateService {
         proposal.setCandidate(null);
         this.proposalRepository.save(proposal);
         proposal.setOffice(null);
-        //this.proposalRepository.delete(proposal);
+        // this.proposalRepository.delete(proposal);
         this.proposalRepository.deleteProposalById(proposal.getId());
       }
     }
     this.candidateRepository.delete(this.candidateRepository.findById(id).get());
   }
-
 }
