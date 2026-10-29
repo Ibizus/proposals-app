@@ -21,8 +21,6 @@ import { matAddCircleOutline } from '@ng-icons/material-icons/outline';
 export class NewProposalButtonComponent {
   private router: Router = new Router();
 
-  constructor() {}
-
   newProposal() {
     this.router.navigate(['/new-proposal']);
   }

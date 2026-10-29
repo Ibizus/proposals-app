@@ -5,33 +5,18 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { NgForm } from '@angular/forms';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [
-    FormsModule,
-    InputTextModule,
-    PasswordModule,
-    ButtonModule,
-    TranslateModule,
-  ],
+  imports: [FormsModule, InputTextModule, PasswordModule, ButtonModule, TranslateModule],
   providers: [TranslateService, TranslateStore],
   template: `
     <div class="grid h-screen place-items-center relative">
       <img src="assets/login-pattern.png" class="w-screen h-screen" />
-      <div
-        class="my-auto max-w-md bg-white border shadow-md p-8 mx-auto absolute"
-      >
-        <header
-          id="ui-navbar-top"
-          class="navbar ui-navbar-top justify-center p-10 mx-auto"
-        >
+      <div class="my-auto max-w-md bg-white border shadow-md p-8 mx-auto absolute">
+        <header id="ui-navbar-top" class="navbar ui-navbar-top justify-center p-10 mx-auto">
           <span id="siteIcon" class="navbar-brand mr-auto mr-lg-0">
             <div id="DeltaSiteLogo">
               <a id="ctl00_onetidProjectPropertyTitleGraphic" href="/">
@@ -56,9 +41,7 @@ import {
         </header>
         <!-- <img src="assets/logo.png" alt="logo" class="m-10 mx-auto" /> -->
         <div id="welcome">
-          <label
-            class="flex justify-center text-lg font-semibold text-[#0056D2] ml-auto pb-5"
-          >
+          <label class="flex justify-center text-lg font-semibold text-[#0056D2] ml-auto pb-5">
             {{ 'WELCOME' | translate }}
           </label>
         </div>
@@ -120,9 +103,7 @@ import {
           </p>
         </div>
       </div>
-      <small
-        id="small"
-        class="absolute bottom-5 left-1/2 transform -translate-x-1/2"
+      <small id="small" class="absolute bottom-5 left-1/2 transform -translate-x-1/2"
         >&copy; {{ 'RIGHTS' | translate }}</small
       >
     </div>
@@ -133,20 +114,23 @@ import {
     }
 
     .small {
-      font-family: Source Sans Pro, "Source Sans Pro", sans-serif;
+      font-family:
+        Source Sans Pro,
+        'Source Sans Pro',
+        sans-serif;
       size: 12px;
     }
 
     .ui-navbar-top.navbar[_ngcontent-ng-c498251216] .navbar-brand[_ngcontent-ng-c498251216] {
-      font-family: "Source Sans Pro", Arial, "Helvetica Neue", sans-serif;
+      font-family: 'Source Sans Pro', Arial, 'Helvetica Neue', sans-serif;
     }
 
     .ui-navbar-top.navbar .navbar-brand {
-      font-family: "Source Sans Pro", Arial, "Helvetica Neue", sans-serif;
+      font-family: 'Source Sans Pro', Arial, 'Helvetica Neue', sans-serif;
     }
 
     #siteIcon #ctl00_PlaceHolderSiteName_ProjectPropertyTitle {
-      margin-left: .75rem;
+      margin-left: 0.75rem;
     }
 
     .font-bold {
@@ -175,10 +159,10 @@ import {
       color: #151515;
       font-weight: 600;
     }
-    
+
     :host ::ng-deep {
       .p-button {
-        background: #0056D2;
+        background: #0056d2;
         color: white;
         width: 100%;
         border-radius: 0px;
@@ -190,7 +174,10 @@ import {
         padding: 6px;
         padding-left: 15px;
         padding-right: 15px;
-        font-family: Source Sans Pro, "Source Sans Pro", sans-serif;
+        font-family:
+          Source Sans Pro,
+          'Source Sans Pro',
+          sans-serif;
       }
 
       .p-inputtext {
@@ -200,7 +187,7 @@ import {
 
       .p-password {
         width: 100%;
-        padding:4px;
+        padding: 4px;
       }
 
       .p-password-input {
@@ -214,27 +201,26 @@ import {
         border-radius: 0 !important;
         box-shadow: none !important;
         color: #333333;
-        background: #EFEFEF;
+        background: #efefef;
       }
 
       .p-inputtext:focus {
         border: none !important;
-        border-bottom: 2px solid #0056D2 !important;
+        border-bottom: 2px solid #0056d2 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
         transition: 100ms ease-out;
       }
-      
     }
   `,
 })
 export class LoginFormComponent {
   loginForm!: NgForm;
 
-  username: string = '';
-  password: string = '';
+  username = '';
+  password = '';
 
-  showPassword: boolean = false;
+  showPassword = false;
 
   router: Router = new Router();
 
@@ -253,7 +239,7 @@ export class LoginFormComponent {
   togglePassword(): void {
     this.showPassword = !this.showPassword;
 
-    let togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
 
     if (togglePasswordIcon) {
       if (this.showPassword) {

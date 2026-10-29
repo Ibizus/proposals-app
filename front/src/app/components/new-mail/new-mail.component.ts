@@ -3,42 +3,35 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import {
-  TranslateModule,
-  TranslateService,
-  TranslateStore,
-} from '@ngx-translate/core';
+import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 @Component({
   selector: 'app-new-mail',
   standalone: true,
-  imports: [
-    FormsModule,
-    DialogModule,
-    TooltipModule,
-    ButtonModule,
-    TranslateModule,
-  ],
+  imports: [FormsModule, DialogModule, TooltipModule, ButtonModule, TranslateModule],
   providers: [TranslateService, TranslateStore],
   templateUrl: './new-mail.component.html',
   styleUrl: './new-mail.component.scss',
 })
 export class NewMailComponent {
   @Input() proposalId!: number;
-  @Output() sendEmailClicked: EventEmitter<any> = new EventEmitter<{
+  @Output() sendEmailClicked: EventEmitter<{
+    email: string;
+    subject: string;
+    message: string;
+    proposalId: number;
+  }> = new EventEmitter<{
     email: string;
     subject: string;
     message: string;
     proposalId: number;
   }>();
 
-  visible: boolean = false;
-  position: string = 'right';
-  emailPlaceholder: string = '';
-  emailInput: string = '';
-  subjectInput: string = '';
-  messageInput: string = '';
-
-  constructor() {}
+  visible = false;
+  position = 'right';
+  emailPlaceholder = '';
+  emailInput = '';
+  subjectInput = '';
+  messageInput = '';
 
   showDialog() {
     this.visible = true;

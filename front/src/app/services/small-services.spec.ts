@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService } from 'primeng/api';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { environment } from '../../environments/environment';
 import { makeProposal } from '../../testing/fixtures';
 import { DashboardService } from './dashboard.service';
@@ -66,7 +67,12 @@ describe('HTTP services', () => {
     it('passes the autocomplete query as a filter and sorts results', () => {
       const service = TestBed.inject(OfficeService);
       let offices: unknown;
-      service.getOffices({ query: 'lis' }).subscribe((o) => (offices = o));
+      service
+        .getOffices({
+          originalEvent: new Event('input'),
+          query: 'lis',
+        } as AutoCompleteCompleteEvent)
+        .subscribe((o) => (offices = o));
 
       const req = http.expectOne((r) => r.url === API + 'offices/');
       expect(req.request.params.get('filter')).toBe('lis');
