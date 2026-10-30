@@ -225,7 +225,7 @@ export class ProposalsComponent implements OnInit {
       case this.t.instant('APPROVED'):
         return 'success';
       default:
-        return '';
+        return undefined;
     }
   }
 
