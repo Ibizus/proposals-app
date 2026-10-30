@@ -14,5 +14,9 @@ public record TaxDTO(
     @NotNull @Schema(description = "FIXED or BRACKETED.", example = "BRACKETED") TaxType type,
     @Schema(description = "Fixed rate in percent. Only for FIXED taxes.", example = "6.45")
         Double fixedRate,
+    @Schema(
+            description = "When true, the tax only applies to extras, never to the base salary.",
+            example = "false")
+        Boolean extrasOnly,
     @Valid @Schema(description = "Progressive brackets. Only for BRACKETED taxes.")
         List<TaxBracketDTO> brackets) {}

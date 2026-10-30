@@ -49,6 +49,12 @@ public class Tax extends AuditableSuperclass {
   @Schema(description = "Fixed rate in percent. Only used when type is FIXED.", example = "6.45")
   private Double fixedRate;
 
+  @Schema(
+      description =
+          "When true, the tax only applies to extras that reference it, never to the base salary.",
+      example = "false")
+  private Boolean extrasOnly;
+
   @ManyToOne @NotNull private TaxConfiguration configuration;
 
   @OneToMany(mappedBy = "tax", cascade = CascadeType.ALL, orphanRemoval = true)

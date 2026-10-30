@@ -100,7 +100,7 @@ export class TaxesService {
         let irs = 0;
         let ss = 0;
         let other = 0;
-        for (const tax of config.taxes) {
+        for (const tax of config.taxes.filter((t) => !t.extrasOnly)) {
           const rate = this.effectiveRate(tax, base);
           if (isIncomeTax(tax)) {
             irs = rate;

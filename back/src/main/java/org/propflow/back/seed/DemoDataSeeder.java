@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import org.propflow.back.migration.TaxDataMigration;
 import org.propflow.back.model.AuditableSuperclass;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Extra;
@@ -29,7 +30,6 @@ import org.propflow.back.model.Status;
 import org.propflow.back.model.Tax;
 import org.propflow.back.model.TaxBracket;
 import org.propflow.back.model.TaxConfiguration;
-import org.propflow.back.model.TaxType;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ExtraRepository;
 import org.propflow.back.repository.ExtraTemplateRepository;
@@ -203,11 +203,15 @@ public class DemoDataSeeder implements CommandLineRunner {
     spainConfiguration =
         taxConfigurationRepository
             .findByCountryCode("es")
-            .orElseGet(() -> taxConfigurationRepository.save(buildSpainConfiguration()));
+            .orElseGet(
+                () -> taxConfigurationRepository.save(TaxDataMigration.buildSpainConfiguration()));
     portugalConfiguration =
         taxConfigurationRepository
             .findByCountryCode("pt")
-            .orElseGet(() -> taxConfigurationRepository.save(buildPortugalConfiguration()));
+            .orElseGet(
+                () ->
+                    taxConfigurationRepository.save(
+                        TaxDataMigration.buildPortugalConfiguration(this::portugalIrsBrackets)));
 
     // Ensure exactly one configuration is active: Spain by default.
     if (taxConfigurationRepository.findByActiveTrue().isEmpty()) {
@@ -233,63 +237,6 @@ public class DemoDataSeeder implements CommandLineRunner {
         .getId();
   }
 
-  private TaxConfiguration buildSpainConfiguration() {
-    TaxConfiguration config = new TaxConfiguration();
-    config.setCountryCode("es");
-    config.setLabel("Spain (illustrative example data)");
-    config.setYearlyPayments(12);
-    config.setActive(true);
-
-    Tax socialSecurity = new Tax();
-    socialSecurity.setName("Social Security");
-    socialSecurity.setType(TaxType.FIXED);
-    socialSecurity.setFixedRate(6.45);
-    socialSecurity.setConfiguration(config);
-
-    Tax irpf = new Tax();
-    irpf.setName("IRPF");
-    irpf.setType(TaxType.BRACKETED);
-    irpf.setConfiguration(config);
-    irpf.setBrackets(spainIrpfBrackets(irpf));
-
-    config.setTaxes(List.of(socialSecurity, irpf));
-    return config;
-  }
-
-  private List<TaxBracket> spainIrpfBrackets(Tax irpf) {
-    return List.of(
-        bracket(irpf, 1200, 0.0),
-        bracket(irpf, 1500, 8.0),
-        bracket(irpf, 2000, 12.0),
-        bracket(irpf, 3000, 17.0),
-        bracket(irpf, 4000, 24.0),
-        bracket(irpf, 6000, 30.0),
-        bracket(irpf, 9999999, 37.0));
-  }
-
-  private TaxConfiguration buildPortugalConfiguration() {
-    TaxConfiguration config = new TaxConfiguration();
-    config.setCountryCode("pt");
-    config.setLabel("Portugal (illustrative example data)");
-    config.setYearlyPayments(14);
-    config.setActive(false);
-
-    Tax socialSecurity = new Tax();
-    socialSecurity.setName("Social Security");
-    socialSecurity.setType(TaxType.FIXED);
-    socialSecurity.setFixedRate(11.0);
-    socialSecurity.setConfiguration(config);
-
-    Tax irs = new Tax();
-    irs.setName("IRS");
-    irs.setType(TaxType.WITHHOLDING);
-    irs.setConfiguration(config);
-    irs.setBrackets(portugalIrsBrackets(irs));
-
-    config.setTaxes(List.of(socialSecurity, irs));
-    return config;
-  }
-
   private List<TaxBracket> portugalIrsBrackets(Tax irs) {
     List<TaxBracket> brackets = new ArrayList<>();
     try (BufferedReader reader =
@@ -302,19 +249,14 @@ public class DemoDataSeeder implements CommandLineRunner {
           .filter(line -> !line.isBlank() && !line.startsWith("#") && !line.startsWith("marital"))
           .map(line -> line.split(","))
           .filter(c -> "0".equals(c[0]))
-          .forEach(c -> brackets.add(bracket(irs, Double.valueOf(c[1]), Double.valueOf(c[2]))));
+          .forEach(
+              c ->
+                  brackets.add(
+                      TaxDataMigration.bracket(irs, Double.valueOf(c[1]), Double.valueOf(c[2]))));
     } catch (IOException e) {
       throw new UncheckedIOException("Could not read seed/taxes.csv", e);
     }
     return brackets;
-  }
-
-  private TaxBracket bracket(Tax tax, double threshold, double rate) {
-    TaxBracket bracket = new TaxBracket();
-    bracket.setThreshold(threshold);
-    bracket.setRate(rate);
-    bracket.setTax(tax);
-    return bracket;
   }
 
   private void seedExtraTemplates() {

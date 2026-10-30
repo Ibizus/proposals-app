@@ -32,6 +32,7 @@ public class TaxConfigurationMapper {
         tax.getName(),
         tax.getType(),
         tax.getFixedRate(),
+        tax.getExtrasOnly(),
         tax.getBrackets() == null
             ? List.of()
             : tax.getBrackets().stream().map(this::toDTO).collect(Collectors.toList()));
@@ -60,6 +61,7 @@ public class TaxConfigurationMapper {
     tax.setId(dto.id() == null ? 0 : dto.id());
     tax.setName(dto.name());
     tax.setType(dto.type());
+    tax.setExtrasOnly(dto.extrasOnly());
     tax.setConfiguration(config);
     if (dto.type() == TaxType.FIXED) {
       tax.setFixedRate(dto.fixedRate());

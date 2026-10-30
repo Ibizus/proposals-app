@@ -220,6 +220,25 @@ class SalaryServiceTest {
   }
 
   @Test
+  void extrasOnlyTaxAppliesToReferencingExtrasButNotToBaseSalary() {
+    Tax extrasIrs = new Tax();
+    extrasIrs.setId(30);
+    extrasIrs.setName("IRS 21% (extras)");
+    extrasIrs.setType(TaxType.FIXED);
+    extrasIrs.setFixedRate(21.0);
+    extrasIrs.setExtrasOnly(true);
+    extrasIrs.setConfiguration(configuration);
+    configuration.setTaxes(List.of(socialSecurity, incomeTax, extrasIrs));
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(30L), 12, 1);
+
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1000, allowance), null, null).get("monthly");
+
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(815, CENT);
+    assertThat(monthly.get("Car Allowance")).isCloseTo(79, CENT);
+  }
+
+  @Test
   void yearlyOnlyExtrasAreMissingFromMonthly() {
     Extra flex = extra("Flex", 4, true, false, List.of(10L), 12, -1);
 

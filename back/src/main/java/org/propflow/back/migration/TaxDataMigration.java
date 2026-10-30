@@ -1,10 +1,14 @@
 package org.propflow.back.migration;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.propflow.back.model.Extra;
 import org.propflow.back.model.ExtraTemplate;
@@ -63,24 +67,25 @@ public class TaxDataMigration implements CommandLineRunner {
     }
 
     log.info("Migrating legacy tax data to configurable tax configurations");
-    TaxConfiguration portugal = buildPortugalConfigurationFromLegacy();
+    TaxConfiguration portugal = buildPortugalConfiguration(this::loadLegacyBrackets);
+    Tax socialSecurity = portugal.getTaxes().get(0);
+    Tax incomeTax = portugal.getTaxes().get(1);
+    List<Extra> extras = extraRepository.findAll();
+    List<ExtraTemplate> templates = extraTemplateRepository.findAll();
+    Map<String, Tax> rateTaxes = new LinkedHashMap<>();
+    for (HasLegacyTaxFlags entity : concat(extras, templates)) {
+      if (Boolean.TRUE.equals(entity.getIsSSTaxable()) && entity.getSsTaxrate() != null) {
+        rateTax(portugal, rateTaxes, socialSecurity.getName(), entity.getSsTaxrate());
+      }
+      if (Boolean.TRUE.equals(entity.getIsIRSTaxable()) && entity.getIrsTaxrate() != null) {
+        rateTax(portugal, rateTaxes, incomeTax.getName(), entity.getIrsTaxrate());
+      }
+    }
     taxConfigurationRepository.saveAll(List.of(spain, portugal));
 
-    long socialSecurityId =
-        portugal.getTaxes().stream()
-            .filter(t -> "Social Security".equals(t.getName()))
-            .findFirst()
-            .orElseThrow()
-            .getId();
-    long incomeTaxId =
-        portugal.getTaxes().stream()
-            .filter(t -> "IRS".equals(t.getName()))
-            .findFirst()
-            .orElseThrow()
-            .getId();
-
-    migrateExtras(socialSecurityId, incomeTaxId);
-    migrateExtraTemplates(socialSecurityId, incomeTaxId, portugal.getId());
+    TaxIds taxIds = new TaxIds(socialSecurity, incomeTax, rateTaxes);
+    migrateExtras(extras, taxIds);
+    migrateExtraTemplates(templates, taxIds, portugal.getId());
     migrateSalaries(portugal.getId());
     log.info(
         "Tax migration complete: Portugal configuration id={}, Spain configuration id={}",
@@ -101,7 +106,7 @@ public class TaxDataMigration implements CommandLineRunner {
     }
   }
 
-  private TaxConfiguration buildSpainConfiguration() {
+  public static TaxConfiguration buildSpainConfiguration() {
     TaxConfiguration config = new TaxConfiguration();
     config.setCountryCode("es");
     config.setLabel("Spain (illustrative example data)");
@@ -128,11 +133,12 @@ public class TaxDataMigration implements CommandLineRunner {
             bracket(irpf, 6000, 30.0),
             bracket(irpf, 9999999, 37.0)));
 
-    config.setTaxes(List.of(socialSecurity, irpf));
+    config.setTaxes(new ArrayList<>(List.of(socialSecurity, irpf)));
     return config;
   }
 
-  private TaxConfiguration buildPortugalConfigurationFromLegacy() {
+  public static TaxConfiguration buildPortugalConfiguration(
+      Function<Tax, List<TaxBracket>> irsBrackets) {
     TaxConfiguration config = new TaxConfiguration();
     config.setCountryCode("pt");
     config.setLabel("Portugal (illustrative example data)");
@@ -149,9 +155,9 @@ public class TaxDataMigration implements CommandLineRunner {
     irs.setName("IRS");
     irs.setType(TaxType.WITHHOLDING);
     irs.setConfiguration(config);
-    irs.setBrackets(loadLegacyBrackets(irs));
+    irs.setBrackets(irsBrackets.apply(irs));
 
-    config.setTaxes(List.of(socialSecurity, irs));
+    config.setTaxes(new ArrayList<>(List.of(socialSecurity, irs)));
     return config;
   }
 
@@ -169,7 +175,7 @@ public class TaxDataMigration implements CommandLineRunner {
     return brackets;
   }
 
-  private TaxBracket bracket(Tax tax, double threshold, double rate) {
+  public static TaxBracket bracket(Tax tax, double threshold, double rate) {
     TaxBracket bracket = new TaxBracket();
     bracket.setThreshold(threshold);
     bracket.setRate(rate);
@@ -177,10 +183,54 @@ public class TaxDataMigration implements CommandLineRunner {
     return bracket;
   }
 
-  private void migrateExtras(long socialSecurityId, long incomeTaxId) {
-    List<Extra> extras = extraRepository.findAll();
+  private static List<HasLegacyTaxFlags> concat(List<Extra> extras, List<ExtraTemplate> templates) {
+    List<HasLegacyTaxFlags> all = new ArrayList<>(extras);
+    all.addAll(templates);
+    return all;
+  }
+
+  private static String rateKey(String kind, double rate) {
+    return kind + ":" + rate;
+  }
+
+  private static void rateTax(
+      TaxConfiguration config, Map<String, Tax> rateTaxes, String kind, double rate) {
+    rateTaxes.computeIfAbsent(
+        rateKey(kind, rate),
+        key -> {
+          Tax tax = new Tax();
+          tax.setName(
+              kind
+                  + " "
+                  + BigDecimal.valueOf(rate).stripTrailingZeros().toPlainString()
+                  + "% (extras)");
+          tax.setType(TaxType.FIXED);
+          tax.setFixedRate(rate);
+          tax.setExtrasOnly(true);
+          tax.setConfiguration(config);
+          config.getTaxes().add(tax);
+          return tax;
+        });
+  }
+
+  private record TaxIds(Tax socialSecurity, Tax incomeTax, Map<String, Tax> rateTaxes) {
+
+    long socialSecurityId(Double rate) {
+      return rate == null
+          ? socialSecurity.getId()
+          : rateTaxes.get(rateKey(socialSecurity.getName(), rate)).getId();
+    }
+
+    long incomeTaxId(Double rate) {
+      return rate == null
+          ? incomeTax.getId()
+          : rateTaxes.get(rateKey(incomeTax.getName(), rate)).getId();
+    }
+  }
+
+  private void migrateExtras(List<Extra> extras, TaxIds taxIds) {
     for (Extra extra : extras) {
-      applyTaxApplicability(extra, socialSecurityId, incomeTaxId);
+      applyTaxApplicability(extra, taxIds);
       // Legacy columns are deprecated but may still be NOT NULL in existing databases, so keep
       // harmless defaults instead of writing null.
       extra.setIsSSTaxable(false);
@@ -193,10 +243,9 @@ public class TaxDataMigration implements CommandLineRunner {
   }
 
   private void migrateExtraTemplates(
-      long socialSecurityId, long incomeTaxId, long portugalConfigurationId) {
-    List<ExtraTemplate> templates = extraTemplateRepository.findAll();
+      List<ExtraTemplate> templates, TaxIds taxIds, long portugalConfigurationId) {
     for (ExtraTemplate template : templates) {
-      applyTaxApplicability(template, socialSecurityId, incomeTaxId);
+      applyTaxApplicability(template, taxIds);
       template.setTaxConfigurationId(portugalConfigurationId);
       template.setIsSSTaxable(false);
       template.setIsIRSTaxable(false);
@@ -207,17 +256,16 @@ public class TaxDataMigration implements CommandLineRunner {
     log.info("Migrated {} extra templates to reference configurable taxes", templates.size());
   }
 
-  private <T extends HasLegacyTaxFlags> void applyTaxApplicability(
-      T entity, long socialSecurityId, long incomeTaxId) {
-    Set<Long> taxIds = new HashSet<>();
+  private void applyTaxApplicability(HasLegacyTaxFlags entity, TaxIds taxIds) {
+    Set<Long> ids = new HashSet<>();
     if (Boolean.TRUE.equals(entity.getIsSSTaxable())) {
-      taxIds.add(socialSecurityId);
+      ids.add(taxIds.socialSecurityId(entity.getSsTaxrate()));
     }
     if (Boolean.TRUE.equals(entity.getIsIRSTaxable())) {
-      taxIds.add(incomeTaxId);
+      ids.add(taxIds.incomeTaxId(entity.getIrsTaxrate()));
     }
-    entity.setTaxIds(taxIds);
-    entity.setExempt(taxIds.isEmpty());
+    entity.setTaxIds(ids);
+    entity.setExempt(ids.isEmpty());
   }
 
   private void migrateSalaries(long portugalConfigurationId) {

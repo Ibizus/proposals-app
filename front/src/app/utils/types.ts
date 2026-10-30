@@ -97,6 +97,7 @@ interface Tax {
   name: string;
   type: 'FIXED' | 'BRACKETED' | 'WITHHOLDING';
   fixedRate: number | null;
+  extrasOnly?: boolean | null;
   brackets: TaxBracket[];
   createdAt: Date;
   createdBy: string;

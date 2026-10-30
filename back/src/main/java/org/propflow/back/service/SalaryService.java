@@ -282,7 +282,9 @@ public class SalaryService {
       int payments) {
     double totalTax = 0;
     for (Tax tax : configuration.getTaxes()) {
-      totalTax += calculateTax(tax, salary, overrides.get(tax.getId()));
+      if (!Boolean.TRUE.equals(tax.getExtrasOnly())) {
+        totalTax += calculateTax(tax, salary, overrides.get(tax.getId()));
+      }
     }
     double netSalary = salary - totalTax;
     double monthlyNetSalary = netSalary;

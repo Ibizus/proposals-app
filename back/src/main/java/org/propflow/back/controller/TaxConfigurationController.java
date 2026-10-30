@@ -11,17 +11,12 @@ import org.propflow.back.dto.TaxConfigurationDTO;
 import org.propflow.back.mapper.TaxConfigurationMapper;
 import org.propflow.back.service.TaxConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -72,21 +67,6 @@ public class TaxConfigurationController {
         taxConfigurationService.save(taxConfigurationMapper.toEntity(dto)));
   }
 
-  @Operation(summary = "Replace a tax configuration")
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Configuration replaced"),
-    @ApiResponse(responseCode = "400", description = "Invalid configuration payload"),
-    @ApiResponse(responseCode = "404", description = "Configuration not found"),
-    @ApiResponse(responseCode = "409", description = "Path id does not match configuration id")
-  })
-  @PutMapping("/{id}")
-  public TaxConfigurationDTO replace(
-      @PathVariable("id") Long id, @Valid @RequestBody TaxConfigurationDTO dto) {
-    log.info("Updating tax configuration with id = {}", id);
-    return taxConfigurationMapper.toDTO(
-        taxConfigurationService.replace(id, taxConfigurationMapper.toEntity(dto)));
-  }
-
   @Operation(summary = "Activate a tax configuration")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Configuration activated"),
@@ -96,18 +76,5 @@ public class TaxConfigurationController {
   public TaxConfigurationDTO activate(@PathVariable("id") Long id) {
     log.info("Activating tax configuration with id = {}", id);
     return taxConfigurationMapper.toDTO(taxConfigurationService.activate(id));
-  }
-
-  @Operation(summary = "Delete a tax configuration")
-  @ApiResponses({
-    @ApiResponse(responseCode = "204", description = "Configuration deleted"),
-    @ApiResponse(responseCode = "404", description = "Configuration not found")
-  })
-  @ResponseBody
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{id}")
-  public void delete(@PathVariable("id") Long id) {
-    log.info("Deleting tax configuration with id = {}", id);
-    taxConfigurationService.delete(id);
   }
 }

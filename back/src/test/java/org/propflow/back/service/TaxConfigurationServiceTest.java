@@ -2,8 +2,6 @@ package org.propflow.back.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.propflow.back.exception.NotCouplingIdException;
 import org.propflow.back.model.Tax;
 import org.propflow.back.model.TaxBracket;
 import org.propflow.back.model.TaxConfiguration;
@@ -85,18 +82,6 @@ class TaxConfigurationServiceTest {
   }
 
   @Test
-  void replaceRejectsMismatchedIds() {
-    TaxConfiguration existing = config(2, "pt", false);
-    when(taxConfigurationRepository.findById(2L)).thenReturn(Optional.of(existing));
-
-    TaxConfiguration update = config(3, "pt", false);
-
-    assertThatThrownBy(() -> service.replace(2L, update))
-        .isInstanceOf(NotCouplingIdException.class);
-    verify(taxConfigurationRepository, never()).save(update);
-  }
-
-  @Test
   void saveActivatingConfigurationDeactivatesOthers() {
     TaxConfiguration spain = config(1, "es", true);
     TaxConfiguration portugal = config(2, "pt", false);
@@ -108,25 +93,5 @@ class TaxConfigurationServiceTest {
 
     assertThat(saved.getActive()).isTrue();
     assertThat(spain.getActive()).isFalse();
-  }
-
-  @Test
-  void cannotDeactivateOnlyActiveConfiguration() {
-    TaxConfiguration only = config(1, "es", true);
-    when(taxConfigurationRepository.findById(1L)).thenReturn(Optional.of(only));
-    when(taxConfigurationRepository.findAll()).thenReturn(List.of(only));
-
-    TaxConfiguration update = config(1, "es", false);
-
-    assertThatThrownBy(() -> service.replace(1L, update)).isInstanceOf(IllegalStateException.class);
-  }
-
-  @Test
-  void cannotDeleteOnlyActiveConfiguration() {
-    TaxConfiguration only = config(1, "es", true);
-    when(taxConfigurationRepository.findById(1L)).thenReturn(Optional.of(only));
-    when(taxConfigurationRepository.findAll()).thenReturn(List.of(only));
-
-    assertThatThrownBy(() -> service.delete(1L)).isInstanceOf(IllegalStateException.class);
   }
 }

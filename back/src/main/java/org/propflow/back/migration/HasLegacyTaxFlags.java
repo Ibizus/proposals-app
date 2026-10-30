@@ -12,6 +12,10 @@ public interface HasLegacyTaxFlags {
 
   Boolean getIsIRSTaxable();
 
+  Double getSsTaxrate();
+
+  Double getIrsTaxrate();
+
   Set<Long> getTaxIds();
 
   void setTaxIds(Set<Long> taxIds);
