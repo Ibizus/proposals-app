@@ -266,141 +266,32 @@ public class DemoDataSeeder implements CommandLineRunner {
 
   private List<ExtraTemplate> spainTemplates() {
     return List.of(
+        template("Flex", 4d, true, false, false, 12, -1, spainConfiguration.getId(), Set.of()),
         template(
-            "Flex",
-            4d,
-            true,
-            false,
-            false,
-            12,
-            -1,
-            spainConfiguration.getId(),
-            Set.of(spainSocialSecurityId)),
-        template(
-            "Car Allowance",
-            250d,
-            false,
-            false,
-            true,
-            12,
-            1,
-            spainConfiguration.getId(),
-            Set.of(spainIncomeTaxId),
-            true),
+            "Car Allowance", 250d, false, false, true, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId, spainIncomeTaxId)),
         template("Car", 350d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of()),
-        template(
-            "Fuel Allowance",
-            100d,
-            false,
-            false,
-            false,
-            12,
-            1,
-            spainConfiguration.getId(),
-            Set.of(),
-            true),
-        template(
-            "Food Allowance",
-            15d,
-            false,
-            false,
-            false,
-            11,
-            21,
-            spainConfiguration.getId(),
-            Set.of(spainIncomeTaxId)),
-        template("Phone", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of()),
-        template("Computer", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of()),
-        template(
-            "Health Insurance",
-            0d,
-            false,
-            true,
-            false,
-            12,
-            1,
-            spainConfiguration.getId(),
-            Set.of(spainIncomeTaxId)),
-        template(
-            "Life Insurance",
-            0d,
-            false,
-            true,
-            false,
-            12,
-            1,
-            spainConfiguration.getId(),
-            Set.of(spainIncomeTaxId)));
+        template("Fuel Allowance", 100d, false, false, true, 12, 1, spainConfiguration.getId(), Set.of()),
+        // Amount per working day
+        template("Food Allowance", 15d, false, false, true, 11, 21, spainConfiguration.getId(), Set.of()),
+        template("Phone", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
+        template("Computer", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
+        template("Health Insurance", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId)),
+        template("Life Insurance", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId)));
   }
 
   private List<ExtraTemplate> portugalTemplates() {
     return List.of(
+        template("Flex", 4d, true, false, false, 12, -1, portugalConfiguration.getId(), Set.of()),
         template(
-            "Flex",
-            4d,
-            true,
-            false,
-            false,
-            12,
-            -1,
-            portugalConfiguration.getId(),
-            Set.of(portugalSocialSecurityId)),
-        template(
-            "Car Allowance",
-            250d,
-            false,
-            false,
-            true,
-            12,
-            1,
-            portugalConfiguration.getId(),
-            Set.of(portugalIncomeTaxId),
-            true),
+            "Car Allowance", 250d, false, false, true, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId, portugalIncomeTaxId)),
         template("Car", 350d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template(
-            "Fuel Allowance",
-            100d,
-            false,
-            false,
-            false,
-            12,
-            1,
-            portugalConfiguration.getId(),
-            Set.of(),
-            true),
-        template(
-            "Food Allowance",
-            15d,
-            false,
-            false,
-            false,
-            11,
-            21,
-            portugalConfiguration.getId(),
-            Set.of(portugalIncomeTaxId)),
-        template("Phone", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template(
-            "Computer", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template(
-            "Health Insurance",
-            0d,
-            false,
-            true,
-            false,
-            12,
-            1,
-            portugalConfiguration.getId(),
-            Set.of(portugalIncomeTaxId)),
-        template(
-            "Life Insurance",
-            0d,
-            false,
-            true,
-            false,
-            12,
-            1,
-            portugalConfiguration.getId(),
-            Set.of(portugalIncomeTaxId)));
+        template("Fuel Allowance", 100d, false, false, true, 12, 1, portugalConfiguration.getId(), Set.of()),
+        // Amount per working day
+        template("Food Allowance", 15d, false, false, true, 11, 21, portugalConfiguration.getId(), Set.of()),
+        template("Phone", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template("Computer", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template("Health Insurance", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId)),
+        template("Life Insurance", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId)));
   }
 
   private ExtraTemplate template(
@@ -413,30 +304,6 @@ public class DemoDataSeeder implements CommandLineRunner {
       int multiplyMonthly,
       Long taxConfigurationId,
       Set<Long> taxIds) {
-    return template(
-        name,
-        amount,
-        isPercentage,
-        isDefault,
-        addToSalary,
-        multiplyYearly,
-        multiplyMonthly,
-        taxConfigurationId,
-        taxIds,
-        false);
-  }
-
-  private ExtraTemplate template(
-      String name,
-      double amount,
-      boolean isPercentage,
-      boolean isDefault,
-      boolean addToSalary,
-      int multiplyYearly,
-      int multiplyMonthly,
-      Long taxConfigurationId,
-      Set<Long> taxIds,
-      boolean exempt) {
     ExtraTemplate template = new ExtraTemplate();
     template.setName(name);
     template.setAmount(amount);
@@ -447,7 +314,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     template.setMultiplyMonthly(multiplyMonthly);
     template.setTaxConfigurationId(taxConfigurationId);
     template.setTaxIds(new HashSet<>(taxIds));
-    template.setExempt(exempt || taxIds.isEmpty());
+    template.setExempt(taxIds.isEmpty());
     return template;
   }
 

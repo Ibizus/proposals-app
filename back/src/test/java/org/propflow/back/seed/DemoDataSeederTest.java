@@ -5,12 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.propflow.back.model.Candidate;
+import org.propflow.back.model.ExtraTemplate;
 import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
+import org.propflow.back.model.Tax;
 import org.propflow.back.model.TaxConfiguration;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ExtraRepository;
@@ -157,6 +160,51 @@ class DemoDataSeederTest {
     assertThat(candidates).allMatch(c -> c.getProposals().size() <= 1);
 
     assertThat(positionRepository.findAll()).extracting(Position::getNjoyn).doesNotHaveDuplicates();
+  }
+
+  /**
+   * Same flags as the pre-configurable seed: {@code ExtraTemplate(.., isPercentage, isSSTaxable,
+   * isIRSTaxable, isDefault, addToSalary, ..)}, with the SS/IRS flags mapped to the configuration's
+   * social security and income tax.
+   */
+  @Test
+  void seedsExtraTemplatesWithThePreviousTaxDefaultAndAddToSalaryFlags() {
+    seeder.seed();
+
+    for (TaxConfiguration configuration : taxConfigurationRepository.findAll()) {
+      Map<String, Long> taxIdsByName =
+          configuration.getTaxes().stream().collect(Collectors.toMap(Tax::getName, Tax::getId));
+      long ss = taxIdsByName.get("Social Security");
+      long irs = taxIdsByName.get("es".equals(configuration.getCountryCode()) ? "IRPF" : "IRS");
+      Map<String, ExtraTemplate> templates =
+          extraTemplateRepository.findAll().stream()
+              .filter(t -> configuration.getId() == t.getTaxConfigurationId())
+              .collect(Collectors.toMap(ExtraTemplate::getName, t -> t));
+
+      assertThat(templates).hasSize(9);
+      assertTemplate(templates.get("Flex"), true, Set.of(), false, false);
+      assertTemplate(templates.get("Car Allowance"), false, Set.of(ss, irs), false, true);
+      assertTemplate(templates.get("Car"), false, Set.of(), false, false);
+      assertTemplate(templates.get("Fuel Allowance"), false, Set.of(), false, true);
+      assertTemplate(templates.get("Food Allowance"), false, Set.of(), false, true);
+      assertTemplate(templates.get("Phone"), false, Set.of(), true, false);
+      assertTemplate(templates.get("Computer"), false, Set.of(), true, false);
+      assertTemplate(templates.get("Health Insurance"), false, Set.of(ss), false, false);
+      assertTemplate(templates.get("Life Insurance"), false, Set.of(ss), false, false);
+    }
+  }
+
+  private static void assertTemplate(
+      ExtraTemplate template,
+      boolean isPercentage,
+      Set<Long> taxIds,
+      boolean isDefault,
+      boolean addToSalary) {
+    assertThat(template.getIsPercentage()).as(template.getName()).isEqualTo(isPercentage);
+    assertThat(template.getTaxIds()).as(template.getName()).isEqualTo(taxIds);
+    assertThat(template.getExempt()).as(template.getName()).isEqualTo(taxIds.isEmpty());
+    assertThat(template.getIsDefault()).as(template.getName()).isEqualTo(isDefault);
+    assertThat(template.getAddToSalary()).as(template.getName()).isEqualTo(addToSalary);
   }
 
   @Test
