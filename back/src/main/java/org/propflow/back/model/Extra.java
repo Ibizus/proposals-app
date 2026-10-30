@@ -45,11 +45,11 @@ public class Extra implements org.propflow.back.migration.HasLegacyTaxFlags {
 
   @Deprecated
   @Schema(hidden = true)
-  private Double ssTaxrate;
+  private Double ssTaxrate = 0.0;
 
   @Deprecated
   @Schema(hidden = true)
-  private Double irsTaxrate;
+  private Double irsTaxrate = 0.0;
 
   private Boolean isPercentage;
   private Boolean isDefault;

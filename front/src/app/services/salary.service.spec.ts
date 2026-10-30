@@ -133,6 +133,32 @@ describe('SalaryService', () => {
       expect(yearly.get('Bonus')).toBe(800);
     });
 
+    it('adds annual-only extras with addToSalary to the yearly net only', () => {
+      const proposal = makeProposal({
+        salary: {
+          id: 1,
+          base: 1000,
+          taxConfigurationId: null,
+          extras: [
+            makeExtra({
+              name: 'Bonus',
+              amount: 1000,
+              multiplyMonthly: -1,
+              multiplyYearly: 1,
+              addToSalary: true,
+              taxIds: [20],
+            }),
+          ],
+        },
+      });
+
+      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000, payments, config);
+
+      // 1000 minus 20% IRS
+      expect(m).toBe(500);
+      expect(y).toBeCloseTo(7800, 6);
+    });
+
     it('treats exempt extras as untaxed', () => {
       const proposal = makeProposal({
         salary: {

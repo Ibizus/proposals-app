@@ -115,29 +115,26 @@ export class SalaryService {
     overrides: TaxOverrides = {},
   ): [number, number] {
     for (const extra of proposal.salary.extras) {
-      let value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
+      const value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
 
-      console.log('AddToSalary -> ' + extra.addToSalary);
-
-      const baseNet = this.netExtraValue(value, extra, configuration, salary, overrides);
+      const monthlyGross = extra.multiplyMonthly === -1 ? 0 : value * extra.multiplyMonthly;
+      const yearlyGross =
+        extra.multiplyMonthly === -1
+          ? value * extra.multiplyYearly
+          : monthlyGross * extra.multiplyYearly;
+      const monthlyNet = this.netExtraValue(monthlyGross, extra, configuration, salary, overrides);
+      const yearlyNet = this.netExtraValue(yearlyGross, extra, configuration, salary, overrides);
 
       if (extra.addToSalary === true) {
-        monthlyNetSalary += baseNet * extra.multiplyMonthly;
-        yearlyNetSalary += baseNet * (extra.multiplyMonthly * extra.multiplyYearly);
-        console.log(monthlyNetSalary);
+        monthlyNetSalary += monthlyNet;
+        yearlyNetSalary += yearlyNet;
       }
 
-      if (extra.multiplyMonthly != -1) {
+      if (extra.multiplyMonthly !== -1) {
         // If monthly = -1 means that it is only Annual extra
-        value *= extra.multiplyMonthly;
-        const netValue = this.netExtraValue(value, extra, configuration, salary, overrides);
-        monthlySalaryCalculations.set(extra.name, netValue);
-        yearlySalaryCalculations.set(extra.name, netValue * extra.multiplyYearly);
-      } else {
-        value *= extra.multiplyYearly;
-        const netValue = this.netExtraValue(value, extra, configuration, salary, overrides);
-        yearlySalaryCalculations.set(extra.name, netValue);
+        monthlySalaryCalculations.set(extra.name, monthlyNet);
       }
+      yearlySalaryCalculations.set(extra.name, yearlyNet);
     }
 
     return [monthlyNetSalary, yearlyNetSalary];

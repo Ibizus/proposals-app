@@ -44,7 +44,6 @@ public class TaxConfigurationMapper {
 
   public TaxConfiguration toEntity(TaxConfigurationDTO dto) {
     TaxConfiguration config = new TaxConfiguration();
-    config.setId(dto.id() == null ? 0 : dto.id());
     config.setCountryCode(dto.countryCode());
     config.setLabel(dto.label());
     config.setYearlyPayments(dto.yearlyPayments());
@@ -58,7 +57,6 @@ public class TaxConfigurationMapper {
 
   public Tax toEntity(TaxDTO dto, TaxConfiguration config) {
     Tax tax = new Tax();
-    tax.setId(dto.id() == null ? 0 : dto.id());
     tax.setName(dto.name());
     tax.setType(dto.type());
     tax.setExtrasOnly(dto.extrasOnly());
@@ -78,7 +76,6 @@ public class TaxConfigurationMapper {
 
   public TaxBracket toEntity(TaxBracketDTO dto, Tax tax) {
     TaxBracket bracket = new TaxBracket();
-    bracket.setId(dto.id() == null ? 0 : dto.id());
     bracket.setThreshold(dto.threshold());
     bracket.setRate(dto.rate());
     bracket.setTax(tax);
