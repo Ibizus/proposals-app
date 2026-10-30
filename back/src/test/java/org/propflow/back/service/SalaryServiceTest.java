@@ -237,4 +237,28 @@ class SalaryServiceTest {
               "Estimated Net Salary");
     }
   }
+
+  @Test
+  void bracketedExtraUsesMarginalRateFromBaseSalary() {
+    // Base 1000 sits in the 20% marginal bracket (next bracket after 1000).
+    // A 100€ extra taxed by IRS should pay 20€, leaving 80€.
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(20L), 12, 1);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, allowance), null, null);
+
+    assertThat(result.get("monthly").get("Car Allowance")).isCloseTo(80, CENT);
+    assertThat(result.get("yearly").get("Car Allowance")).isCloseTo(960, CENT);
+  }
+
+  @Test
+  void withholdingTaxAppliesSingleBracketRateToWholeAmount() {
+    incomeTax.setType(TaxType.WITHHOLDING);
+    // Base 1500: withholding bracket 1000@10% does not cover it, next bracket 9999999@20% does.
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1500), null, null).get("monthly");
+
+    // SS = 165, IRS = 1500 * 20% = 300 -> net = 1500 - 465 = 1035
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(1035, CENT);
+  }
 }

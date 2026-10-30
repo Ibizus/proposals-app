@@ -95,4 +95,38 @@ class TaxConfigurationServiceTest {
         .isInstanceOf(NotCouplingIdException.class);
     verify(taxConfigurationRepository, never()).save(update);
   }
+
+  @Test
+  void saveActivatingConfigurationDeactivatesOthers() {
+    TaxConfiguration spain = config(1, "es", true);
+    TaxConfiguration portugal = config(2, "pt", false);
+    when(taxConfigurationRepository.findAll()).thenReturn(List.of(spain, portugal));
+    when(taxConfigurationRepository.save(portugal)).thenReturn(portugal);
+
+    portugal.setActive(true);
+    TaxConfiguration saved = service.save(portugal);
+
+    assertThat(saved.getActive()).isTrue();
+    assertThat(spain.getActive()).isFalse();
+  }
+
+  @Test
+  void cannotDeactivateOnlyActiveConfiguration() {
+    TaxConfiguration only = config(1, "es", true);
+    when(taxConfigurationRepository.findById(1L)).thenReturn(Optional.of(only));
+    when(taxConfigurationRepository.findAll()).thenReturn(List.of(only));
+
+    TaxConfiguration update = config(1, "es", false);
+
+    assertThatThrownBy(() -> service.replace(1L, update)).isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void cannotDeleteOnlyActiveConfiguration() {
+    TaxConfiguration only = config(1, "es", true);
+    when(taxConfigurationRepository.findById(1L)).thenReturn(Optional.of(only));
+    when(taxConfigurationRepository.findAll()).thenReturn(List.of(only));
+
+    assertThatThrownBy(() -> service.delete(1L)).isInstanceOf(IllegalStateException.class);
+  }
 }

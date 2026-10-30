@@ -141,24 +141,14 @@ public class SalaryService {
 
   private Optional<Tax> findIncomeTax(TaxConfiguration configuration) {
     return configuration.getTaxes().stream()
-        .filter(t -> isNamed(t, "IRPF", "IRS", "Income Tax"))
+        .filter(t -> "IRS".equals(t.getName()) || "IRPF".equals(t.getName()))
         .findFirst();
   }
 
   private Optional<Tax> findSocialSecurityTax(TaxConfiguration configuration) {
     return configuration.getTaxes().stream()
-        .filter(t -> isNamed(t, "Social Security", "Seguridad Social", "Seguranca Social"))
+        .filter(t -> "Social Security".equals(t.getName()))
         .findFirst();
-  }
-
-  private boolean isNamed(Tax tax, String... candidates) {
-    String name = tax.getName();
-    if (name == null) return false;
-    String lower = name.toLowerCase();
-    for (String candidate : candidates) {
-      if (lower.equals(candidate.toLowerCase())) return true;
-    }
-    return false;
   }
 
   private double calculateTax(Tax tax, double base, Double override) {
@@ -168,6 +158,9 @@ public class SalaryService {
     }
     if (override != null) {
       return base * override / 100;
+    }
+    if (tax.getType() == TaxType.WITHHOLDING) {
+      return base * withholdingRate(tax, base) / 100;
     }
     double total = 0;
     double remaining = base;
@@ -181,6 +174,41 @@ public class SalaryService {
       previousThreshold = bracket.getThreshold();
     }
     return total;
+  }
+
+  /**
+   * Returns the marginal tax rate (as a percentage) that applies to the next euro earned on top of
+   * {@code base}. Used for extras so they are taxed at the same marginal rate as the salary they
+   * are added to, rather than as standalone income.
+   */
+  private double marginalRate(Tax tax, double base, Double override) {
+    if (override != null) {
+      return override;
+    }
+    if (tax.getType() == TaxType.FIXED) {
+      return tax.getFixedRate();
+    }
+    return marginalBracketRate(tax, base);
+  }
+
+  private double marginalBracketRate(Tax tax, double base) {
+    for (TaxBracket bracket : tax.getBrackets()) {
+      if (base < bracket.getThreshold()) {
+        return bracket.getRate();
+      }
+    }
+    List<TaxBracket> brackets = tax.getBrackets();
+    return brackets.isEmpty() ? 0.0 : brackets.get(brackets.size() - 1).getRate();
+  }
+
+  private double withholdingRate(Tax tax, double base) {
+    for (TaxBracket bracket : tax.getBrackets()) {
+      if (base <= bracket.getThreshold()) {
+        return bracket.getRate();
+      }
+    }
+    List<TaxBracket> brackets = tax.getBrackets();
+    return brackets.isEmpty() ? 0.0 : brackets.get(brackets.size() - 1).getRate();
   }
 
   private Tax findTaxById(TaxConfiguration configuration, long taxId) {
@@ -284,39 +312,44 @@ public class SalaryService {
       double baseValue =
           Boolean.TRUE.equals(extra.getIsPercentage()) ? (salary * amount) / 100 : amount;
 
-      double baseTax = taxOnExtra(baseValue, extra, configuration, overrides);
-      double netBaseValue = baseValue - baseTax;
+      int multiplyMonthly = extra.getMultiplyMonthly();
+      int multiplyYearly = extra.getMultiplyYearly();
+
+      double monthlyGross = multiplyMonthly == -1 ? 0.0 : baseValue * multiplyMonthly;
+      double yearlyGross =
+          multiplyMonthly == -1 ? baseValue * multiplyYearly : monthlyGross * multiplyYearly;
+
+      double monthlyTax = taxOnExtra(monthlyGross, salary, extra, configuration, overrides);
+      double yearlyTax = taxOnExtra(yearlyGross, salary, extra, configuration, overrides);
+      double monthlyNet = monthlyGross - monthlyTax;
+      double yearlyNet = yearlyGross - yearlyTax;
 
       if (Boolean.TRUE.equals(extra.getAddToSalary())) {
-        monthlyNetSalary += netBaseValue * extra.getMultiplyMonthly();
-        yearlyNetSalary +=
-            netBaseValue * ((long) extra.getMultiplyMonthly() * extra.getMultiplyYearly());
+        monthlyNetSalary += monthlyNet;
+        yearlyNetSalary += yearlyNet;
       }
 
-      if (extra.getMultiplyMonthly() != -1) {
-        double value = baseValue * extra.getMultiplyMonthly();
-        double tax = taxOnExtra(value, extra, configuration, overrides);
-        double netValue = value - tax;
-        monthlySalaryCalculations.put(extra.getName(), netValue);
-        yearlySalaryCalculations.put(extra.getName(), netValue * extra.getMultiplyYearly());
-      } else {
-        double value = baseValue * extra.getMultiplyYearly();
-        double tax = taxOnExtra(value, extra, configuration, overrides);
-        double netValue = value - tax;
-        yearlySalaryCalculations.put(extra.getName(), netValue);
+      if (multiplyMonthly != -1) {
+        monthlySalaryCalculations.put(extra.getName(), monthlyNet);
       }
+      yearlySalaryCalculations.put(extra.getName(), yearlyNet);
     }
     return new double[] {monthlyNetSalary, yearlyNetSalary};
   }
 
   private double taxOnExtra(
-      double value, Extra extra, TaxConfiguration configuration, Map<Long, Double> overrides) {
+      double value,
+      double baseSalary,
+      Extra extra,
+      TaxConfiguration configuration,
+      Map<Long, Double> overrides) {
     if (Boolean.TRUE.equals(extra.getExempt())) return 0;
     double total = 0;
     for (Long taxId : extra.getTaxIds()) {
       Tax tax = findTaxById(configuration, taxId);
       if (tax != null) {
-        total += calculateTax(tax, value, overrides.get(tax.getId()));
+        double rate = marginalRate(tax, baseSalary, overrides.get(tax.getId()));
+        total += value * rate / 100;
       }
     }
     return total;

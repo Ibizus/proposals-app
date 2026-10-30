@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { BehaviorSubject, map, Observable, switchMap } from 'rxjs';
+import { BehaviorSubject, map, Observable, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Proposal, TaxBracket, TaxConfiguration } from '../utils/types';
 import { TaxesService } from './taxes.service';
@@ -63,9 +63,15 @@ export class ProposalService {
     const monthlyNetSalary = 0;
     const yearlyNetSalary = 0;
 
-    return this.taxesService.getActiveConfiguration().pipe(
+    const configuration$ = proposal.salary.taxConfigurationId
+      ? this.taxesService.getTaxConfiguration(proposal.salary.taxConfigurationId)
+      : this.taxesService.getActiveConfiguration();
+
+    return configuration$.pipe(
       switchMap((configuration) =>
-        this.taxesService.getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber).pipe(
+        this.taxesService
+          .getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber)
+          .pipe(
           switchMap((taxBracket) => {
             if (irs) {
               taxBracket.irs = irs;

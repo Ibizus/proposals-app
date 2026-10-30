@@ -75,6 +75,13 @@ public class ExtraTemplate extends AuditableSuperclass
   @Schema(description = "When true, the extra is exempt from all taxes.")
   private Boolean exempt;
 
+  @Schema(
+      description =
+          "Tax configuration this template belongs to. Extras created from the template are"
+              + " calculated under this configuration.",
+      example = "1")
+  private Long taxConfigurationId;
+
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(
       name = "extra_template_tax",

@@ -95,7 +95,7 @@ interface TaxConfiguration {
 interface Tax {
   id: number;
   name: string;
-  type: 'FIXED' | 'BRACKETED';
+  type: 'FIXED' | 'BRACKETED' | 'WITHHOLDING';
   fixedRate: number | null;
   brackets: TaxBracket[];
   createdAt: Date;

@@ -94,7 +94,7 @@ class DemoDataSeederTest {
         .containsEntry("salaries", (long) DemoDataSeeder.PROPOSAL_COUNT)
         .containsEntry("taxConfigurations", 2L)
         .containsEntry("parameters", 3L)
-        .containsEntry("extraTemplates", 9L);
+        .containsEntry("extraTemplates", 18L);
 
     TaxConfiguration active = taxConfigurationRepository.findByActiveTrue().orElseThrow();
     assertThat(active.getCountryCode()).isEqualTo("es");

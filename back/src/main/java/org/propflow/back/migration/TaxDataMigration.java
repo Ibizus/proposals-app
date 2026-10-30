@@ -80,7 +80,7 @@ public class TaxDataMigration implements CommandLineRunner {
             .getId();
 
     migrateExtras(socialSecurityId, incomeTaxId);
-    migrateExtraTemplates(socialSecurityId, incomeTaxId);
+    migrateExtraTemplates(socialSecurityId, incomeTaxId, portugal.getId());
     migrateSalaries(portugal.getId());
     log.info(
         "Tax migration complete: Portugal configuration id={}, Spain configuration id={}",
@@ -146,7 +146,7 @@ public class TaxDataMigration implements CommandLineRunner {
 
     Tax irs = new Tax();
     irs.setName("IRS");
-    irs.setType(TaxType.BRACKETED);
+    irs.setType(TaxType.WITHHOLDING);
     irs.setConfiguration(config);
     irs.setBrackets(loadLegacyBrackets(irs));
 
@@ -180,23 +180,27 @@ public class TaxDataMigration implements CommandLineRunner {
     List<Extra> extras = extraRepository.findAll();
     for (Extra extra : extras) {
       applyTaxApplicability(extra, socialSecurityId, incomeTaxId);
-      extra.setIsSSTaxable(null);
-      extra.setIsIRSTaxable(null);
-      extra.setSsTaxrate(null);
-      extra.setIrsTaxrate(null);
+      // Legacy columns are deprecated but may still be NOT NULL in existing databases, so keep
+      // harmless defaults instead of writing null.
+      extra.setIsSSTaxable(false);
+      extra.setIsIRSTaxable(false);
+      extra.setSsTaxrate(0.0);
+      extra.setIrsTaxrate(0.0);
     }
     extraRepository.saveAll(extras);
     log.info("Migrated {} extras to reference configurable taxes", extras.size());
   }
 
-  private void migrateExtraTemplates(long socialSecurityId, long incomeTaxId) {
+  private void migrateExtraTemplates(
+      long socialSecurityId, long incomeTaxId, long portugalConfigurationId) {
     List<ExtraTemplate> templates = extraTemplateRepository.findAll();
     for (ExtraTemplate template : templates) {
       applyTaxApplicability(template, socialSecurityId, incomeTaxId);
-      template.setIsSSTaxable(null);
-      template.setIsIRSTaxable(null);
-      template.setSsTaxrate(null);
-      template.setIrsTaxrate(null);
+      template.setTaxConfigurationId(portugalConfigurationId);
+      template.setIsSSTaxable(false);
+      template.setIsIRSTaxable(false);
+      template.setSsTaxrate(0.0);
+      template.setIrsTaxrate(0.0);
     }
     extraTemplateRepository.saveAll(templates);
     log.info("Migrated {} extra templates to reference configurable taxes", templates.size());

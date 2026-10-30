@@ -105,7 +105,7 @@ export class SalaryService {
 
       console.log('AddToSalary -> ' + extra.addToSalary);
 
-      const baseNet = this.netExtraValue(value, extra, configuration);
+      const baseNet = this.netExtraValue(value, extra, configuration, salary);
 
       if (extra.addToSalary === true) {
         monthlyNetSalary += baseNet * extra.multiplyMonthly;
@@ -116,12 +116,12 @@ export class SalaryService {
       if (extra.multiplyMonthly != -1) {
         // If monthly = -1 means that it is only Annual extra
         value *= extra.multiplyMonthly;
-        const netValue = this.netExtraValue(value, extra, configuration);
+        const netValue = this.netExtraValue(value, extra, configuration, salary);
         monthlySalaryCalculations.set(extra.name, netValue);
         yearlySalaryCalculations.set(extra.name, netValue * extra.multiplyYearly);
       } else {
         value *= extra.multiplyYearly;
-        const netValue = this.netExtraValue(value, extra, configuration);
+        const netValue = this.netExtraValue(value, extra, configuration, salary);
         yearlySalaryCalculations.set(extra.name, netValue);
       }
     }
@@ -129,7 +129,12 @@ export class SalaryService {
     return [monthlyNetSalary, yearlyNetSalary];
   }
 
-  private netExtraValue(value: number, extra: Extra, configuration?: TaxConfiguration): number {
+  private netExtraValue(
+    value: number,
+    extra: Extra,
+    configuration: TaxConfiguration | undefined,
+    baseSalary: number,
+  ): number {
     if (extra.exempt || !configuration) {
       return value;
     }
@@ -137,29 +142,23 @@ export class SalaryService {
     for (const taxId of extra.taxIds) {
       const t = configuration.taxes.find((tx) => tx.id === taxId);
       if (t) {
-        tax += this.calculateTax(t, value);
+        tax += (value * this.marginalRate(t, baseSalary)) / 100;
       }
     }
     return value - tax;
   }
 
-  private calculateTax(tax: Tax, base: number): number {
+  private marginalRate(tax: Tax, baseSalary: number): number {
     if (tax.type === 'FIXED') {
-      return (base * (tax.fixedRate ?? 0)) / 100;
+      return tax.fixedRate ?? 0;
     }
     const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
-    let total = 0;
-    let remaining = base;
-    let previousThreshold = 0;
     for (const bracket of sorted) {
-      const size = bracket.threshold - previousThreshold;
-      const taxable = Math.min(remaining, Math.max(0, size));
-      total += (taxable * bracket.rate) / 100;
-      remaining -= taxable;
-      if (remaining <= 0) break;
-      previousThreshold = bracket.threshold;
+      if (baseSalary <= bracket.threshold) {
+        return bracket.rate;
+      }
     }
-    return total;
+    return sorted[sorted.length - 1]?.rate ?? 0;
   }
 
   calculateSCR(monthlySalaryCalculations: Map<string, number>, scr: number) {

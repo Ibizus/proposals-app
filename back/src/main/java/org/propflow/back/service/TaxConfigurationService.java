@@ -31,6 +31,9 @@ public class TaxConfigurationService {
   public TaxConfiguration save(TaxConfiguration configuration) {
     configuration.setActive(Boolean.TRUE.equals(configuration.getActive()));
     wireChildren(configuration);
+    if (configuration.getActive()) {
+      deactivateOthers(configuration.getId());
+    }
     return taxConfigurationRepository.save(configuration);
   }
 
@@ -53,6 +56,7 @@ public class TaxConfigurationService {
         .orElseThrow(() -> new EntityNotFoundException(id, TaxConfiguration.class));
   }
 
+  @Transactional
   public TaxConfiguration replace(Long id, TaxConfiguration configuration) {
     return taxConfigurationRepository
         .findById(id)
@@ -61,21 +65,48 @@ public class TaxConfigurationService {
               if (!id.equals(configuration.getId())) {
                 throw new NotCouplingIdException(id, configuration.getId(), TaxConfiguration.class);
               }
+              configuration.setActive(Boolean.TRUE.equals(configuration.getActive()));
               wireChildren(configuration);
+              if (configuration.getActive()) {
+                deactivateOthers(id);
+              } else if (Boolean.TRUE.equals(existing.getActive())) {
+                ensureAnotherActiveExists(id);
+              }
               return taxConfigurationRepository.save(configuration);
             })
         .orElseThrow(() -> new EntityNotFoundException(id, TaxConfiguration.class));
   }
 
+  @Transactional
   public void delete(Long id) {
-    taxConfigurationRepository
-        .findById(id)
-        .map(
-            config -> {
-              taxConfigurationRepository.delete(config);
-              return config;
-            })
-        .orElseThrow(() -> new EntityNotFoundException(id, TaxConfiguration.class));
+    TaxConfiguration config =
+        taxConfigurationRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(id, TaxConfiguration.class));
+    if (Boolean.TRUE.equals(config.getActive())) {
+      ensureAnotherActiveExists(id);
+    }
+    taxConfigurationRepository.delete(config);
+  }
+
+  private void ensureAnotherActiveExists(Long excludedId) {
+    boolean anotherActive =
+        taxConfigurationRepository.findAll().stream()
+            .anyMatch(
+                c ->
+                    (excludedId == null || c.getId() != excludedId)
+                        && Boolean.TRUE.equals(c.getActive()));
+    if (!anotherActive) {
+      throw new IllegalStateException("Cannot deactivate or delete the only active configuration");
+    }
+  }
+
+  private void deactivateOthers(Long keptId) {
+    for (TaxConfiguration config : taxConfigurationRepository.findAll()) {
+      if (keptId == null || config.getId() != keptId) {
+        config.setActive(false);
+      }
+    }
   }
 
   private void wireChildren(TaxConfiguration configuration) {
