@@ -48,6 +48,7 @@ public class ProposalService {
   @Autowired private ProposalMapper proposalMapper;
   @Autowired private SalaryRepository salaryRepository;
   @Autowired private ExtraRepository extraRepository;
+  @Autowired private TaxConfigurationService taxConfigurationService;
   @PersistenceContext EntityManager entityManager;
 
   public List<ProposalDTO> all() {
@@ -129,6 +130,10 @@ public class ProposalService {
     Candidate persistedCandidate = candidateService.save(candidate);
     // Update proposal counter:
     persistedCandidate.setProposalsCount(persistedCandidate.getProposals().size() + 1);
+
+    if (!isModifying && salary.getTaxConfigurationId() == null) {
+      salary.setTaxConfigurationId(taxConfigurationService.findActive().getId());
+    }
 
     if (!isModifying) {
       salaryRepository.saveAndFlush(salary);

@@ -26,25 +26,8 @@
             {{ 'QTY' | translate }} <p-sortIcon field="isPercentage" />
           </div>
         </th>
-        <th pSortableColumn="ssTaxrate" class="header-cell">
-          <div class="header-content">
-            {{ 'SS TAXRATE' | translate }} <p-sortIcon field="ssTaxrate" />
-          </div>
-        </th>
-        <th pSortableColumn="irsTaxrate" class="header-cell">
-          <div class="header-content">
-            {{ 'IRS TAXRATE' | translate }} <p-sortIcon field="irsTaxrate" />
-          </div>
-        </th>
-        <th pSortableColumn="isSSTaxable" class="header-cell">
-          <div class="header-content">
-            {{ 'SS TAX' | translate }} <p-sortIcon field="isSSTaxable" />
-          </div>
-        </th>
-        <th pSortableColumn="isIRSTaxable" class="header-cell">
-          <div class="header-content">
-            {{ 'IRS TAX' | translate }} <p-sortIcon field="isIRSTaxable" />
-          </div>
+        <th pSortableColumn="exempt" class="header-cell">
+          <div class="header-content">{{ 'EXEMPT' | translate }} <p-sortIcon field="exempt" /></div>
         </th>
         <th pSortableColumn="isDefault" class="header-cell">
           <div class="header-content">
@@ -108,42 +91,11 @@
         <td>
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="extra.ssTaxrate" />
+              <span>{{ 'EXEMPT' | translate }}</span> <br />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.exempt" />
             </ng-template>
             <ng-template pTemplate="output">
-              {{ extra.ssTaxrate }}
-            </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="extra.irsTaxrate" />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ extra.irsTaxrate }}
-            </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <span>{{ 'IS IT TAXABLE BY SOCIAL SECURITY' | translate }}</span> <br />
-              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isSSTaxable" />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ extra.isSSTaxable ? yes : no }}
-            </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <span>{{ 'IS IT TAXABLE BY IRS' | translate }}</span> <br />
-              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.isIRSTaxable" />
-            </ng-template>
-            <ng-template pTemplate="output">
-              {{ extra.isIRSTaxable ? yes : no }}
+              {{ extra.exempt ? yes : no }}
             </ng-template>
           </p-cellEditor>
         </td>

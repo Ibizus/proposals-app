@@ -1,4 +1,13 @@
-import { Candidate, Extra, Position, Proposal, Taxes } from '../app/utils/types';
+import {
+  Candidate,
+  Extra,
+  Position,
+  Proposal,
+  Tax,
+  TaxBracket,
+  TaxConfiguration,
+  Taxes,
+} from '../app/utils/types';
 
 export function makeCandidate(overrides: Partial<Candidate> = {}): Candidate {
   return {
@@ -42,15 +51,63 @@ export function makeExtra(overrides: Partial<Extra> = {}): Extra {
     id: 1,
     name: 'Meal allowance',
     amount: 100,
-    ssTaxrate: 10,
-    irsTaxrate: 20,
     isPercentage: false,
-    isSSTaxable: true,
-    isIRSTaxable: true,
     isDefault: false,
     addToSalary: false,
     multiplyYearly: 11,
     multiplyMonthly: 1,
+    exempt: false,
+    taxIds: [10, 20],
+    createdAt: at,
+    createdBy: 'test',
+    modifiedAt: at,
+    modifiedBy: 'test',
+    ...overrides,
+  };
+}
+
+export function makeTaxBracket(overrides: Partial<TaxBracket> = {}): TaxBracket {
+  const at = new Date('2024-01-01T00:00:00Z');
+  return {
+    id: 1,
+    threshold: 2000,
+    rate: 20,
+    createdAt: at,
+    createdBy: 'test',
+    modifiedAt: at,
+    modifiedBy: 'test',
+    ...overrides,
+  };
+}
+
+export function makeTax(overrides: Partial<Tax> = {}): Tax {
+  const at = new Date('2024-01-01T00:00:00Z');
+  return {
+    id: 1,
+    name: 'IRS',
+    type: 'BRACKETED',
+    fixedRate: null,
+    brackets: [makeTaxBracket()],
+    createdAt: at,
+    createdBy: 'test',
+    modifiedAt: at,
+    modifiedBy: 'test',
+    ...overrides,
+  };
+}
+
+export function makeTaxConfiguration(overrides: Partial<TaxConfiguration> = {}): TaxConfiguration {
+  const at = new Date('2024-01-01T00:00:00Z');
+  return {
+    id: 1,
+    countryCode: 'pt',
+    label: 'Portugal (illustrative example data)',
+    yearlyPayments: 14,
+    active: true,
+    taxes: [
+      makeTax({ id: 10, name: 'Social Security', type: 'FIXED', fixedRate: 11, brackets: [] }),
+      makeTax({ id: 20, name: 'IRS', type: 'BRACKETED', fixedRate: null }),
+    ],
     createdAt: at,
     createdBy: 'test',
     modifiedAt: at,
@@ -97,7 +154,7 @@ export function makeProposal(overrides: Partial<Proposal> = {}): Proposal {
     indefinite: true,
     knowMore: '',
     office: { id: 1, name: 'Lisbon', code: 'LIS' },
-    salary: { id: 1, base: 1000, extras: [] },
+    salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [] },
     candidate: makeCandidate(),
     position: null,
     statuses: [],

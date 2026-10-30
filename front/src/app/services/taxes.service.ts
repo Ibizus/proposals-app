@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
-import { Taxes } from '../utils/types';
-import { Observable, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Tax, TaxConfiguration, Taxes } from '../utils/types';
+import { Observable, map, of } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { isIncomeTax, isSocialSecurityTax } from '../utils/functions';
 
-const TAXESURL = 'http://localhost:8080/v1/api/taxes/';
+const TAX_CONFIG_URL = `${environment.API_ENDPOINT}tax-configurations/`;
 
 @Injectable({
   providedIn: 'root',
@@ -12,75 +14,111 @@ const TAXESURL = 'http://localhost:8080/v1/api/taxes/';
 export class TaxesService {
   constructor(private http: HttpClient) {}
 
+  private effectiveRate(tax: Tax, base: number): number {
+    if (tax.type === 'FIXED') {
+      return tax.fixedRate ?? 0;
+    }
+    const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
+    if (tax.type === 'WITHHOLDING') {
+      const bracket = sorted.find((b) => base <= b.threshold) ?? sorted[sorted.length - 1];
+      return bracket?.rate ?? 0;
+    }
+    let remaining = base;
+    let previousThreshold = 0;
+    let total = 0;
+    for (const bracket of sorted) {
+      const size = bracket.threshold - previousThreshold;
+      const taxable = Math.min(remaining, Math.max(0, size));
+      total += (taxable * bracket.rate) / 100;
+      remaining -= taxable;
+      if (remaining <= 0) break;
+      previousThreshold = bracket.threshold;
+    }
+    return base > 0 ? (total / base) * 100 : 0;
+  }
+
   getTaxes(): Observable<Taxes[]> {
-    return this.http.get<Taxes[]>(TAXESURL).pipe(
+    return this.getActiveConfiguration().pipe(
+      map((config) => {
+        const incomeTax = config.taxes.find((t) => isIncomeTax(t));
+        if (!incomeTax) return [];
+        return [...incomeTax.brackets]
+          .sort((a, b) => a.threshold - b.threshold)
+          .map((bracket): Taxes => ({
+            id: bracket.id,
+            salaryMax: bracket.threshold,
+            socialSecurityTax: config.taxes.find((t) => isSocialSecurityTax(t))?.fixedRate ?? 0,
+            taxPercentageCompany: 0,
+            validFrom: new Date(),
+            validUntil: new Date(),
+            maritalStatus: 0,
+            zero: bracket.rate,
+            one: bracket.rate,
+            two: bracket.rate,
+            three: bracket.rate,
+            four: bracket.rate,
+            five: bracket.rate,
+            createdAt: new Date(),
+            createdBy: '',
+            modifiedAt: new Date(),
+            modifiedBy: '',
+          }));
+      }),
+    );
+  }
+
+  getTaxConfigurations(): Observable<TaxConfiguration[]> {
+    return this.http.get<TaxConfiguration[]>(TAX_CONFIG_URL).pipe(
       map((data) => {
-        data.sort((a, b) => a.salaryMax - b.salaryMax);
+        data.sort((a, b) => a.countryCode.localeCompare(b.countryCode));
         return data;
       }),
     );
   }
 
-  getTaxesForSalaryAndMaritalStatus(salary: number, maritalStatus: number): Observable<Taxes> {
-    return this.http
-      .get<Taxes>(TAXESURL + '?salary=' + salary + '&maritalStatus=' + maritalStatus)
-      .pipe(
-        map((data) => {
-          return data;
-        }),
-      );
+  getActiveConfiguration(): Observable<TaxConfiguration> {
+    return this.http.get<TaxConfiguration>(`${TAX_CONFIG_URL}active`);
   }
 
-  getTaxesForMaritalStatus(maritalStatus: number): Observable<Taxes[]> {
-    return this.http.get<Taxes[]>(TAXESURL + '?maritalStatus=' + maritalStatus).pipe(
-      map((data) => {
-        data.sort((a, b) => a.salaryMax - b.salaryMax);
-        return data;
-      }),
-    );
+  getTaxConfiguration(id: number): Observable<TaxConfiguration> {
+    return this.http.get<TaxConfiguration>(`${TAX_CONFIG_URL}${id}`);
   }
 
-  getTaxBracket(base: number, maritalStatus: number, numberOfDependents: number): Observable<any> {
-    return new Observable<any>((observer) => {
-      this.getTaxesForSalaryAndMaritalStatus(base, maritalStatus).subscribe({
-        next: (data) => {
-          const tax = data;
-          const taxBracket = {
-            irs: tax.zero,
-            ss: tax.socialSecurityTax,
-          };
+  activateConfiguration(id: number): Observable<TaxConfiguration> {
+    return this.http.post<TaxConfiguration>(`${TAX_CONFIG_URL}${id}/activate`, {});
+  }
 
-          if (numberOfDependents <= 0) {
-            taxBracket.irs = tax.zero;
-          } else if (numberOfDependents === 1) {
-            taxBracket.irs = tax.one;
-          } else if (numberOfDependents === 2) {
-            taxBracket.irs = tax.two;
-          } else if (numberOfDependents === 3) {
-            taxBracket.irs = tax.three;
-          } else if (numberOfDependents === 4) {
-            taxBracket.irs = tax.four;
+  getTaxBracket(
+    base: number,
+    maritalStatus: number,
+    numberOfDependents: number,
+    configuration?: TaxConfiguration,
+  ): Observable<any> {
+    const config$ = configuration ? of(configuration) : this.getActiveConfiguration();
+    return config$.pipe(
+      map((config) => {
+        let irs = 0;
+        let ss = 0;
+        let other = 0;
+        for (const tax of config.taxes.filter((t) => !t.extrasOnly)) {
+          const rate = this.effectiveRate(tax, base);
+          if (isIncomeTax(tax)) {
+            irs = rate;
+          } else if (isSocialSecurityTax(tax)) {
+            ss = rate;
           } else {
-            taxBracket.irs = tax.five;
+            other += rate;
           }
+        }
 
-          console.log('Tax bracket calculated inside Taxes Service: ' + JSON.stringify(taxBracket));
-          observer.next(taxBracket);
-          observer.complete();
-        },
-        error: (error) => {
-          console.error('Error while fetching extras:', error);
-          observer.error(error);
-        },
-      });
-    });
-  }
-
-  modifyTaxes(tax: Taxes, context?: HttpContext): Observable<unknown> {
-    return this.http.put<Taxes>(TAXESURL + tax.id, tax, { context });
-  }
-
-  deleteTaxes(id: number, context?: HttpContext): Observable<Taxes> {
-    return this.http.delete<Taxes>(TAXESURL + id, { context });
+        const taxBracket = {
+          irs: irs,
+          ss: ss,
+          other: other,
+        };
+        console.log('Tax bracket calculated inside Taxes Service: ' + JSON.stringify(taxBracket));
+        return taxBracket;
+      }),
+    );
   }
 }
