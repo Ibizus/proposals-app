@@ -74,6 +74,10 @@ public class ExtraTemplateService {
   }
 
   public ExtraTemplate save(ExtraTemplate extra) {
+    if (extra.getTaxConfigurationId() == null) {
+      extra.setTaxConfigurationId(
+          taxConfigurationRepository.findByActiveTrue().map(TaxConfiguration::getId).orElse(null));
+    }
     return this.extraTemplateRepository.save(extra);
   }
 

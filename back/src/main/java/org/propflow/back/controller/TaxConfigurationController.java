@@ -50,6 +50,16 @@ public class TaxConfigurationController {
     return taxConfigurationMapper.toDTO(taxConfigurationService.findActive());
   }
 
+  @Operation(summary = "Get a tax configuration by id")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Configuration found"),
+    @ApiResponse(responseCode = "404", description = "Configuration not found")
+  })
+  @GetMapping("/{id}")
+  public TaxConfigurationDTO one(@PathVariable("id") Long id) {
+    return taxConfigurationMapper.toDTO(taxConfigurationService.one(id));
+  }
+
   @Operation(summary = "Create a tax configuration")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Configuration created"),

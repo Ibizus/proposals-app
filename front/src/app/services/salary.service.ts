@@ -153,8 +153,12 @@ export class SalaryService {
       return tax.fixedRate ?? 0;
     }
     const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
+    if (tax.type === 'WITHHOLDING') {
+      const bracket = sorted.find((b) => baseSalary <= b.threshold) ?? sorted[sorted.length - 1];
+      return bracket?.rate ?? 0;
+    }
     for (const bracket of sorted) {
-      if (baseSalary <= bracket.threshold) {
+      if (baseSalary < bracket.threshold) {
         return bracket.rate;
       }
     }

@@ -105,8 +105,7 @@ describe('ProposalService', () => {
       let result = new Map<string, Map<string, number>>();
       service.salaryCalculations(makeProposal(), irs, ss).subscribe((r) => (result = r));
 
-      // Active configuration, then getTaxBracket's configuration, then parameters.
-      expectGet(`${TAX_CONFIG_URL}active`).flush(activeConfiguration());
+      // Active configuration for the proposal, then parameters.
       expectGet(`${TAX_CONFIG_URL}active`).flush(activeConfiguration());
       expectGet(API + 'parameters').flush(PARAMETERS);
 

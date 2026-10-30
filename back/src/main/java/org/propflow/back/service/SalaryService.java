@@ -188,6 +188,9 @@ public class SalaryService {
     if (tax.getType() == TaxType.FIXED) {
       return tax.getFixedRate();
     }
+    if (tax.getType() == TaxType.WITHHOLDING) {
+      return withholdingRate(tax, base);
+    }
     return marginalBracketRate(tax, base);
   }
 

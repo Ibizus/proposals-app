@@ -92,7 +92,8 @@ public class TaxDataMigration implements CommandLineRunner {
     try {
       Long count =
           jdbcTemplate.queryForObject(
-              "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'taxes'",
+              "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'taxes' AND"
+                  + " table_schema = DATABASE()",
               Long.class);
       return count != null && count > 0;
     } catch (DataAccessException e) {

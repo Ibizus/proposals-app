@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { TaxConfiguration, Taxes } from '../utils/types';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 const TAX_CONFIG_URL = `${environment.API_ENDPOINT}tax-configurations/`;
@@ -71,23 +71,14 @@ export class TaxesService {
     return this.http.post<TaxConfiguration>(`${TAX_CONFIG_URL}${id}/activate`, {});
   }
 
-  getTaxesForSalaryAndMaritalStatus(salary: number, maritalStatus: number): Observable<Taxes> {
-    return this.getTaxes().pipe(
-      map((taxes) => {
-        const sorted = [...taxes].sort((a, b) => a.salaryMax - b.salaryMax);
-        return (
-          sorted.find((t) => salary <= t.salaryMax) ?? sorted[sorted.length - 1]
-        );
-      }),
-    );
-  }
-
-  getTaxesForMaritalStatus(maritalStatus: number): Observable<Taxes[]> {
-    return this.getTaxes();
-  }
-
-  getTaxBracket(base: number, maritalStatus: number, numberOfDependents: number): Observable<any> {
-    return this.getActiveConfiguration().pipe(
+  getTaxBracket(
+    base: number,
+    maritalStatus: number,
+    numberOfDependents: number,
+    configuration?: TaxConfiguration,
+  ): Observable<any> {
+    const config$ = configuration ? of(configuration) : this.getActiveConfiguration();
+    return config$.pipe(
       map((config) => {
         const ssTax = config.taxes.find((t) => t.type === 'FIXED');
         const incomeTax = config.taxes.find((t) => this.isIncomeTax(t));
@@ -124,11 +115,4 @@ export class TaxesService {
     );
   }
 
-  modifyTaxes(tax: Taxes, context?: HttpContext): Observable<unknown> {
-    return this.http.put<Taxes>(TAX_CONFIG_URL + tax.id, tax, { context });
-  }
-
-  deleteTaxes(id: number, context?: HttpContext): Observable<Taxes> {
-    return this.http.delete<Taxes>(TAX_CONFIG_URL + id, { context });
-  }
 }

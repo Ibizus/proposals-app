@@ -70,7 +70,7 @@ export class ProposalService {
     return configuration$.pipe(
       switchMap((configuration) =>
         this.taxesService
-          .getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber)
+          .getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber, configuration)
           .pipe(
           switchMap((taxBracket) => {
             if (irs) {

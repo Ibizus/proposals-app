@@ -64,7 +64,6 @@ describe('DetailedProposalComponent', () => {
     );
     http.expectOne(`${TAX_CONFIG_URL}active`).flush(makeTaxConfiguration());
     http.expectOne(`${TAX_CONFIG_URL}active`).flush(makeTaxConfiguration());
-    http.expectOne(`${TAX_CONFIG_URL}active`).flush(makeTaxConfiguration());
     http.expectOne(API + 'parameters').flush(PARAMETERS);
 
     fixture.detectChanges();
