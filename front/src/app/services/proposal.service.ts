@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { BehaviorSubject, map, Observable, of, switchMap } from 'rxjs';
+import { BehaviorSubject, map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Proposal, TaxBracket, TaxConfiguration } from '../utils/types';
+import { Proposal } from '../utils/types';
 import { TaxesService } from './taxes.service';
 import { SalaryService } from './salary.service';
 
@@ -70,72 +70,77 @@ export class ProposalService {
     return configuration$.pipe(
       switchMap((configuration) =>
         this.taxesService
-          .getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber, configuration)
+          .getTaxBracket(
+            salary,
+            proposal.candidate.maritalStatus,
+            proposal.candidate.dependentsNumber,
+            configuration,
+          )
           .pipe(
-          switchMap((taxBracket) => {
-            if (irs != null) {
-              taxBracket.irs = irs;
-            }
-            if (ss != null) {
-              taxBracket.ss = ss;
-            }
-            return this.getParameters().pipe(
-              map((parameters) => {
-                const iht = parameters.get('iht') ?? 0;
-                const spp = parameters.get('spp') ?? 0;
-                const scr = parameters.get('scr') ?? 0;
-                const payments = configuration.yearlyPayments;
+            switchMap((taxBracket) => {
+              if (irs != null) {
+                taxBracket.irs = irs;
+              }
+              if (ss != null) {
+                taxBracket.ss = ss;
+              }
+              return this.getParameters().pipe(
+                map((parameters) => {
+                  const iht = parameters.get('iht') ?? 0;
+                  const spp = parameters.get('spp') ?? 0;
+                  const scr = parameters.get('scr') ?? 0;
+                  const payments = configuration.yearlyPayments;
 
-                this.salaryService.setBaseSalary(
-                  monthlySalaryCalculations,
-                  yearlySalaryCalculations,
-                  salary,
-                  iht,
-                  scr,
-                  payments,
-                );
-                this.salaryService.setIHT(
-                  monthlySalaryCalculations,
-                  yearlySalaryCalculations,
-                  salary,
-                  iht,
-                  payments,
-                );
-                this.salaryService.setSharePurchasePlan(
-                  monthlySalaryCalculations,
-                  yearlySalaryCalculations,
-                  salary,
-                  spp,
-                  payments,
-                );
-                this.salaryService.setGrossSalary(
-                  monthlySalaryCalculations,
-                  yearlySalaryCalculations,
-                  salary,
-                  payments,
-                );
-                this.salaryService.setNetSalary(
-                  proposal,
-                  monthlySalaryCalculations,
-                  yearlySalaryCalculations,
-                  salary,
-                  taxBracket,
-                  monthlyNetSalary,
-                  yearlyNetSalary,
-                  payments,
-                  configuration,
-                  { irs, ss },
-                );
+                  this.salaryService.setBaseSalary(
+                    monthlySalaryCalculations,
+                    yearlySalaryCalculations,
+                    salary,
+                    iht,
+                    scr,
+                    payments,
+                  );
+                  this.salaryService.setIHT(
+                    monthlySalaryCalculations,
+                    yearlySalaryCalculations,
+                    salary,
+                    iht,
+                    payments,
+                  );
+                  this.salaryService.setSharePurchasePlan(
+                    monthlySalaryCalculations,
+                    yearlySalaryCalculations,
+                    salary,
+                    spp,
+                    payments,
+                  );
+                  this.salaryService.setGrossSalary(
+                    monthlySalaryCalculations,
+                    yearlySalaryCalculations,
+                    salary,
+                    payments,
+                  );
+                  this.salaryService.setNetSalary(
+                    proposal,
+                    monthlySalaryCalculations,
+                    yearlySalaryCalculations,
+                    salary,
+                    taxBracket,
+                    monthlyNetSalary,
+                    yearlyNetSalary,
+                    payments,
+                    configuration,
+                    { irs, ss },
+                  );
 
-                this.scrValue = this.salaryService.calculateSCR(monthlySalaryCalculations, scr);
+                  this.scrValue = this.salaryService.calculateSCR(monthlySalaryCalculations, scr);
 
-                calculations.set('monthly', monthlySalaryCalculations);
-                calculations.set('yearly', yearlySalaryCalculations);
-                return calculations;
-              }),
-            );
-          }),
-        ),
+                  calculations.set('monthly', monthlySalaryCalculations);
+                  calculations.set('yearly', yearlySalaryCalculations);
+                  return calculations;
+                }),
+              );
+            }),
+          ),
       ),
     );
   }

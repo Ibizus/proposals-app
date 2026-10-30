@@ -11,13 +11,7 @@ import { Extra } from '../../utils/types';
 
 type NewExtraForm = Omit<
   Extra,
-  | 'id'
-  | 'createdAt'
-  | 'createdBy'
-  | 'modifiedAt'
-  | 'modifiedBy'
-  | 'isDefault'
-  | 'taxIds'
+  'id' | 'createdAt' | 'createdBy' | 'modifiedAt' | 'modifiedBy' | 'isDefault' | 'taxIds'
 > &
   Partial<Pick<Extra, 'taxIds' | 'addToSalary'>>;
 

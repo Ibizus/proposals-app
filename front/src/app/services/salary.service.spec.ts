@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { SalaryService } from './salary.service';
-import { makeExtra, makeProposal, makeTax, makeTaxConfiguration } from '../../testing/fixtures';
-import { Tax } from '../utils/types';
+import { makeExtra, makeProposal, makeTaxConfiguration } from '../../testing/fixtures';
 
 describe('SalaryService', () => {
   let service: SalaryService;
@@ -56,7 +55,16 @@ describe('SalaryService', () => {
         salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra()] },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000, payments, config);
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
 
       // 100 - (11% SS + 20% IRS) = 69 per month, 11 months a year
       expect(monthly.get('Meal allowance')).toBeCloseTo(69, 6);
@@ -80,10 +88,24 @@ describe('SalaryService', () => {
 
     it('adds the net extra to net salary when addToSalary is set', () => {
       const proposal = makeProposal({
-        salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra({ addToSalary: true })] },
+        salary: {
+          id: 1,
+          base: 1000,
+          taxConfigurationId: null,
+          extras: [makeExtra({ addToSalary: true })],
+        },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000, payments, config);
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
 
       // 100 - (11% SS + 20% IRS) = 69
       expect(m).toBeCloseTo(569, 6);
@@ -96,9 +118,7 @@ describe('SalaryService', () => {
           id: 1,
           base: 1000,
           taxConfigurationId: null,
-          extras: [
-            makeExtra({ isPercentage: true, amount: 10, taxIds: [], exempt: true }),
-          ],
+          extras: [makeExtra({ isPercentage: true, amount: 10, taxIds: [], exempt: true })],
         },
       });
 
@@ -152,7 +172,16 @@ describe('SalaryService', () => {
         },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000, payments, config);
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
 
       // 1000 minus 20% IRS
       expect(m).toBe(500);

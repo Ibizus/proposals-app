@@ -268,30 +268,119 @@ public class DemoDataSeeder implements CommandLineRunner {
     return List.of(
         template("Flex", 4d, true, false, false, 12, -1, spainConfiguration.getId(), Set.of()),
         template(
-            "Car Allowance", 250d, false, false, true, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId, spainIncomeTaxId)),
+            "Car Allowance",
+            250d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId, spainIncomeTaxId)),
         template("Car", 350d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of()),
-        template("Fuel Allowance", 100d, false, false, true, 12, 1, spainConfiguration.getId(), Set.of()),
+        template(
+            "Fuel Allowance",
+            100d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of()),
         // Amount per working day
-        template("Food Allowance", 15d, false, false, true, 11, 21, spainConfiguration.getId(), Set.of()),
+        template(
+            "Food Allowance",
+            15d,
+            false,
+            false,
+            true,
+            11,
+            21,
+            spainConfiguration.getId(),
+            Set.of()),
         template("Phone", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
         template("Computer", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
-        template("Health Insurance", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId)),
-        template("Life Insurance", 0d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of(spainSocialSecurityId)));
+        template(
+            "Health Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId)),
+        template(
+            "Life Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId)));
   }
 
   private List<ExtraTemplate> portugalTemplates() {
     return List.of(
         template("Flex", 4d, true, false, false, 12, -1, portugalConfiguration.getId(), Set.of()),
         template(
-            "Car Allowance", 250d, false, false, true, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId, portugalIncomeTaxId)),
+            "Car Allowance",
+            250d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId, portugalIncomeTaxId)),
         template("Car", 350d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template("Fuel Allowance", 100d, false, false, true, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Fuel Allowance",
+            100d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of()),
         // Amount per working day
-        template("Food Allowance", 15d, false, false, true, 11, 21, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Food Allowance",
+            15d,
+            false,
+            false,
+            true,
+            11,
+            21,
+            portugalConfiguration.getId(),
+            Set.of()),
         template("Phone", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template("Computer", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
-        template("Health Insurance", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId)),
-        template("Life Insurance", 0d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of(portugalSocialSecurityId)));
+        template(
+            "Computer", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Health Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId)),
+        template(
+            "Life Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId)));
   }
 
   private ExtraTemplate template(

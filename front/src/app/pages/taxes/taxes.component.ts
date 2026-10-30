@@ -33,21 +33,17 @@ export class TaxesComponent implements OnInit {
     const validUntil$ = this.t.get('VALID UNTIL');
     const zero$ = this.t.get('ZERO');
 
-    forkJoin([
-      salaryMax$,
-      socialSecurityTax$,
-      validFrom$,
-      validUntil$,
-      zero$,
-    ]).subscribe(([salaryMax, socialSecurityTax, validFrom, validUntil, zero]) => {
-      this.cols = [
-        { field: 'salaryMax', header: salaryMax },
-        { field: 'socialSecurityTax', header: socialSecurityTax },
-        { field: 'zero', header: zero },
-        { field: 'validFrom', header: validFrom },
-        { field: 'validUntil', header: validUntil },
-      ];
-    });
+    forkJoin([salaryMax$, socialSecurityTax$, validFrom$, validUntil$, zero$]).subscribe(
+      ([salaryMax, socialSecurityTax, validFrom, validUntil, zero]) => {
+        this.cols = [
+          { field: 'salaryMax', header: salaryMax },
+          { field: 'socialSecurityTax', header: socialSecurityTax },
+          { field: 'zero', header: zero },
+          { field: 'validFrom', header: validFrom },
+          { field: 'validUntil', header: validUntil },
+        ];
+      },
+    );
   }
 
   ngOnInit(): void {

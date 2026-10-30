@@ -66,9 +66,7 @@ export function makeExtra(overrides: Partial<Extra> = {}): Extra {
   };
 }
 
-export function makeTaxBracket(
-  overrides: Partial<TaxBracket> = {},
-): TaxBracket {
+export function makeTaxBracket(overrides: Partial<TaxBracket> = {}): TaxBracket {
   const at = new Date('2024-01-01T00:00:00Z');
   return {
     id: 1,
@@ -98,9 +96,7 @@ export function makeTax(overrides: Partial<Tax> = {}): Tax {
   };
 }
 
-export function makeTaxConfiguration(
-  overrides: Partial<TaxConfiguration> = {},
-): TaxConfiguration {
+export function makeTaxConfiguration(overrides: Partial<TaxConfiguration> = {}): TaxConfiguration {
   const at = new Date('2024-01-01T00:00:00Z');
   return {
     id: 1,

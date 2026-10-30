@@ -50,7 +50,12 @@ function activeConfiguration(): TaxConfiguration {
     ...makeTaxConfiguration(),
     taxes: [
       tax({ id: 10, name: 'Social Security', type: 'FIXED', fixedRate: 11, brackets: [] }),
-      tax({ id: 20, name: 'IRS', type: 'BRACKETED', brackets: [taxBracket({ threshold: 2000, rate: 20 })] }),
+      tax({
+        id: 20,
+        name: 'IRS',
+        type: 'BRACKETED',
+        brackets: [taxBracket({ threshold: 2000, rate: 20 })],
+      }),
     ],
   };
 }

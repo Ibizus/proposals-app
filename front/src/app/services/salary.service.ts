@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Extra, Proposal, Tax, TaxBracket, TaxConfiguration } from '../utils/types';
+import { Extra, Proposal, Tax, TaxConfiguration } from '../utils/types';
 import { isIncomeTax, isSocialSecurityTax } from '../utils/functions';
 
 interface TaxBracketRates {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Tax, TaxConfiguration, Taxes } from '../utils/types';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
