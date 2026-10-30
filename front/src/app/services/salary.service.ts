@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Proposal } from '../utils/types';
+import { Extra, Proposal, Tax, TaxBracket, TaxConfiguration } from '../utils/types';
 
-interface TaxBracket {
+interface TaxBracketRates {
   ss: number;
   irs: number;
 }
@@ -16,9 +16,10 @@ export class SalaryService {
     monthlySalaryCalculations: Map<string, number>,
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
+    payments: number,
   ): void {
     monthlySalaryCalculations.set('Gross Salary', salary);
-    yearlySalaryCalculations.set('Gross Salary', salary * 14);
+    yearlySalaryCalculations.set('Gross Salary', salary * payments);
   }
 
   setBaseSalary(
@@ -27,10 +28,11 @@ export class SalaryService {
     salary: number,
     iht: number,
     scr: number,
+    payments: number,
   ): void {
     const baseSalary = salary * (1 - iht / 100) * scr;
     monthlySalaryCalculations.set('Base Salary', baseSalary);
-    yearlySalaryCalculations.set('Base Salary', baseSalary * 14);
+    yearlySalaryCalculations.set('Base Salary', baseSalary * payments);
   }
 
   setIHT(
@@ -38,10 +40,11 @@ export class SalaryService {
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
     iht: number,
+    payments: number,
   ): void {
     const ihtAmount = (salary * iht) / 100;
     monthlySalaryCalculations.set('IHT', ihtAmount);
-    yearlySalaryCalculations.set('IHT', ihtAmount * 14);
+    yearlySalaryCalculations.set('IHT', ihtAmount * payments);
   }
 
   setSharePurchasePlan(
@@ -49,10 +52,11 @@ export class SalaryService {
     yearlySalaryCalculations: Map<string, number>,
     baseSalary: number,
     spp: number,
+    payments: number,
   ): void {
     const sppValue = (baseSalary * spp) / 100;
     monthlySalaryCalculations.set('Share Purchase Plan', sppValue);
-    yearlySalaryCalculations.set('Share Purchase Plan', sppValue * 14);
+    yearlySalaryCalculations.set('Share Purchase Plan', sppValue * payments);
   }
 
   setNetSalary(
@@ -60,13 +64,15 @@ export class SalaryService {
     monthlySalaryCalculations: Map<string, number>,
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
-    taxBracket: TaxBracket,
+    taxBracket: TaxBracketRates,
     monthlyNetSalary: number,
     yearlyNetSalary: number,
+    payments: number,
+    configuration?: TaxConfiguration,
   ): void {
     const netSalary = salary - ((salary * taxBracket.ss) / 100 + (salary * taxBracket.irs) / 100);
     const monthlyNetSalaryNoExtras = netSalary;
-    const yearlyNetSalaryNoExtras = netSalary * 14;
+    const yearlyNetSalaryNoExtras = netSalary * payments;
     [monthlyNetSalary, yearlyNetSalary] = this.setExtraSalaryComponents(
       proposal,
       monthlySalaryCalculations,
@@ -74,6 +80,8 @@ export class SalaryService {
       monthlyNetSalaryNoExtras,
       yearlyNetSalaryNoExtras,
       salary,
+      payments,
+      configuration,
     );
 
     console.log('monthly -> ' + monthlyNetSalary);
@@ -89,49 +97,69 @@ export class SalaryService {
     monthlyNetSalary: number,
     yearlyNetSalary: number,
     salary: number,
+    payments: number,
+    configuration?: TaxConfiguration,
   ): [number, number] {
     for (const extra of proposal.salary.extras) {
       let value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
 
       console.log('AddToSalary -> ' + extra.addToSalary);
 
+      const baseNet = this.netExtraValue(value, extra, configuration);
+
       if (extra.addToSalary === true) {
-        const monthlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const monthlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const monthlyNetExtraValue =
-          value -
-          (monthlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            monthlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-        monthlyNetSalary += monthlyNetExtraValue * extra.multiplyMonthly;
-        yearlyNetSalary += monthlyNetExtraValue * (extra.multiplyMonthly * extra.multiplyYearly);
+        monthlyNetSalary += baseNet * extra.multiplyMonthly;
+        yearlyNetSalary += baseNet * (extra.multiplyMonthly * extra.multiplyYearly);
         console.log(monthlyNetSalary);
       }
 
       if (extra.multiplyMonthly != -1) {
         // If monthly = -1 means that it is only Annual extra
         value *= extra.multiplyMonthly;
-        const monthlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const monthlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const monthlyNetExtraValue =
-          value -
-          (monthlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            monthlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-
-        monthlySalaryCalculations.set(extra.name, monthlyNetExtraValue);
-        yearlySalaryCalculations.set(extra.name, monthlyNetExtraValue * extra.multiplyYearly);
+        const netValue = this.netExtraValue(value, extra, configuration);
+        monthlySalaryCalculations.set(extra.name, netValue);
+        yearlySalaryCalculations.set(extra.name, netValue * extra.multiplyYearly);
       } else {
         value *= extra.multiplyYearly;
-        const yearlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const yearlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const yearlyNetExtraValue =
-          value -
-          (yearlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            yearlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-        yearlySalaryCalculations.set(extra.name, yearlyNetExtraValue);
+        const netValue = this.netExtraValue(value, extra, configuration);
+        yearlySalaryCalculations.set(extra.name, netValue);
       }
     }
 
     return [monthlyNetSalary, yearlyNetSalary];
+  }
+
+  private netExtraValue(value: number, extra: Extra, configuration?: TaxConfiguration): number {
+    if (extra.exempt || !configuration) {
+      return value;
+    }
+    let tax = 0;
+    for (const taxId of extra.taxIds) {
+      const t = configuration.taxes.find((tx) => tx.id === taxId);
+      if (t) {
+        tax += this.calculateTax(t, value);
+      }
+    }
+    return value - tax;
+  }
+
+  private calculateTax(tax: Tax, base: number): number {
+    if (tax.type === 'FIXED') {
+      return (base * (tax.fixedRate ?? 0)) / 100;
+    }
+    const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
+    let total = 0;
+    let remaining = base;
+    let previousThreshold = 0;
+    for (const bracket of sorted) {
+      const size = bracket.threshold - previousThreshold;
+      const taxable = Math.min(remaining, Math.max(0, size));
+      total += (taxable * bracket.rate) / 100;
+      remaining -= taxable;
+      if (remaining <= 0) break;
+      previousThreshold = bracket.threshold;
+    }
+    return total;
   }
 
   calculateSCR(monthlySalaryCalculations: Map<string, number>, scr: number) {

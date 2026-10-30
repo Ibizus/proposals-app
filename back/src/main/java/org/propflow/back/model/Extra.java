@@ -2,10 +2,26 @@ package org.propflow.back.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import java.util.HashSet;
+import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -14,7 +30,7 @@ import lombok.*;
 @Entity
 @Table(name = "extra", indexes = @Index(name = "extra_name_index", columnList = "name"))
 @Schema(description = "A salary extra such as a bonus or allowance.")
-public class Extra {
+public class Extra implements org.propflow.back.migration.HasLegacyTaxFlags {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +43,24 @@ public class Extra {
 
   @NotNull private Double amount;
 
-  @NotNull private Double ssTaxrate;
+  @Deprecated
+  @Schema(hidden = true)
+  private Double ssTaxrate;
 
-  @NotNull private Double irsTaxrate;
+  @Deprecated
+  @Schema(hidden = true)
+  private Double irsTaxrate;
+
   private Boolean isPercentage;
-  private Boolean isSSTaxable;
-  private Boolean isIRSTaxable;
   private Boolean isDefault;
+
+  @Deprecated
+  @Schema(hidden = true)
+  private Boolean isSSTaxable;
+
+  @Deprecated
+  @Schema(hidden = true)
+  private Boolean isIRSTaxable;
 
   @Schema(description = "Whether the extra amount is added to the net salary totals.")
   private Boolean addToSalary;
@@ -48,6 +75,15 @@ public class Extra {
       example = "22")
   private int multiplyMonthly;
 
+  @Schema(description = "When true, the extra is exempt from all taxes.")
+  private Boolean exempt;
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "extra_tax", joinColumns = @JoinColumn(name = "extra_id"))
+  @Column(name = "tax_id")
+  @Schema(description = "Taxes that apply to this extra, ignored when exempt.")
+  private Set<Long> taxIds = new HashSet<>();
+
   private long templateId;
 
   @JsonBackReference
@@ -59,12 +95,10 @@ public class Extra {
   public Extra(ExtraTemplate template) {
     this.name = template.getName();
     this.amount = template.getAmount();
-    this.ssTaxrate = template.getSsTaxrate();
-    this.irsTaxrate = template.getIrsTaxrate();
     this.isPercentage = template.getIsPercentage();
-    this.isSSTaxable = template.getIsSSTaxable();
-    this.isIRSTaxable = template.getIsIRSTaxable();
     this.multiplyYearly = template.getMultiplyYearly();
     this.multiplyMonthly = template.getMultiplyMonthly();
+    this.exempt = template.getExempt();
+    this.taxIds = new HashSet<>(template.getTaxIds());
   }
 }

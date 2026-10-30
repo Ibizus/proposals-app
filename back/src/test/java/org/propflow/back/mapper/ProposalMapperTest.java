@@ -32,7 +32,7 @@ class ProposalMapperTest {
     Proposal sibling = new Proposal();
     sibling.setId(11);
     Office office = new Office(3, "Lisbon", "LIS", new HashSet<>(Set.of(proposal, sibling)));
-    Salary salary = new Salary(4, 1500d, proposal, new HashSet<>());
+    Salary salary = new Salary(4, 1500d, null, proposal, new HashSet<>());
     Candidate candidate = new Candidate();
     candidate.setName("Ann");
     proposal.setOffice(office);

@@ -17,11 +17,9 @@ type NewExtraForm = Omit<
   | 'modifiedAt'
   | 'modifiedBy'
   | 'isDefault'
-  | 'ssTaxrate'
-  | 'irsTaxrate'
-  | 'addToSalary'
+  | 'taxIds'
 > &
-  Partial<Pick<Extra, 'ssTaxrate' | 'irsTaxrate' | 'addToSalary'>>;
+  Partial<Pick<Extra, 'taxIds' | 'addToSalary'>>;
 
 @Component({
   selector: 'app-new-extra-button',
@@ -67,29 +65,10 @@ type NewExtraForm = Omit<
           <label class="text-gray-700 font-semibold">{{ 'IS IT A PERCENTAGE' | translate }}</label>
           <p-checkbox [(ngModel)]="extra.isPercentage" [binary]="true" />
         </div>
-        <!-- isSSTaxable -->
+        <!-- exempt -->
         <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{
-            'IS IT TAXABLE BY SOCIAL SECURITY' | translate
-          }}</label>
-          <p-checkbox [(ngModel)]="extra.isSSTaxable" [binary]="true" />
-        </div>
-        <!-- ssTaxrates -->
-        <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'SS Taxrate' | translate }}</label>
-          <input [(ngModel)]="extra.ssTaxrate" class="input-field" required />
-        </div>
-        <!-- irsTaxrates -->
-        <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{ 'IRS Taxrate' | translate }}</label>
-          <input [(ngModel)]="extra.irsTaxrate" class="input-field" required />
-        </div>
-        <!-- isIRSTaxable -->
-        <div class="flex flex-col">
-          <label class="text-gray-700 font-semibold">{{
-            'IS IT TAXABLE BY IRS' | translate
-          }}</label>
-          <p-checkbox [(ngModel)]="extra.isIRSTaxable" [binary]="true" />
+          <label class="text-gray-700 font-semibold">{{ 'EXEMPT' | translate }}</label>
+          <p-checkbox [(ngModel)]="extra.exempt" [binary]="true" />
         </div>
         <!-- Multiply Monthly -->
         <div class="flex flex-col">
@@ -121,15 +100,6 @@ type NewExtraForm = Omit<
       .p-checkbox-box {
         border: 1px solid grey;
       }
-
-      // .p-checkbox-box:focus {
-      //   border: none;
-      //   background-color: #0056D2;
-      // }
-
-      // .p-checkbox-icon {
-      //   background-color: #0056D2; /* Set the same background color for the checkmark icon */
-      // }
 
       .input-field {
         border: none !important;
@@ -223,10 +193,11 @@ export class NewExtraButtonComponent {
       name: '',
       amount: 0.0,
       isPercentage: false,
-      isSSTaxable: false,
-      isIRSTaxable: false,
+      exempt: false,
+      taxIds: [],
       multiplyYearly: 0,
       multiplyMonthly: 0,
+      addToSalary: false,
     };
 
     this.t.use(localStorage.getItem('lang') || 'en');
@@ -247,10 +218,11 @@ export class NewExtraButtonComponent {
           name: '',
           amount: 0.0,
           isPercentage: false,
-          isSSTaxable: false,
-          isIRSTaxable: false,
+          exempt: false,
+          taxIds: [],
           multiplyYearly: 0,
           multiplyMonthly: 0,
+          addToSalary: false,
         };
       },
     });

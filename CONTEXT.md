@@ -10,7 +10,7 @@ A person the proposal is made to (name, surname, id number, phone, email, worker
 The generated PDF document for a proposal, produced in-JVM from the proposal id, in one of es, pt, de, en.
 
 ## Extra
-A salary component (bonus/allowance) attached to a proposal salary, with amount, tax rates, multipliers.
+A salary component (bonus/allowance) attached to a proposal salary, with amount, applicable taxes and multipliers.
 
 ## Office
 The office/branch where the candidate will work.
@@ -20,3 +20,12 @@ The computed monthly and yearly salary component amounts derived from a proposal
 
 ## Status
 The lifecycle state of a proposal (draft, confirmed, sent, declined, cancelled, approved).
+
+## Tax configuration
+A country-specific set of taxes and payment rules used to calculate salary breakdowns. Only one configuration is active at a time.
+
+## Tax
+A single tax inside a tax configuration, either a fixed rate or a list of progressive brackets.
+
+## Tax bracket
+A threshold/rate pair within a bracketed tax. Only the part of the base that falls inside the bracket is taxed at that rate.

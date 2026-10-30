@@ -1,5 +1,5 @@
 import { Component, signal, OnInit } from '@angular/core';
-import { Taxes, Column } from '../../utils/types';
+import { Taxes, Column, TaxConfiguration } from '../../utils/types';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -33,16 +33,16 @@ import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 })
 export class TaxesComponent implements OnInit {
   taxesTable!: Taxes[];
+  configurations: TaxConfiguration[] = [];
+  activeConfiguration!: TaxConfiguration;
   clonedTaxes = new Map<number, Taxes>();
   cols!: Column[];
   isLoading = signal(true);
   moneySign = '€';
   visible = signal(false);
   taxId = -1;
-  maritalStatus!: string[];
-  numberOfDependents: string[] = ['0', '1', '2', '3', '4', '5+'];
-  maritalPlaceholder!: string;
-  // numberOfDependentsPlaceholder = 'Number of Dependents';
+  countryOptions: string[] = [];
+  selectedCountry!: string;
   editTaxesTooltip!: string;
   deleteTaxesTooltip!: string;
   saveTaxesTooltip!: string;
@@ -55,9 +55,6 @@ export class TaxesComponent implements OnInit {
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
 
-    const unmarried$ = this.t.get('UNMARRIED');
-    const marriedOne$ = this.t.get('MARRIED ONE');
-    const marriedTwo$ = this.t.get('MARRIED TWO');
     const editTaxesTooltip$ = this.t.get('EDIT TAXES');
     const deleteTaxesTooltip$ = this.t.get('DELETE TAXES');
     const saveTaxesTooltip$ = this.t.get('SAVE TAXES');
@@ -67,16 +64,8 @@ export class TaxesComponent implements OnInit {
     const validFrom$ = this.t.get('VALID FROM');
     const validUntil$ = this.t.get('VALID UNTIL');
     const zero$ = this.t.get('ZERO');
-    const one$ = this.t.get('ONE');
-    const two$ = this.t.get('TWO');
-    const three$ = this.t.get('THREE');
-    const four$ = this.t.get('FOUR');
-    const five$ = this.t.get('FIVE');
 
     forkJoin([
-      unmarried$,
-      marriedOne$,
-      marriedTwo$,
       editTaxesTooltip$,
       deleteTaxesTooltip$,
       saveTaxesTooltip$,
@@ -86,16 +75,8 @@ export class TaxesComponent implements OnInit {
       validFrom$,
       validUntil$,
       zero$,
-      one$,
-      two$,
-      three$,
-      four$,
-      five$,
     ]).subscribe(
       ([
-        unmarried,
-        marriedOne,
-        marriedTwo,
         editTaxesTooltip,
         deleteTaxesTooltip,
         saveTaxesTooltip,
@@ -105,13 +86,7 @@ export class TaxesComponent implements OnInit {
         validFrom,
         validUntil,
         zero,
-        one,
-        two,
-        three,
-        four,
-        five,
       ]) => {
-        this.maritalStatus = [unmarried, marriedOne, marriedTwo];
         this.editTaxesTooltip = editTaxesTooltip;
         this.deleteTaxesTooltip = deleteTaxesTooltip;
         this.saveTaxesTooltip = saveTaxesTooltip;
@@ -123,24 +98,27 @@ export class TaxesComponent implements OnInit {
             header: socialSecurityTax,
           },
           { field: 'zero', header: zero },
-          { field: 'one', header: one },
-          { field: 'two', header: two },
-          { field: 'three', header: three },
-          { field: 'four', header: four },
-          { field: 'five', header: five },
           { field: 'validFrom', header: validFrom },
           { field: 'validUntil', header: validUntil },
-          // {
-          //   field: 'taxPercentageCompany',
-          //   header: taxPercentageCompany,
-          // },
         ];
       },
     );
   }
 
   ngOnInit(): void {
-    this.getTaxesForMaritalStatus(0);
+    this.loadConfigurations();
+    this.getTaxes();
+  }
+
+  loadConfigurations() {
+    this.taxesService.getTaxConfigurations().subscribe({
+      next: (configs) => {
+        this.configurations = configs;
+        this.countryOptions = configs.map((c) => c.countryCode.toUpperCase());
+        this.activeConfiguration = configs.find((c) => c.active) ?? configs[0];
+        this.selectedCountry = this.activeConfiguration?.countryCode.toUpperCase();
+      },
+    });
   }
 
   getTaxes() {
@@ -156,17 +134,21 @@ export class TaxesComponent implements OnInit {
     });
   }
 
-  getTaxesForMaritalStatus(maritalStatus: number) {
-    this.isLoading.set(true);
-    this.taxesService.getTaxesForMaritalStatus(maritalStatus).subscribe({
-      next: (data) => {
-        this.taxesTable = data;
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-      },
-    });
+  onCountryChange(event: { value: string }) {
+    const code = event.value.toLowerCase();
+    const config = this.configurations.find((c) => c.countryCode === code);
+    if (config && config.id !== this.activeConfiguration?.id) {
+      this.taxesService.activateConfiguration(config.id).subscribe({
+        next: () => {
+          this.activeConfiguration = config;
+          this.getTaxes();
+          this.toastService.success('Configuration activated');
+        },
+        error: () => {
+          this.toastService.error('Could not activate configuration');
+        },
+      });
+    }
   }
 
   updateTaxes(modifiedTaxes: Taxes) {
@@ -211,19 +193,13 @@ export class TaxesComponent implements OnInit {
     this.visible.set(true);
   }
 
-  onMaritalStatusChange($event: { value: string }) {
-    const value = $event.value;
-    const index = this.maritalStatus.findIndex((status) => status === value);
-    this.getTaxesForMaritalStatus(index);
-  }
-
   // HTML BUTTON METHODS:
   onRowEditInit(taxes: Taxes) {
     this.clonedTaxes.set(taxes.id, { ...taxes });
   }
 
   onRowEditSave(taxes: Taxes) {
-    if (taxes.salaryMax > 0 && taxes.taxPercentageCompany > 0) {
+    if (taxes.salaryMax > 0) {
       this.updateTaxes(taxes);
       this.clonedTaxes.delete(taxes.id);
     } else {

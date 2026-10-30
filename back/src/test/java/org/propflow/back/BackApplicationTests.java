@@ -3,6 +3,7 @@ package org.propflow.back;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.propflow.back.migration.TaxDataMigration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +16,9 @@ class BackApplicationTests {
 
   @Test
   void contextLoadsWithoutSeedingDemoData() {
-    assertThat(context.getBeansOfType(CommandLineRunner.class)).isEmpty();
+    assertThat(context.getBeansOfType(CommandLineRunner.class))
+        .containsOnlyKeys("taxDataMigration")
+        .hasEntrySatisfying(
+            "taxDataMigration", bean -> assertThat(bean).isInstanceOf(TaxDataMigration.class));
   }
 }

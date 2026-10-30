@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
+import org.propflow.back.model.TaxConfiguration;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ExtraRepository;
 import org.propflow.back.repository.ExtraTemplateRepository;
@@ -20,7 +21,7 @@ import org.propflow.back.repository.PositionRepository;
 import org.propflow.back.repository.ProposalRepository;
 import org.propflow.back.repository.SalaryRepository;
 import org.propflow.back.repository.StatusRepository;
-import org.propflow.back.repository.TaxesRepository;
+import org.propflow.back.repository.TaxConfigurationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -40,7 +41,7 @@ class DemoDataSeederTest {
   @Autowired private StatusRepository statusRepository;
   @Autowired private ExtraRepository extraRepository;
   @Autowired private ExtraTemplateRepository extraTemplateRepository;
-  @Autowired private TaxesRepository taxesRepository;
+  @Autowired private TaxConfigurationRepository taxConfigurationRepository;
   @Autowired private ParameterRepository parameterRepository;
 
   private DemoDataSeeder seeder;
@@ -57,7 +58,7 @@ class DemoDataSeederTest {
             statusRepository,
             extraRepository,
             extraTemplateRepository,
-            taxesRepository,
+            taxConfigurationRepository,
             parameterRepository);
   }
 
@@ -72,7 +73,7 @@ class DemoDataSeederTest {
             "statuses", statusRepository,
             "extras", extraRepository,
             "extraTemplates", extraTemplateRepository,
-            "taxes", taxesRepository,
+            "taxConfigurations", taxConfigurationRepository,
             "parameters", parameterRepository);
     return repositories.entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().count()));
@@ -91,9 +92,13 @@ class DemoDataSeederTest {
         .containsEntry("candidates", (long) DemoDataSeeder.CANDIDATE_COUNT)
         .containsEntry("positions", (long) DemoDataSeeder.POSITION_COUNT)
         .containsEntry("salaries", (long) DemoDataSeeder.PROPOSAL_COUNT)
-        .containsEntry("taxes", 105L)
+        .containsEntry("taxConfigurations", 2L)
         .containsEntry("parameters", 3L)
         .containsEntry("extraTemplates", 9L);
+
+    TaxConfiguration active = taxConfigurationRepository.findByActiveTrue().orElseThrow();
+    assertThat(active.getCountryCode()).isEqualTo("es");
+    assertThat(active.getYearlyPayments()).isEqualTo(12);
   }
 
   @Test
@@ -110,6 +115,7 @@ class DemoDataSeederTest {
               assertThat(p.getPosition().getId()).isEqualTo(p.getCandidate().getPosition().getId());
               assertThat(p.getSalary().getBase()).isPositive();
               assertThat(p.getSalary().getExtras()).isNotEmpty();
+              assertThat(p.getSalary().getTaxConfigurationId()).isNotNull();
               assertThat(p.getStatuses()).isNotEmpty();
               assertThat(p.getDueDate() == null).isEqualTo(p.getIndefinite());
             });
@@ -176,6 +182,6 @@ class DemoDataSeederTest {
     assertThat(proposalRepository.count()).isZero();
     assertThat(candidateRepository.count()).isEqualTo(1);
     assertThat(positionRepository.count()).isZero();
-    assertThat(taxesRepository.count()).isEqualTo(105);
+    assertThat(taxConfigurationRepository.count()).isEqualTo(2);
   }
 }

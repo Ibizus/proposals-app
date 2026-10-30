@@ -1,14 +1,15 @@
 <div class="mt-24 px-10 relative">
-  <h2 class="text-5xl font-bold mb-5">{{ 'PORTUGAL TAXES' | translate }}</h2>
+  <h2 class="text-5xl font-bold mb-5">{{ 'TAXES' | translate }}</h2>
   <div class="md:absolute md:right-10 md:top-0">
     <p-floatLabel>
       <p-dropdown
-        [options]="maritalStatus"
+        [options]="countryOptions"
         inputId="float-label1"
-        [placeholder]="maritalPlaceholder"
-        (onChange)="onMaritalStatusChange($event)"
+        [placeholder]="selectedCountry"
+        [(ngModel)]="selectedCountry"
+        (onChange)="onCountryChange($event)"
       />
-      <label for="float-label1">{{ 'SELECT MARITAL STATUS' | translate }}</label>
+      <label for="float-label1">{{ 'SELECT COUNTRY' | translate }}</label>
     </p-floatLabel>
   </div>
 
@@ -66,46 +67,6 @@
               <input pInputText type="number" [(ngModel)]="taxes.zero" required />
             </ng-template>
             <ng-template pTemplate="output"> {{ taxes.zero }} % </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.one" required />
-            </ng-template>
-            <ng-template pTemplate="output"> {{ taxes.one }} % </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.two" required />
-            </ng-template>
-            <ng-template pTemplate="output"> {{ taxes.two }} % </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.three" required />
-            </ng-template>
-            <ng-template pTemplate="output"> {{ taxes.three }} % </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.four" required />
-            </ng-template>
-            <ng-template pTemplate="output"> {{ taxes.four }} % </ng-template>
-          </p-cellEditor>
-        </td>
-        <td>
-          <p-cellEditor>
-            <ng-template pTemplate="input">
-              <input pInputText type="number" [(ngModel)]="taxes.five" required />
-            </ng-template>
-            <ng-template pTemplate="output"> {{ taxes.five }} % </ng-template>
           </p-cellEditor>
         </td>
         <td>

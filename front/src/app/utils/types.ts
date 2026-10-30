@@ -29,6 +29,7 @@ interface Office {
 interface Salary {
   id: number;
   base: number;
+  taxConfigurationId: number | null;
   extras: Extra[];
 }
 
@@ -36,15 +37,13 @@ interface Extra {
   id: number;
   name: string;
   amount: number;
-  ssTaxrate: number;
-  irsTaxrate: number;
   isPercentage: boolean;
-  isSSTaxable: boolean;
-  isIRSTaxable: boolean;
   isDefault: boolean;
   addToSalary: boolean;
   multiplyYearly: number;
   multiplyMonthly: number;
+  exempt: boolean;
+  taxIds: number[];
   createdAt: Date;
   createdBy: string;
   modifiedAt: Date;
@@ -78,6 +77,41 @@ interface Position {
   createdBy?: string;
   modifiedAt?: Date;
   modifiedBy?: string;
+}
+
+interface TaxConfiguration {
+  id: number;
+  countryCode: string;
+  label: string;
+  yearlyPayments: number;
+  active: boolean;
+  taxes: Tax[];
+  createdAt: Date;
+  createdBy: string;
+  modifiedAt: Date;
+  modifiedBy: string;
+}
+
+interface Tax {
+  id: number;
+  name: string;
+  type: 'FIXED' | 'BRACKETED';
+  fixedRate: number | null;
+  brackets: TaxBracket[];
+  createdAt: Date;
+  createdBy: string;
+  modifiedAt: Date;
+  modifiedBy: string;
+}
+
+interface TaxBracket {
+  id: number;
+  threshold: number;
+  rate: number;
+  createdAt: Date;
+  createdBy: string;
+  modifiedAt: Date;
+  modifiedBy: string;
 }
 
 interface Taxes {
@@ -154,6 +188,7 @@ const EmptyProposalForm = () => {
     salary: {
       id: 0,
       base: 0,
+      taxConfigurationId: null,
       extras: [],
     },
     candidate: {
@@ -185,6 +220,9 @@ export {
   Position,
   Status,
   Taxes,
+  TaxConfiguration,
+  Tax,
+  TaxBracket,
   Parameter,
   Column,
   PageEvent,

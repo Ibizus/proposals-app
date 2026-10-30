@@ -274,9 +274,9 @@ export class NewProposalComponent implements OnInit, OnDestroy {
           amount: input.amount,
           createdAt: null, // Set createdAt to null
           id: input.templateId,
-          isIRSTaxable: input.isIRSTaxable,
           isPercentage: input.isPercentage,
-          isSSTaxable: input.isSSTaxable,
+          exempt: input.exempt,
+          taxIds: input.taxIds,
           modifiedAt: null, // Set modifiedAt to null
           modifiedBy: null, // Set modifiedBy to null
           multiplyMonthly: input.multiplyMonthly,
@@ -342,11 +342,9 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       id: json.id,
       name: json.name,
       amount: json.amount,
-      irsTaxrate: json.irsTaxrate,
-      ssTaxrate: json.ssTaxrate,
       isPercentage: json.isPercentage,
-      isSSTaxable: json.isSSTaxable,
-      isIRSTaxable: json.isIRSTaxable,
+      exempt: json.exempt ?? false,
+      taxIds: json.taxIds ?? [],
       isDefault: json.isDefault,
       addToSalary: json.addToSalary,
       multiplyYearly: json.multiplyYearly,

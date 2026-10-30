@@ -193,5 +193,7 @@
   "POSITION FIELD INFORMATION": "Select the position the candidate is considered for",
   "MODAL NEW POSITION HELP": "Please fill in the details below to create a new position",
   "PLEASE ENTER A VALID TITLE": "Please enter a valid title.",
-  "PLEASE ENTER A VALID DESCRIPTION": "Please enter a valid description."
+  "PLEASE ENTER A VALID DESCRIPTION": "Please enter a valid description.",
+  "EXEMPT": "Exempt",
+  "SELECT COUNTRY": "Select country"
 }
