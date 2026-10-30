@@ -190,34 +190,6 @@ export class NewProposalComponent implements OnInit, OnDestroy {
       error: () => this.positions.set([]),
     });
 
-    // Fetch extras into this.extras mapped by the method mapJsonToExtra
-    this.extrasService.getExtras(0, 100).subscribe({
-      next: (data) => {
-        const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
-
-        // If it's a new proposal, add the default extras to it
-        if (this.selectedExtras.length === 0) {
-          extras.forEach((ex) => {
-            if (ex.isDefault) {
-              this.selectedExtras.push(ex);
-            }
-          });
-        }
-
-        // Find matching extras and update the selectedExtras.
-        this.selectedExtras.forEach((ex) => {
-          const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
-          if (matchingExtraIndex !== -1) {
-            extras[matchingExtraIndex] = ex;
-          }
-        });
-        this.extras.set(extras);
-      },
-      error: (error) => {
-        console.error('Error while fetching extras:', error);
-      },
-    });
-
     // Fetch parameters
     this.proposalService.getParameters().subscribe({
       next: (parameters) => {
@@ -301,6 +273,34 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     if (this.selectedCandidate()) {
       this.proposalForm.candidate = this.selectedCandidate();
     }
+
+    // Fetch extras into this.extras mapped by the method mapJsonToExtra
+    this.extrasService.getExtras(0, 100, this.proposalForm.salary.taxConfigurationId).subscribe({
+      next: (data) => {
+        const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
+
+        // If it's a new proposal, add the default extras to it
+        if (this.selectedExtras.length === 0) {
+          extras.forEach((ex) => {
+            if (ex.isDefault) {
+              this.selectedExtras.push(ex);
+            }
+          });
+        }
+
+        // Find matching extras and update the selectedExtras.
+        this.selectedExtras.forEach((ex) => {
+          const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
+          if (matchingExtraIndex !== -1) {
+            extras[matchingExtraIndex] = ex;
+          }
+        });
+        this.extras.set(extras);
+      },
+      error: (error) => {
+        console.error('Error while fetching extras:', error);
+      },
+    });
   }
 
   ngOnInit() {

@@ -1,7 +1,9 @@
 package org.propflow.back.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.propflow.back.exception.EntityNotFoundException;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Extra;
 import org.propflow.back.model.Proposal;
@@ -68,8 +71,11 @@ class SalaryServiceTest {
 
     configuration.setTaxes(List.of(socialSecurity, incomeTax));
 
-    when(taxConfigurationRepository.findByActiveTrue()).thenReturn(Optional.of(configuration));
-    when(parameterService.getCalculationsParameters())
+    lenient()
+        .when(taxConfigurationRepository.findByActiveTrue())
+        .thenReturn(Optional.of(configuration));
+    lenient()
+        .when(parameterService.getCalculationsParameters())
         .thenReturn(Map.of("iht", 20.0, "spp", 3.0, "scr", 0.9235));
   }
 
@@ -140,6 +146,36 @@ class SalaryServiceTest {
 
     // 1000 - (11% SS + 5% forced IRS)
     assertThat(result.get("monthly").get("Estimated Net Salary")).isCloseTo(840, CENT);
+  }
+
+  @Test
+  void incomeTaxOverrideMatchesIncomeTaxByName() {
+    incomeTax.setName("Income Tax");
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000), 5.0, null);
+
+    assertThat(result.get("monthly").get("Estimated Net Salary")).isCloseTo(840, CENT);
+  }
+
+  @Test
+  void extraWithTaxFromAnotherConfigurationIsRejected() {
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(99L), 12, 1);
+
+    assertThatThrownBy(
+            () -> salaryService.salaryCalculations(proposal(1000, allowance), null, null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("99");
+  }
+
+  @Test
+  void missingPinnedConfigurationIsNotReplacedByActiveOne() {
+    Proposal proposal = proposal(1000);
+    proposal.getSalary().setTaxConfigurationId(7L);
+    when(taxConfigurationRepository.findById(7L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> salaryService.salaryCalculations(proposal, null, null))
+        .isInstanceOf(EntityNotFoundException.class);
   }
 
   @Test

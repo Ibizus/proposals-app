@@ -4,6 +4,7 @@ import { Extra, Proposal, Tax, TaxBracket, TaxConfiguration } from '../utils/typ
 interface TaxBracketRates {
   ss: number;
   irs: number;
+  other?: number;
 }
 
 @Injectable({
@@ -70,7 +71,11 @@ export class SalaryService {
     payments: number,
     configuration?: TaxConfiguration,
   ): void {
-    const netSalary = salary - ((salary * taxBracket.ss) / 100 + (salary * taxBracket.irs) / 100);
+    const netSalary =
+      salary -
+      ((salary * taxBracket.ss) / 100 +
+        (salary * taxBracket.irs) / 100 +
+        (salary * (taxBracket.other ?? 0)) / 100);
     const monthlyNetSalaryNoExtras = netSalary;
     const yearlyNetSalaryNoExtras = netSalary * payments;
     [monthlyNetSalary, yearlyNetSalary] = this.setExtraSalaryComponents(
@@ -141,9 +146,12 @@ export class SalaryService {
     let tax = 0;
     for (const taxId of extra.taxIds) {
       const t = configuration.taxes.find((tx) => tx.id === taxId);
-      if (t) {
-        tax += (value * this.marginalRate(t, baseSalary)) / 100;
+      if (!t) {
+        throw new Error(
+          `Tax ${taxId} of extra "${extra.name}" is not part of tax configuration ${configuration.id}`,
+        );
       }
+      tax += (value * this.marginalRate(t, baseSalary)) / 100;
     }
     return value - tax;
   }

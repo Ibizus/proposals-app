@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { TaxConfiguration, Taxes } from '../utils/types';
+import { Tax, TaxConfiguration, Taxes } from '../utils/types';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 const TAX_CONFIG_URL = `${environment.API_ENDPOINT}tax-configurations/`;
+const INCOME_TAX_NAMES = ['IRS', 'IRPF', 'Income Tax'];
+const SOCIAL_SECURITY_TAX_NAME = 'Social Security';
 
 @Injectable({
   providedIn: 'root',
@@ -13,8 +15,35 @@ const TAX_CONFIG_URL = `${environment.API_ENDPOINT}tax-configurations/`;
 export class TaxesService {
   constructor(private http: HttpClient) {}
 
-  private isIncomeTax(tax: any): boolean {
-    return tax.type === 'BRACKETED' || tax.type === 'WITHHOLDING';
+  private isIncomeTax(tax: Tax): boolean {
+    return INCOME_TAX_NAMES.includes(tax.name);
+  }
+
+  private isSocialSecurityTax(tax: Tax): boolean {
+    return tax.name === SOCIAL_SECURITY_TAX_NAME;
+  }
+
+  private effectiveRate(tax: Tax, base: number): number {
+    if (tax.type === 'FIXED') {
+      return tax.fixedRate ?? 0;
+    }
+    const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
+    if (tax.type === 'WITHHOLDING') {
+      const bracket = sorted.find((b) => base <= b.threshold) ?? sorted[sorted.length - 1];
+      return bracket?.rate ?? 0;
+    }
+    let remaining = base;
+    let previousThreshold = 0;
+    let total = 0;
+    for (const bracket of sorted) {
+      const size = bracket.threshold - previousThreshold;
+      const taxable = Math.min(remaining, Math.max(0, size));
+      total += (taxable * bracket.rate) / 100;
+      remaining -= taxable;
+      if (remaining <= 0) break;
+      previousThreshold = bracket.threshold;
+    }
+    return base > 0 ? (total / base) * 100 : 0;
   }
 
   getTaxes(): Observable<Taxes[]> {
@@ -24,28 +53,26 @@ export class TaxesService {
         if (!incomeTax) return [];
         return [...incomeTax.brackets]
           .sort((a, b) => a.threshold - b.threshold)
-          .map(
-            (bracket): Taxes => ({
-              id: bracket.id,
-              salaryMax: bracket.threshold,
-              socialSecurityTax:
-                config.taxes.find((t) => t.type === 'FIXED')?.fixedRate ?? 0,
-              taxPercentageCompany: 0,
-              validFrom: new Date(),
-              validUntil: new Date(),
-              maritalStatus: 0,
-              zero: bracket.rate,
-              one: bracket.rate,
-              two: bracket.rate,
-              three: bracket.rate,
-              four: bracket.rate,
-              five: bracket.rate,
-              createdAt: new Date(),
-              createdBy: '',
-              modifiedAt: new Date(),
-              modifiedBy: '',
-            }),
-          );
+          .map((bracket): Taxes => ({
+            id: bracket.id,
+            salaryMax: bracket.threshold,
+            socialSecurityTax:
+              config.taxes.find((t) => this.isSocialSecurityTax(t))?.fixedRate ?? 0,
+            taxPercentageCompany: 0,
+            validFrom: new Date(),
+            validUntil: new Date(),
+            maritalStatus: 0,
+            zero: bracket.rate,
+            one: bracket.rate,
+            two: bracket.rate,
+            three: bracket.rate,
+            four: bracket.rate,
+            five: bracket.rate,
+            createdAt: new Date(),
+            createdBy: '',
+            modifiedAt: new Date(),
+            modifiedBy: '',
+          }));
       }),
     );
   }
@@ -80,39 +107,28 @@ export class TaxesService {
     const config$ = configuration ? of(configuration) : this.getActiveConfiguration();
     return config$.pipe(
       map((config) => {
-        const ssTax = config.taxes.find((t) => t.type === 'FIXED');
-        const incomeTax = config.taxes.find((t) => this.isIncomeTax(t));
-
         let irs = 0;
-        if (incomeTax) {
-          const sorted = [...incomeTax.brackets].sort((a, b) => a.threshold - b.threshold);
-          if (incomeTax.type === 'WITHHOLDING') {
-            const bracket = sorted.find((b) => base <= b.threshold) ?? sorted[sorted.length - 1];
-            irs = bracket?.rate ?? 0;
+        let ss = 0;
+        let other = 0;
+        for (const tax of config.taxes) {
+          const rate = this.effectiveRate(tax, base);
+          if (this.isIncomeTax(tax)) {
+            irs = rate;
+          } else if (this.isSocialSecurityTax(tax)) {
+            ss = rate;
           } else {
-            let remaining = base;
-            let previousThreshold = 0;
-            let tax = 0;
-            for (const bracket of sorted) {
-              const size = bracket.threshold - previousThreshold;
-              const taxable = Math.min(remaining, Math.max(0, size));
-              tax += (taxable * bracket.rate) / 100;
-              remaining -= taxable;
-              if (remaining <= 0) break;
-              previousThreshold = bracket.threshold;
-            }
-            irs = base > 0 ? (tax / base) * 100 : 0;
+            other += rate;
           }
         }
 
         const taxBracket = {
           irs: irs,
-          ss: ssTax?.fixedRate ?? 0,
+          ss: ss,
+          other: other,
         };
         console.log('Tax bracket calculated inside Taxes Service: ' + JSON.stringify(taxBracket));
         return taxBracket;
       }),
     );
   }
-
 }

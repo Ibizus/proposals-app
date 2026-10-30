@@ -24,6 +24,8 @@ public class SalaryService {
   @Autowired private ParameterService parameterService;
   @Autowired private TaxConfigurationRepository taxConfigurationRepository;
 
+  private static final List<String> INCOME_TAX_NAMES = List.of("IRS", "IRPF", "Income Tax");
+
   private double scrValue;
 
   // PERSISTENCE METHODS USING REPOSITORY:
@@ -117,7 +119,12 @@ public class SalaryService {
   private TaxConfiguration resolveConfiguration(Salary salary) {
     Long configId = salary.getTaxConfigurationId();
     if (configId != null) {
-      return taxConfigurationRepository.findById(configId).orElseGet(this::findActiveConfiguration);
+      return taxConfigurationRepository
+          .findById(configId)
+          .orElseThrow(
+              () ->
+                  new org.propflow.back.exception.EntityNotFoundException(
+                      configId, TaxConfiguration.class));
     }
     return findActiveConfiguration();
   }
@@ -141,7 +148,7 @@ public class SalaryService {
 
   private Optional<Tax> findIncomeTax(TaxConfiguration configuration) {
     return configuration.getTaxes().stream()
-        .filter(t -> "IRS".equals(t.getName()) || "IRPF".equals(t.getName()))
+        .filter(t -> INCOME_TAX_NAMES.contains(t.getName()))
         .findFirst();
   }
 
@@ -350,10 +357,17 @@ public class SalaryService {
     double total = 0;
     for (Long taxId : extra.getTaxIds()) {
       Tax tax = findTaxById(configuration, taxId);
-      if (tax != null) {
-        double rate = marginalRate(tax, baseSalary, overrides.get(tax.getId()));
-        total += value * rate / 100;
+      if (tax == null) {
+        throw new IllegalArgumentException(
+            "Tax "
+                + taxId
+                + " of extra '"
+                + extra.getName()
+                + "' is not part of tax configuration "
+                + configuration.getId());
       }
+      double rate = marginalRate(tax, baseSalary, overrides.get(tax.getId()));
+      total += value * rate / 100;
     }
     return total;
   }
