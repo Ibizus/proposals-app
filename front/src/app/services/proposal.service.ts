@@ -73,10 +73,10 @@ export class ProposalService {
           .getTaxBracket(salary, proposal.candidate.maritalStatus, proposal.candidate.dependentsNumber, configuration)
           .pipe(
           switchMap((taxBracket) => {
-            if (irs) {
+            if (irs != null) {
               taxBracket.irs = irs;
             }
-            if (ss) {
+            if (ss != null) {
               taxBracket.ss = ss;
             }
             return this.getParameters().pipe(
@@ -124,6 +124,7 @@ export class ProposalService {
                   yearlyNetSalary,
                   payments,
                   configuration,
+                  { irs, ss },
                 );
 
                 this.scrValue = this.salaryService.calculateSCR(monthlySalaryCalculations, scr);

@@ -64,6 +64,20 @@ describe('SalaryService', () => {
       expect([m, y]).toEqual([500, 7000]);
     });
 
+    it('applies IRS and SS overrides to taxed extras', () => {
+      const proposal = makeProposal({
+        salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra()] },
+      });
+
+      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000, payments, config, {
+        irs: 5,
+        ss: 10,
+      });
+
+      // 100 - (10% SS + 5% IRS) = 85
+      expect(monthly.get('Meal allowance')).toBeCloseTo(85, 6);
+    });
+
     it('adds the net extra to net salary when addToSalary is set', () => {
       const proposal = makeProposal({
         salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra({ addToSalary: true })] },

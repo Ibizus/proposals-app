@@ -4,24 +4,15 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { Tax, TaxConfiguration, Taxes } from '../utils/types';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { isIncomeTax, isSocialSecurityTax } from '../utils/functions';
 
 const TAX_CONFIG_URL = `${environment.API_ENDPOINT}tax-configurations/`;
-const INCOME_TAX_NAMES = ['IRS', 'IRPF', 'Income Tax'];
-const SOCIAL_SECURITY_TAX_NAME = 'Social Security';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaxesService {
   constructor(private http: HttpClient) {}
-
-  private isIncomeTax(tax: Tax): boolean {
-    return INCOME_TAX_NAMES.includes(tax.name);
-  }
-
-  private isSocialSecurityTax(tax: Tax): boolean {
-    return tax.name === SOCIAL_SECURITY_TAX_NAME;
-  }
 
   private effectiveRate(tax: Tax, base: number): number {
     if (tax.type === 'FIXED') {
@@ -49,15 +40,14 @@ export class TaxesService {
   getTaxes(): Observable<Taxes[]> {
     return this.getActiveConfiguration().pipe(
       map((config) => {
-        const incomeTax = config.taxes.find((t) => this.isIncomeTax(t));
+        const incomeTax = config.taxes.find((t) => isIncomeTax(t));
         if (!incomeTax) return [];
         return [...incomeTax.brackets]
           .sort((a, b) => a.threshold - b.threshold)
           .map((bracket): Taxes => ({
             id: bracket.id,
             salaryMax: bracket.threshold,
-            socialSecurityTax:
-              config.taxes.find((t) => this.isSocialSecurityTax(t))?.fixedRate ?? 0,
+            socialSecurityTax: config.taxes.find((t) => isSocialSecurityTax(t))?.fixedRate ?? 0,
             taxPercentageCompany: 0,
             validFrom: new Date(),
             validUntil: new Date(),
@@ -112,9 +102,9 @@ export class TaxesService {
         let other = 0;
         for (const tax of config.taxes) {
           const rate = this.effectiveRate(tax, base);
-          if (this.isIncomeTax(tax)) {
+          if (isIncomeTax(tax)) {
             irs = rate;
-          } else if (this.isSocialSecurityTax(tax)) {
+          } else if (isSocialSecurityTax(tax)) {
             ss = rate;
           } else {
             other += rate;

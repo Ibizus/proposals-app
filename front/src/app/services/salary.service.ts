@@ -1,10 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Extra, Proposal, Tax, TaxBracket, TaxConfiguration } from '../utils/types';
+import { isIncomeTax, isSocialSecurityTax } from '../utils/functions';
 
 interface TaxBracketRates {
   ss: number;
   irs: number;
   other?: number;
+}
+
+export interface TaxOverrides {
+  irs?: number;
+  ss?: number;
 }
 
 @Injectable({
@@ -70,6 +76,7 @@ export class SalaryService {
     yearlyNetSalary: number,
     payments: number,
     configuration?: TaxConfiguration,
+    overrides: TaxOverrides = {},
   ): void {
     const netSalary =
       salary -
@@ -87,6 +94,7 @@ export class SalaryService {
       salary,
       payments,
       configuration,
+      overrides,
     );
 
     console.log('monthly -> ' + monthlyNetSalary);
@@ -104,13 +112,14 @@ export class SalaryService {
     salary: number,
     payments: number,
     configuration?: TaxConfiguration,
+    overrides: TaxOverrides = {},
   ): [number, number] {
     for (const extra of proposal.salary.extras) {
       let value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
 
       console.log('AddToSalary -> ' + extra.addToSalary);
 
-      const baseNet = this.netExtraValue(value, extra, configuration, salary);
+      const baseNet = this.netExtraValue(value, extra, configuration, salary, overrides);
 
       if (extra.addToSalary === true) {
         monthlyNetSalary += baseNet * extra.multiplyMonthly;
@@ -121,12 +130,12 @@ export class SalaryService {
       if (extra.multiplyMonthly != -1) {
         // If monthly = -1 means that it is only Annual extra
         value *= extra.multiplyMonthly;
-        const netValue = this.netExtraValue(value, extra, configuration, salary);
+        const netValue = this.netExtraValue(value, extra, configuration, salary, overrides);
         monthlySalaryCalculations.set(extra.name, netValue);
         yearlySalaryCalculations.set(extra.name, netValue * extra.multiplyYearly);
       } else {
         value *= extra.multiplyYearly;
-        const netValue = this.netExtraValue(value, extra, configuration, salary);
+        const netValue = this.netExtraValue(value, extra, configuration, salary, overrides);
         yearlySalaryCalculations.set(extra.name, netValue);
       }
     }
@@ -139,6 +148,7 @@ export class SalaryService {
     extra: Extra,
     configuration: TaxConfiguration | undefined,
     baseSalary: number,
+    overrides: TaxOverrides,
   ): number {
     if (extra.exempt || !configuration) {
       return value;
@@ -151,12 +161,25 @@ export class SalaryService {
           `Tax ${taxId} of extra "${extra.name}" is not part of tax configuration ${configuration.id}`,
         );
       }
-      tax += (value * this.marginalRate(t, baseSalary)) / 100;
+      tax += (value * this.marginalRate(t, baseSalary, this.overrideFor(t, overrides))) / 100;
     }
     return value - tax;
   }
 
-  private marginalRate(tax: Tax, baseSalary: number): number {
+  private overrideFor(tax: Tax, overrides: TaxOverrides): number | undefined {
+    if (isIncomeTax(tax)) {
+      return overrides.irs;
+    }
+    if (isSocialSecurityTax(tax)) {
+      return overrides.ss;
+    }
+    return undefined;
+  }
+
+  private marginalRate(tax: Tax, baseSalary: number, override?: number): number {
+    if (override != null) {
+      return override;
+    }
     if (tax.type === 'FIXED') {
       return tax.fixedRate ?? 0;
     }
