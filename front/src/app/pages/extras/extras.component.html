@@ -29,6 +29,9 @@
         <th pSortableColumn="exempt" class="header-cell">
           <div class="header-content">{{ 'EXEMPT' | translate }} <p-sortIcon field="exempt" /></div>
         </th>
+        <th class="header-cell">
+          <div class="header-content">{{ 'APPLIED TAXES' | translate }}</div>
+        </th>
         <th pSortableColumn="isDefault" class="header-cell">
           <div class="header-content">
             {{ 'DEFAULT' | translate }} <p-sortIcon field="isDefault" />
@@ -92,10 +95,28 @@
           <p-cellEditor>
             <ng-template pTemplate="input">
               <span>{{ 'EXEMPT' | translate }}</span> <br />
-              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.exempt" />
+              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.exempt" (change)="onExemptChange(extra)" />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.exempt ? yes : no }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <p-multiSelect
+                [options]="taxOptionsFor(extra)"
+                [(ngModel)]="extra.taxIds"
+                optionLabel="label"
+                optionValue="value"
+                [disabled]="extra.exempt"
+                display="chip"
+                [style]="{ width: '100%' }"
+              ></p-multiSelect>
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{ taxNamesFor(extra) }}
             </ng-template>
           </p-cellEditor>
         </td>

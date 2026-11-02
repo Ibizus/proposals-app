@@ -1,5 +1,5 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { Extra } from '../../utils/types';
+import { Component, OnInit, signal } from '@angular/core';
+import { Extra, TaxConfiguration } from '../../utils/types';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
@@ -8,10 +8,18 @@ import { TooltipModule } from 'primeng/tooltip';
 import { NewExtraButtonComponent } from '../../components/new-extra-button/new-extra-button.component';
 import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ExtrasService } from '../../services/extras.service';
+import { TaxesService } from '../../services/taxes.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogModule, Dialog } from 'primeng/dialog';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { CommonModule } from '@angular/common';
 import { sleep } from '../../utils/functions';
 import { callerHandlesErrors } from '../../services/error-toast.interceptor';
+
+interface TaxOption {
+  label: string;
+  value: number;
+}
 
 @Component({
   selector: 'app-extras',
@@ -25,6 +33,8 @@ import { callerHandlesErrors } from '../../services/error-toast.interceptor';
     TooltipModule,
     TranslateModule,
     DialogModule,
+    MultiSelectModule,
+    CommonModule,
   ],
   providers: [TranslateService, TranslateStore],
   templateUrl: './extras.component.html',
@@ -44,6 +54,7 @@ export class ExtrasComponent implements OnInit {
   visible = signal(false);
   extrasId = -1;
   isLoading = signal(true);
+  configurations = signal<TaxConfiguration[]>([]);
 
   percentage!: string;
   amount!: string;
@@ -60,6 +71,7 @@ export class ExtrasComponent implements OnInit {
     private toastService: ToastService,
     private translateService: TranslateService,
     private extraService: ExtrasService,
+    private taxesService: TaxesService,
   ) {
     this.translateService.use(localStorage.getItem('lang') || 'en');
 
@@ -83,6 +95,42 @@ export class ExtrasComponent implements OnInit {
 
   ngOnInit(): void {
     this.getExtras(this.demandedPage, this.rows());
+    this.loadConfigurations();
+  }
+
+  private loadConfigurations(): void {
+    this.taxesService.getTaxConfigurations().subscribe({
+      next: (data) => this.configurations.set(data),
+      error: () => this.toastService.error('The tax configurations could not be loaded'),
+    });
+  }
+
+  taxOptionsFor(extra: Extra): TaxOption[] {
+    const configId = extra.taxConfigurationId ?? null;
+    return this.configurations()
+      .filter((c) => configId === null || c.id === configId)
+      .flatMap((configuration) =>
+        configuration.taxes.map((tax) => ({
+          label: `${configuration.label} — ${tax.name}`,
+          value: tax.id,
+        })),
+      );
+  }
+
+  taxNamesFor(extra: Extra): string {
+    if (extra.exempt) {
+      return this.no ?? 'No';
+    }
+    const options = this.taxOptionsFor(extra);
+    return extra.taxIds
+      .map((id) => options.find((o) => o.value === id)?.label ?? `#${id}`)
+      .join(', ') || (this.no ?? 'No');
+  }
+
+  onExemptChange(extra: Extra): void {
+    if (extra.exempt) {
+      extra.taxIds = [];
+    }
   }
 
   paginate(event: PaginatorState) {
@@ -145,7 +193,10 @@ export class ExtrasComponent implements OnInit {
           this.toastService.error('The extra could not be deleted');
         },
       });
+    } else {
+      this.toastService.error('extrasId is not set');
     }
+
     this.extrasId = -1;
     this.visible.set(false);
   }

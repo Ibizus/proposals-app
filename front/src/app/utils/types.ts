@@ -44,6 +44,7 @@ interface Extra {
   multiplyMonthly: number;
   exempt: boolean;
   taxIds: number[];
+  taxConfigurationId?: number | null;
   createdAt: Date;
   createdBy: string;
   modifiedAt: Date;

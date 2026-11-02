@@ -88,6 +88,10 @@ export class TaxesService {
     return this.http.post<TaxConfiguration>(`${TAX_CONFIG_URL}${id}/activate`, {});
   }
 
+  createTaxConfiguration(configuration: TaxConfiguration): Observable<TaxConfiguration> {
+    return this.http.post<TaxConfiguration>(TAX_CONFIG_URL, configuration);
+  }
+
   getTaxBracket(
     base: number,
     maritalStatus: number,

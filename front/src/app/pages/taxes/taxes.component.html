@@ -1,43 +1,176 @@
-<div class="mt-24 px-10 relative">
-  <h2 class="text-5xl font-bold mb-5">{{ 'TAXES' | translate }}</h2>
+<div class="mt-24 px-10">
+  <div class="relative">
+    <h1 class="font-bold text-5xl mb-5">{{ 'TAXES' | translate }}</h1>
+    <button
+      pButton
+      icon="pi pi-plus"
+      class="newProposal bg-[#0056D2] text-white mb-3 px-4 p-1 w-56 h-14 rounded-full absolute top-0 right-0"
+      (click)="openCreateDialog()"
+    >
+      {{ 'NEW TAX CONFIGURATION' | translate }}
+    </button>
+  </div>
 
-  <p-table
-    [columns]="cols"
-    styleClass="p-datatable-striped p-datatable-sm"
-    [value]="taxesTable"
-    [scrollable]="true"
-    scrollHeight="666px"
-    dataKey="id"
-    [loading]="isLoading()"
-    [tableStyle]="{ 'min-width': '50rem' }"
+  <p class="text-gray-600 mb-4">{{ 'ILLUSTRATIVE TAX NOTE' | translate }}</p>
+
+  <div class="flex flex-col gap-4 mb-6">
+    <div class="flex items-center gap-4">
+      <label class="font-semibold">{{ 'SELECT COUNTRY' | translate }}</label>
+      <p-dropdown
+        [options]="configurations()"
+        [(ngModel)]="selectedConfiguration"
+        optionLabel="label"
+        [placeholder]="'SELECT COUNTRY' | translate"
+        [style]="{ width: '24rem' }"
+      ></p-dropdown>
+    </div>
+
+    @if (selectedConfiguration(); as config) {
+      <div class="border rounded-lg p-6 bg-white shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-2xl font-bold">{{ config.label }}</h2>
+            <p class="text-gray-600">{{ config.countryCode | uppercase }} · {{ 'YEARLY PAYMENTS' | translate }}: {{ config.yearlyPayments }}</p>
+          </div>
+          <div class="flex items-center gap-3">
+            @if (config.active) {
+              <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">{{ 'ACTIVE' | translate }}</span>
+            } @else {
+              <button
+                pButton
+                class="bg-[#0056D2] text-white py-2 px-4 rounded-md"
+                (click)="onActivate(config.id)"
+              >
+                {{ 'ACTIVATE' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <p-table [value]="config.taxes" styleClass="p-datatable-striped p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'NAME' | translate }}</th>
+              <th>{{ 'TYPE' | translate }}</th>
+              <th>{{ 'RATE OR BRACKETS' | translate }}</th>
+              <th>{{ 'EXTRAS ONLY' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-tax>
+            <tr>
+              <td>{{ tax.name }}</td>
+              <td>{{ tax.type }}</td>
+              <td>
+                @if (tax.type === 'FIXED') {
+                  {{ tax.fixedRate }} %
+                } @else {
+                  <ul class="list-disc pl-5">
+                    @for (bracket of tax.brackets; track bracket.id) {
+                      <li>{{ 'UP TO' | translate }} {{ bracket.threshold }} · {{ bracket.rate }} %</li>
+                    }
+                  </ul>
+                }
+              </td>
+              <td>{{ tax.extrasOnly ? ('YES' | translate) : ('NO' | translate) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </div>
+
+  <p-dialog
+    [header]="'NEW TAX CONFIGURATION' | translate"
+    [(visible)]="visibleCreate"
+    [modal]="true"
+    [style]="{ width: '75vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    (onHide)="closeCreateDialog()"
   >
-    <ng-template pTemplate="header" let-columns>
-      <tr>
-        @for (col of columns; track col.field) {
-          <th style="width: fit-content">
-            {{ col.header }}
-          </th>
-        }
-      </tr>
-      <tr>
-        <div class="absolute tableGradient h-1 w-full col-span-full"></div>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-taxes let-rowData>
-      <tr>
-        <td>
-          @if (taxes.salaryMax <= taxesTable[taxesTable.length - 2].salaryMax) {
-            {{ taxes.salaryMax }}{{ moneySign }}
-          } @else {
-            > {{ taxesTable[taxesTable.length - 2].salaryMax }}{{ moneySign }}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="flex flex-col">
+        <label class="text-gray-700 font-semibold">{{ 'COUNTRY CODE' | translate }}</label>
+        <input pInputText [(ngModel)]="newConfiguration.countryCode" maxlength="2" />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-gray-700 font-semibold">{{ 'LABEL' | translate }}</label>
+        <input pInputText [(ngModel)]="newConfiguration.label" />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-gray-700 font-semibold">{{ 'YEARLY PAYMENTS' | translate }}</label>
+        <input pInputText type="number" [(ngModel)]="newConfiguration.yearlyPayments" min="1" />
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-semibold">{{ 'TAXES' | translate }}</h3>
+        <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addTax()">{{ 'ADD TAX' | translate }}</button>
+      </div>
+
+      @for (tax of newConfiguration.taxes; track $index) {
+        <div class="border rounded-lg p-4 mb-4 bg-gray-50">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'NAME' | translate }}</label>
+              <input pInputText [(ngModel)]="tax.name" />
+            </div>
+            <div class="flex flex-col">
+              <label class="text-gray-700 font-semibold">{{ 'TYPE' | translate }}</label>
+              <p-dropdown [options]="taxTypes" [(ngModel)]="tax.type" [style]="{ width: '100%' }"></p-dropdown>
+            </div>
+            @if (tax.type === 'FIXED') {
+              <div class="flex flex-col">
+                <label class="text-gray-700 font-semibold">{{ 'FIXED RATE' | translate }} (%)</label>
+                <input pInputText type="number" [(ngModel)]="tax.fixedRate" min="0" />
+              </div>
+            }
+            <div class="flex items-center gap-2 pb-2">
+              <p-checkbox [(ngModel)]="tax.extrasOnly" [binary]="true" />
+              <label class="text-gray-700 font-semibold mb-0">{{ 'EXTRAS ONLY' | translate }}</label>
+            </div>
+            <div class="sm:col-start-4 flex justify-end">
+              <button pButton class="p-button-danger p-button-sm" icon="pi pi-trash" (click)="removeTax($index)">{{ 'REMOVE TAX' | translate }}</button>
+            </div>
+          </div>
+
+          @if (tax.type === 'BRACKETED') {
+            <div class="mt-4">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold">{{ 'BRACKETS' | translate }}</h4>
+                <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addBracket(tax)">{{ 'ADD BRACKET' | translate }}</button>
+              </div>
+              @for (bracket of tax.brackets; track $index) {
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-2">
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'UP TO' | translate }}</label>
+                    <input pInputText type="number" [(ngModel)]="bracket.threshold" min="0" />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-gray-700 font-semibold">{{ 'RATE' | translate }} (%)</label>
+                    <input pInputText type="number" [(ngModel)]="bracket.rate" min="0" />
+                  </div>
+                  <div>
+                    <button pButton class="p-button-danger p-button-sm" icon="pi pi-trash" (click)="removeBracket(tax, $index)">{{ 'REMOVE BRACKET' | translate }}</button>
+                  </div>
+                </div>
+              }
+            </div>
           }
-        </td>
-        <td>{{ taxes.socialSecurityTax }} %</td>
-        <td>{{ taxes.zero }} %</td>
-        <td>{{ taxes.validFrom }}</td>
-        <td>{{ taxes.validUntil }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-  <div class="h-20"></div>
+        </div>
+      }
+    </div>
+
+    <button
+      class="bg-[#0056D2] text-white py-2 px-4 rounded-md mx-auto block mt-6"
+      type="button"
+      [disabled]="submitting()"
+      (click)="onCreate()"
+    >
+      <span>{{ 'SAVE TAX CONFIGURATION' | translate }}</span>
+    </button>
+  </p-dialog>
+
+  <div class="h-12"></div>
 </div>
