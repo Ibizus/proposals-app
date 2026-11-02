@@ -118,7 +118,7 @@ class ProposalServiceTest {
     Proposal other = new Proposal();
     other.setId(2);
     Office office = new Office(1, "Lisbon", "LIS", new HashSet<>(Set.of(proposal, other)));
-    Salary salary = new Salary(1, 1000d, proposal, new HashSet<>());
+    Salary salary = new Salary(1, 1000d, null, proposal, new HashSet<>());
     Candidate candidate = new Candidate();
     candidate.setProposals(new HashSet<>(Set.of(proposal, other)));
     candidate.setProposalsCount(2);
@@ -141,7 +141,7 @@ class ProposalServiceTest {
     Proposal proposal = new Proposal();
     proposal.setId(id);
     proposal.setOffice(new Office(1, "Lisbon", "LIS", new HashSet<>(Set.of(proposal))));
-    proposal.setSalary(new Salary(1, 1000d, proposal, new HashSet<>()));
+    proposal.setSalary(new Salary(1, 1000d, null, proposal, new HashSet<>()));
     return proposal;
   }
 

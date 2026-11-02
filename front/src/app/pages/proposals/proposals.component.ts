@@ -259,6 +259,7 @@ export class ProposalsComponent implements OnInit {
       salary: {
         id: 0,
         base: existingProposal.salary.base,
+        taxConfigurationId: existingProposal.salary.taxConfigurationId,
         extras: existingProposal.salary.extras,
       },
       candidate: {

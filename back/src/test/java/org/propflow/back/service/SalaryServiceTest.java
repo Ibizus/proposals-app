@@ -1,12 +1,15 @@
 package org.propflow.back.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,12 +17,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.propflow.back.exception.EntityNotFoundException;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Extra;
 import org.propflow.back.model.Proposal;
 import org.propflow.back.model.Salary;
-import org.propflow.back.model.Taxes;
+import org.propflow.back.model.Tax;
+import org.propflow.back.model.TaxBracket;
+import org.propflow.back.model.TaxConfiguration;
+import org.propflow.back.model.TaxType;
 import org.propflow.back.repository.SalaryRepository;
+import org.propflow.back.repository.TaxConfigurationRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SalaryServiceTest {
@@ -28,30 +36,62 @@ class SalaryServiceTest {
 
   @Mock private SalaryRepository salaryRepository;
   @Mock private ParameterService parameterService;
-  @Mock private TaxesService taxesService;
+  @Mock private TaxConfigurationRepository taxConfigurationRepository;
 
   @InjectMocks private SalaryService salaryService;
 
-  private Taxes bracket;
+  private TaxConfiguration configuration;
+  private Tax socialSecurity;
+  private Tax incomeTax;
 
   @BeforeEach
   void setUp() {
-    bracket = new Taxes();
-    bracket.setSalaryMax(1051d);
-    bracket.setSocialSecurityTax(11d);
-    bracket.setMaritalStatus(0);
-    bracket.setZero(12d);
-    bracket.setOne(10d);
-    when(taxesService.findBySalaryAndMaritalStatus(1000d, 0)).thenReturn(bracket);
-    when(parameterService.getCalculationsParameters())
+    configuration = new TaxConfiguration();
+    configuration.setId(1);
+    configuration.setCountryCode("pt");
+    configuration.setYearlyPayments(14);
+
+    socialSecurity = new Tax();
+    socialSecurity.setId(10);
+    socialSecurity.setName("Social Security");
+    socialSecurity.setType(TaxType.FIXED);
+    socialSecurity.setFixedRate(11.0);
+    socialSecurity.setConfiguration(configuration);
+
+    incomeTax = new Tax();
+    incomeTax.setId(20);
+    incomeTax.setName("IRS");
+    incomeTax.setType(TaxType.BRACKETED);
+    incomeTax.setConfiguration(configuration);
+    incomeTax.setBrackets(
+        List.of(
+            bracket(incomeTax, 500, 5.0),
+            bracket(incomeTax, 1000, 10.0),
+            bracket(incomeTax, 9999999, 20.0)));
+
+    configuration.setTaxes(List.of(socialSecurity, incomeTax));
+
+    lenient()
+        .when(taxConfigurationRepository.findByActiveTrue())
+        .thenReturn(Optional.of(configuration));
+    lenient()
+        .when(parameterService.getCalculationsParameters())
         .thenReturn(Map.of("iht", 20.0, "spp", 3.0, "scr", 0.9235));
   }
 
-  private static Proposal proposal(double base, int dependants, Extra... extras) {
+  private TaxBracket bracket(Tax tax, double threshold, double rate) {
+    TaxBracket bracket = new TaxBracket();
+    bracket.setThreshold(threshold);
+    bracket.setRate(rate);
+    bracket.setTax(tax);
+    return bracket;
+  }
+
+  private static Proposal proposal(double base, Extra... extras) {
     Candidate candidate = new Candidate();
     candidate.setMaritalStatus(0);
-    candidate.setDependentsNumber(dependants);
-    Salary salary = new Salary(0, base, null, new HashSet<>(List.of(extras)));
+    candidate.setDependentsNumber(1);
+    Salary salary = new Salary(0, base, null, null, new HashSet<>(List.of(extras)));
     Proposal proposal = new Proposal();
     proposal.setSalary(salary);
     proposal.setCandidate(candidate);
@@ -62,16 +102,16 @@ class SalaryServiceTest {
       String name,
       double amount,
       boolean percentage,
-      boolean ssTaxable,
-      boolean irsTaxable,
+      boolean exempt,
+      List<Long> taxIds,
       int multiplyYearly,
       int multiplyMonthly) {
     Extra extra = new Extra();
     extra.setName(name);
     extra.setAmount(amount);
     extra.setIsPercentage(percentage);
-    extra.setIsSSTaxable(ssTaxable);
-    extra.setIsIRSTaxable(irsTaxable);
+    extra.setExempt(exempt);
+    extra.setTaxIds(new HashSet<>(taxIds));
     extra.setAddToSalary(false);
     extra.setMultiplyYearly(multiplyYearly);
     extra.setMultiplyMonthly(multiplyMonthly);
@@ -80,10 +120,8 @@ class SalaryServiceTest {
 
   @Test
   void computesMonthlyAndYearlyBaseComponents() {
-    when(taxesService.getIrsByNumberOfDependants(bracket, 1)).thenCallRealMethod();
-
     Map<String, Map<String, Double>> result =
-        salaryService.salaryCalculations(proposal(1000, 1), null, null);
+        salaryService.salaryCalculations(proposal(1000), null, null);
     Map<String, Double> monthly = result.get("monthly");
     Map<String, Double> yearly = result.get("yearly");
 
@@ -96,55 +134,139 @@ class SalaryServiceTest {
     assertThat(yearly.get("IHT")).isCloseTo(2800, CENT);
     assertThat(monthly.get("Share Purchase Plan")).isCloseTo(30, CENT);
     assertThat(yearly.get("Share Purchase Plan")).isCloseTo(420, CENT);
-    // 1000 - (11% SS + 10% IRS for one dependant)
-    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(790, CENT);
-    assertThat(yearly.get("Estimated Net Salary")).isCloseTo(11060, CENT);
+    // 1000 - (11% SS + 75 IRS: 500*5% + 500*10%)
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(815, CENT);
+    assertThat(yearly.get("Estimated Net Salary")).isCloseTo(11410, CENT);
   }
 
   @Test
-  void forcedIrsRateOverridesBracket() {
+  void forcedIncomeTaxRateOverridesBracket() {
     Map<String, Map<String, Double>> result =
-        salaryService.salaryCalculations(proposal(1000, 1), 5.0, null);
+        salaryService.salaryCalculations(proposal(1000), 5.0, null);
 
     // 1000 - (11% SS + 5% forced IRS)
     assertThat(result.get("monthly").get("Estimated Net Salary")).isCloseTo(840, CENT);
   }
 
   @Test
-  void monthlyExtrasAreTaxedPerFlagsAndMultiplied() {
-    when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
-    // 15/day for 21 days, 11 months a year, IRS-taxable only
-    Extra food = extra("Food Allowance", 15, false, false, true, 11, 21);
+  void incomeTaxOverrideMatchesIncomeTaxByName() {
+    incomeTax.setName("Income Tax");
 
     Map<String, Map<String, Double>> result =
-        salaryService.salaryCalculations(proposal(1000, 0, food), null, null);
+        salaryService.salaryCalculations(proposal(1000), 5.0, null);
 
-    // 315 - 12% IRS
-    assertThat(result.get("monthly").get("Food Allowance")).isCloseTo(277.2, CENT);
-    assertThat(result.get("yearly").get("Food Allowance")).isCloseTo(3049.2, CENT);
+    assertThat(result.get("monthly").get("Estimated Net Salary")).isCloseTo(840, CENT);
   }
 
   @Test
-  void yearlyOnlyPercentageExtrasAreMissingFromMonthly() {
-    when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
-    // 4% of salary, paid 12 times a year, SS-taxable only, not monthly (-1)
-    Extra flex = extra("Flex", 4, true, true, false, 12, -1);
+  void extraWithTaxFromAnotherConfigurationIsRejected() {
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(99L), 12, 1);
+
+    assertThatThrownBy(
+            () -> salaryService.salaryCalculations(proposal(1000, allowance), null, null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("99");
+  }
+
+  @Test
+  void missingPinnedConfigurationIsNotReplacedByActiveOne() {
+    Proposal proposal = proposal(1000);
+    proposal.getSalary().setTaxConfigurationId(7L);
+    when(taxConfigurationRepository.findById(7L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> salaryService.salaryCalculations(proposal, null, null))
+        .isInstanceOf(EntityNotFoundException.class);
+  }
+
+  @Test
+  void fixedRateTaxIsAppliedToBase() {
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1000), null, null).get("monthly");
+    // SS fixed 11% of 1000 + IRS 75
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(815, CENT);
+  }
+
+  @Test
+  void progressiveBracketTaxesOnlyThePartInsideEachBracket() {
+    // Base 1500: first 500 at 5% = 25, next 500 at 10% = 50, remaining 500 at 20% = 100
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1500), null, null).get("monthly");
+    // SS = 165, IRS = 175 -> net = 1500 - 340 = 1160
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(1160, CENT);
+  }
+
+  @Test
+  void exemptExtraPaysNoTax() {
+    Extra food = extra("Food Allowance", 100, false, true, List.of(), 11, 1);
 
     Map<String, Map<String, Double>> result =
-        salaryService.salaryCalculations(proposal(1000, 0, flex), null, null);
+        salaryService.salaryCalculations(proposal(1000, food), null, null);
+
+    assertThat(result.get("monthly").get("Food Allowance")).isCloseTo(100, CENT);
+    assertThat(result.get("yearly").get("Food Allowance")).isCloseTo(1100, CENT);
+  }
+
+  @Test
+  void extraWithSubsetOfTaxesPaysOnlyThoseTaxes() {
+    // Taxable by SS only
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(10L), 12, 1);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, allowance), null, null);
+
+    // 100 - 11% SS = 89
+    assertThat(result.get("monthly").get("Car Allowance")).isCloseTo(89, CENT);
+    assertThat(result.get("yearly").get("Car Allowance")).isCloseTo(1068, CENT);
+  }
+
+  @Test
+  void extrasOnlyTaxAppliesToReferencingExtrasButNotToBaseSalary() {
+    Tax extrasIrs = new Tax();
+    extrasIrs.setId(30);
+    extrasIrs.setName("IRS 21% (extras)");
+    extrasIrs.setType(TaxType.FIXED);
+    extrasIrs.setFixedRate(21.0);
+    extrasIrs.setExtrasOnly(true);
+    extrasIrs.setConfiguration(configuration);
+    configuration.setTaxes(List.of(socialSecurity, incomeTax, extrasIrs));
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(30L), 12, 1);
+
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1000, allowance), null, null).get("monthly");
+
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(815, CENT);
+    assertThat(monthly.get("Car Allowance")).isCloseTo(79, CENT);
+  }
+
+  @Test
+  void yearlyOnlyExtrasAreMissingFromMonthly() {
+    Extra flex = extra("Flex", 4, true, false, List.of(10L), 12, -1);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, flex), null, null);
 
     assertThat(result.get("monthly")).doesNotContainKey("Flex");
-    // 40 * 12 = 480, minus 11% SS
+    // 40 * 12 = 480, minus 11% SS = 427.2
     assertThat(result.get("yearly").get("Flex")).isCloseTo(427.2, CENT);
+  }
+
+  @Test
+  void nonDefaultPaymentsCountIsUsed() {
+    configuration.setYearlyPayments(12);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000), null, null);
+
+    assertThat(result.get("monthly").get("Gross Salary")).isCloseTo(1000, CENT);
+    assertThat(result.get("yearly").get("Gross Salary")).isCloseTo(12000, CENT);
   }
 
   @Test
   void missingParametersDefaultToZero() {
     when(parameterService.getCalculationsParameters()).thenReturn(Map.of());
-    when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
 
     Map<String, Double> monthly =
-        salaryService.salaryCalculations(proposal(1000, 0), null, null).get("monthly");
+        salaryService.salaryCalculations(proposal(1000), null, null).get("monthly");
 
     assertThat(monthly.get("Base Salary")).isCloseTo(0, CENT);
     assertThat(monthly.get("IHT")).isCloseTo(0, CENT);
@@ -153,11 +275,10 @@ class SalaryServiceTest {
 
   @Test
   void rowsKeepTheBreakdownOrderWithExtrasBeforeNetSalary() {
-    when(taxesService.getIrsByNumberOfDependants(bracket, 0)).thenCallRealMethod();
-    Extra food = extra("Food Allowance", 15, false, false, true, 11, 21);
+    Extra food = extra("Food Allowance", 15, false, false, List.of(20L), 11, 21);
 
     Map<String, Map<String, Double>> result =
-        salaryService.salaryCalculations(proposal(1000, 0, food), null, null);
+        salaryService.salaryCalculations(proposal(1000, food), null, null);
 
     assertThat(result.keySet()).containsExactly("monthly", "yearly");
     for (Map<String, Double> table : result.values()) {
@@ -170,5 +291,29 @@ class SalaryServiceTest {
               "Food Allowance",
               "Estimated Net Salary");
     }
+  }
+
+  @Test
+  void bracketedExtraUsesMarginalRateFromBaseSalary() {
+    // Base 1000 sits in the 20% marginal bracket (next bracket after 1000).
+    // A 100€ extra taxed by IRS should pay 20€, leaving 80€.
+    Extra allowance = extra("Car Allowance", 100, false, false, List.of(20L), 12, 1);
+
+    Map<String, Map<String, Double>> result =
+        salaryService.salaryCalculations(proposal(1000, allowance), null, null);
+
+    assertThat(result.get("monthly").get("Car Allowance")).isCloseTo(80, CENT);
+    assertThat(result.get("yearly").get("Car Allowance")).isCloseTo(960, CENT);
+  }
+
+  @Test
+  void withholdingTaxAppliesSingleBracketRateToWholeAmount() {
+    incomeTax.setType(TaxType.WITHHOLDING);
+    // Base 1500: withholding bracket 1000@10% does not cover it, next bracket 9999999@20% does.
+    Map<String, Double> monthly =
+        salaryService.salaryCalculations(proposal(1500), null, null).get("monthly");
+
+    // SS = 165, IRS = 1500 * 20% = 300 -> net = 1500 - 465 = 1035
+    assertThat(monthly.get("Estimated Net Salary")).isCloseTo(1035, CENT);
   }
 }

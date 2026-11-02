@@ -1,9 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Proposal } from '../utils/types';
+import { Extra, Proposal, Tax, TaxConfiguration } from '../utils/types';
+import { isIncomeTax, isSocialSecurityTax } from '../utils/functions';
 
-interface TaxBracket {
+interface TaxBracketRates {
   ss: number;
   irs: number;
+  other?: number;
+}
+
+export interface TaxOverrides {
+  irs?: number;
+  ss?: number;
 }
 
 @Injectable({
@@ -16,9 +23,10 @@ export class SalaryService {
     monthlySalaryCalculations: Map<string, number>,
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
+    payments: number,
   ): void {
     monthlySalaryCalculations.set('Gross Salary', salary);
-    yearlySalaryCalculations.set('Gross Salary', salary * 14);
+    yearlySalaryCalculations.set('Gross Salary', salary * payments);
   }
 
   setBaseSalary(
@@ -27,10 +35,11 @@ export class SalaryService {
     salary: number,
     iht: number,
     scr: number,
+    payments: number,
   ): void {
     const baseSalary = salary * (1 - iht / 100) * scr;
     monthlySalaryCalculations.set('Base Salary', baseSalary);
-    yearlySalaryCalculations.set('Base Salary', baseSalary * 14);
+    yearlySalaryCalculations.set('Base Salary', baseSalary * payments);
   }
 
   setIHT(
@@ -38,10 +47,11 @@ export class SalaryService {
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
     iht: number,
+    payments: number,
   ): void {
     const ihtAmount = (salary * iht) / 100;
     monthlySalaryCalculations.set('IHT', ihtAmount);
-    yearlySalaryCalculations.set('IHT', ihtAmount * 14);
+    yearlySalaryCalculations.set('IHT', ihtAmount * payments);
   }
 
   setSharePurchasePlan(
@@ -49,10 +59,11 @@ export class SalaryService {
     yearlySalaryCalculations: Map<string, number>,
     baseSalary: number,
     spp: number,
+    payments: number,
   ): void {
     const sppValue = (baseSalary * spp) / 100;
     monthlySalaryCalculations.set('Share Purchase Plan', sppValue);
-    yearlySalaryCalculations.set('Share Purchase Plan', sppValue * 14);
+    yearlySalaryCalculations.set('Share Purchase Plan', sppValue * payments);
   }
 
   setNetSalary(
@@ -60,13 +71,20 @@ export class SalaryService {
     monthlySalaryCalculations: Map<string, number>,
     yearlySalaryCalculations: Map<string, number>,
     salary: number,
-    taxBracket: TaxBracket,
+    taxBracket: TaxBracketRates,
     monthlyNetSalary: number,
     yearlyNetSalary: number,
+    payments: number,
+    configuration?: TaxConfiguration,
+    overrides: TaxOverrides = {},
   ): void {
-    const netSalary = salary - ((salary * taxBracket.ss) / 100 + (salary * taxBracket.irs) / 100);
+    const netSalary =
+      salary -
+      ((salary * taxBracket.ss) / 100 +
+        (salary * taxBracket.irs) / 100 +
+        (salary * (taxBracket.other ?? 0)) / 100);
     const monthlyNetSalaryNoExtras = netSalary;
-    const yearlyNetSalaryNoExtras = netSalary * 14;
+    const yearlyNetSalaryNoExtras = netSalary * payments;
     [monthlyNetSalary, yearlyNetSalary] = this.setExtraSalaryComponents(
       proposal,
       monthlySalaryCalculations,
@@ -74,6 +92,9 @@ export class SalaryService {
       monthlyNetSalaryNoExtras,
       yearlyNetSalaryNoExtras,
       salary,
+      payments,
+      configuration,
+      overrides,
     );
 
     console.log('monthly -> ' + monthlyNetSalary);
@@ -89,49 +110,87 @@ export class SalaryService {
     monthlyNetSalary: number,
     yearlyNetSalary: number,
     salary: number,
+    payments: number,
+    configuration?: TaxConfiguration,
+    overrides: TaxOverrides = {},
   ): [number, number] {
     for (const extra of proposal.salary.extras) {
-      let value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
+      const value = extra.isPercentage ? (salary * extra.amount) / 100 : extra.amount;
 
-      console.log('AddToSalary -> ' + extra.addToSalary);
+      const monthlyGross = extra.multiplyMonthly === -1 ? 0 : value * extra.multiplyMonthly;
+      const yearlyGross =
+        extra.multiplyMonthly === -1
+          ? value * extra.multiplyYearly
+          : monthlyGross * extra.multiplyYearly;
+      const monthlyNet = this.netExtraValue(monthlyGross, extra, configuration, salary, overrides);
+      const yearlyNet = this.netExtraValue(yearlyGross, extra, configuration, salary, overrides);
 
       if (extra.addToSalary === true) {
-        const monthlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const monthlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const monthlyNetExtraValue =
-          value -
-          (monthlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            monthlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-        monthlyNetSalary += monthlyNetExtraValue * extra.multiplyMonthly;
-        yearlyNetSalary += monthlyNetExtraValue * (extra.multiplyMonthly * extra.multiplyYearly);
-        console.log(monthlyNetSalary);
+        monthlyNetSalary += monthlyNet;
+        yearlyNetSalary += yearlyNet;
       }
 
-      if (extra.multiplyMonthly != -1) {
+      if (extra.multiplyMonthly !== -1) {
         // If monthly = -1 means that it is only Annual extra
-        value *= extra.multiplyMonthly;
-        const monthlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const monthlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const monthlyNetExtraValue =
-          value -
-          (monthlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            monthlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-
-        monthlySalaryCalculations.set(extra.name, monthlyNetExtraValue);
-        yearlySalaryCalculations.set(extra.name, monthlyNetExtraValue * extra.multiplyYearly);
-      } else {
-        value *= extra.multiplyYearly;
-        const yearlyExtraSSTax = (value * extra.ssTaxrate) / 100;
-        const yearlyExtraIRSTax = (value * extra.irsTaxrate) / 100;
-        const yearlyNetExtraValue =
-          value -
-          (yearlyExtraSSTax * (extra.isSSTaxable ? 1 : 0) +
-            yearlyExtraIRSTax * (extra.isIRSTaxable ? 1 : 0));
-        yearlySalaryCalculations.set(extra.name, yearlyNetExtraValue);
+        monthlySalaryCalculations.set(extra.name, monthlyNet);
       }
+      yearlySalaryCalculations.set(extra.name, yearlyNet);
     }
 
     return [monthlyNetSalary, yearlyNetSalary];
+  }
+
+  private netExtraValue(
+    value: number,
+    extra: Extra,
+    configuration: TaxConfiguration | undefined,
+    baseSalary: number,
+    overrides: TaxOverrides,
+  ): number {
+    if (extra.exempt || !configuration) {
+      return value;
+    }
+    let tax = 0;
+    for (const taxId of extra.taxIds) {
+      const t = configuration.taxes.find((tx) => tx.id === taxId);
+      if (!t) {
+        throw new Error(
+          `Tax ${taxId} of extra "${extra.name}" is not part of tax configuration ${configuration.id}`,
+        );
+      }
+      tax += (value * this.marginalRate(t, baseSalary, this.overrideFor(t, overrides))) / 100;
+    }
+    return value - tax;
+  }
+
+  private overrideFor(tax: Tax, overrides: TaxOverrides): number | undefined {
+    if (isIncomeTax(tax)) {
+      return overrides.irs;
+    }
+    if (isSocialSecurityTax(tax)) {
+      return overrides.ss;
+    }
+    return undefined;
+  }
+
+  private marginalRate(tax: Tax, baseSalary: number, override?: number): number {
+    if (override != null) {
+      return override;
+    }
+    if (tax.type === 'FIXED') {
+      return tax.fixedRate ?? 0;
+    }
+    const sorted = [...tax.brackets].sort((a, b) => a.threshold - b.threshold);
+    if (tax.type === 'WITHHOLDING') {
+      const bracket = sorted.find((b) => baseSalary <= b.threshold) ?? sorted[sorted.length - 1];
+      return bracket?.rate ?? 0;
+    }
+    for (const bracket of sorted) {
+      if (baseSalary < bracket.threshold) {
+        return bracket.rate;
+      }
+    }
+    return sorted[sorted.length - 1]?.rate ?? 0;
   }
 
   calculateSCR(monthlySalaryCalculations: Map<string, number>, scr: number) {

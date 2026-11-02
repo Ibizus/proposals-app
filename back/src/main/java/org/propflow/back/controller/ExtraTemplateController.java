@@ -37,8 +37,9 @@ public class ExtraTemplateController {
 
   @Operation(summary = "List all extra templates")
   @GetMapping({"", "/"})
-  public List<ExtraTemplate> all() {
-    return this.extraTemplateService.all();
+  public List<ExtraTemplate> all(
+      @RequestParam(value = "taxConfigurationId", required = false) Long taxConfigurationId) {
+    return this.extraTemplateService.all(taxConfigurationId);
   }
 
   @Operation(summary = "List extra templates paginated")
@@ -47,11 +48,12 @@ public class ExtraTemplateController {
       params = {"page", "size", "!filter"})
   public ResponseEntity<Map<String, Object>> all(
       @RequestParam(value = "page", defaultValue = "0") int page,
-      @RequestParam(value = "size", defaultValue = "3") int size) {
+      @RequestParam(value = "size", defaultValue = "3") int size,
+      @RequestParam(value = "taxConfigurationId", required = false) Long taxConfigurationId) {
     log.info("Accessing paginated ExtraTemplates");
     log.info("PAGE: " + page + " & SIZE: " + size);
 
-    Map<String, Object> responseAll = this.extraTemplateService.all(page, size);
+    Map<String, Object> responseAll = this.extraTemplateService.all(page, size, taxConfigurationId);
     return ResponseEntity.ok(responseAll);
   }
 
@@ -59,8 +61,10 @@ public class ExtraTemplateController {
   @GetMapping(
       value = {"", "/"},
       params = {"!page", "!size", "filter"})
-  public List<ExtraTemplate> filterByName(@RequestParam String filter) {
-    return this.extraTemplateService.findByName(filter);
+  public List<ExtraTemplate> filterByName(
+      @RequestParam String filter,
+      @RequestParam(value = "taxConfigurationId", required = false) Long taxConfigurationId) {
+    return this.extraTemplateService.findByName(filter, taxConfigurationId);
   }
 
   @Operation(summary = "Get an extra template by id")

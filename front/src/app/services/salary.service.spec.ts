@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { SalaryService } from './salary.service';
-import { makeExtra, makeProposal } from '../../testing/fixtures';
+import { makeExtra, makeProposal, makeTaxConfiguration } from '../../testing/fixtures';
 
 describe('SalaryService', () => {
   let service: SalaryService;
   let monthly: Map<string, number>;
   let yearly: Map<string, number>;
+  const payments = 14;
 
   beforeEach(() => {
     service = TestBed.inject(SalaryService);
@@ -13,26 +14,26 @@ describe('SalaryService', () => {
     yearly = new Map();
   });
 
-  it('sets gross salary, paid in 14 instalments a year', () => {
-    service.setGrossSalary(monthly, yearly, 1000);
+  it('sets gross salary using the configurable payments count', () => {
+    service.setGrossSalary(monthly, yearly, 1000, 12);
     expect(monthly.get('Gross Salary')).toBe(1000);
-    expect(yearly.get('Gross Salary')).toBe(14000);
+    expect(yearly.get('Gross Salary')).toBe(12000);
   });
 
   it('derives base salary from IHT and SCR', () => {
-    service.setBaseSalary(monthly, yearly, 1000, 10, 1.5);
+    service.setBaseSalary(monthly, yearly, 1000, 10, 1.5, payments);
     expect(monthly.get('Base Salary')).toBeCloseTo(1350, 6);
     expect(yearly.get('Base Salary')).toBeCloseTo(18900, 6);
   });
 
   it('computes the IHT amount as a percentage of salary', () => {
-    service.setIHT(monthly, yearly, 1000, 10);
+    service.setIHT(monthly, yearly, 1000, 10, payments);
     expect(monthly.get('IHT')).toBe(100);
     expect(yearly.get('IHT')).toBe(1400);
   });
 
   it('computes the share purchase plan as a percentage of salary', () => {
-    service.setSharePurchasePlan(monthly, yearly, 1000, 5);
+    service.setSharePurchasePlan(monthly, yearly, 1000, 5, payments);
     expect(monthly.get('Share Purchase Plan')).toBe(50);
     expect(yearly.get('Share Purchase Plan')).toBe(700);
   });
@@ -47,28 +48,68 @@ describe('SalaryService', () => {
   });
 
   describe('setExtraSalaryComponents', () => {
+    const config = makeTaxConfiguration();
+
     it('records a taxed monthly extra without touching net salary', () => {
       const proposal = makeProposal({
-        salary: { id: 1, base: 1000, extras: [makeExtra()] },
+        salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra()] },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000);
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
 
-      // 100 - (10% SS + 20% IRS) = 70 per month, 11 months a year
-      expect(monthly.get('Meal allowance')).toBeCloseTo(70, 6);
-      expect(yearly.get('Meal allowance')).toBeCloseTo(770, 6);
+      // 100 - (11% SS + 20% IRS) = 69 per month, 11 months a year
+      expect(monthly.get('Meal allowance')).toBeCloseTo(69, 6);
+      expect(yearly.get('Meal allowance')).toBeCloseTo(759, 6);
       expect([m, y]).toEqual([500, 7000]);
+    });
+
+    it('applies IRS and SS overrides to taxed extras', () => {
+      const proposal = makeProposal({
+        salary: { id: 1, base: 1000, taxConfigurationId: null, extras: [makeExtra()] },
+      });
+
+      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000, payments, config, {
+        irs: 5,
+        ss: 10,
+      });
+
+      // 100 - (10% SS + 5% IRS) = 85
+      expect(monthly.get('Meal allowance')).toBeCloseTo(85, 6);
     });
 
     it('adds the net extra to net salary when addToSalary is set', () => {
       const proposal = makeProposal({
-        salary: { id: 1, base: 1000, extras: [makeExtra({ addToSalary: true })] },
+        salary: {
+          id: 1,
+          base: 1000,
+          taxConfigurationId: null,
+          extras: [makeExtra({ addToSalary: true })],
+        },
       });
 
-      const [m, y] = service.setExtraSalaryComponents(proposal, monthly, yearly, 500, 7000, 1000);
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
 
-      expect(m).toBeCloseTo(570, 6);
-      expect(y).toBeCloseTo(7770, 6);
+      // 100 - (11% SS + 20% IRS) = 69
+      expect(m).toBeCloseTo(569, 6);
+      expect(y).toBeCloseTo(7759, 6);
     });
 
     it('computes percentage extras from the base salary', () => {
@@ -76,13 +117,12 @@ describe('SalaryService', () => {
         salary: {
           id: 1,
           base: 1000,
-          extras: [
-            makeExtra({ isPercentage: true, amount: 10, isSSTaxable: false, isIRSTaxable: false }),
-          ],
+          taxConfigurationId: null,
+          extras: [makeExtra({ isPercentage: true, amount: 10, taxIds: [], exempt: true })],
         },
       });
 
-      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000);
+      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000, payments, config);
 
       expect(monthly.get('Meal allowance')).toBe(100);
       expect(yearly.get('Meal allowance')).toBe(1100);
@@ -93,31 +133,81 @@ describe('SalaryService', () => {
         salary: {
           id: 1,
           base: 1000,
+          taxConfigurationId: null,
           extras: [
             makeExtra({
               name: 'Bonus',
               amount: 500,
               multiplyMonthly: -1,
               multiplyYearly: 2,
-              isSSTaxable: false,
-              isIRSTaxable: true,
+              taxIds: [20],
             }),
           ],
         },
       });
 
-      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000);
+      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000, payments, config);
 
       // 500 * 2 = 1000, minus 20% IRS
       expect(monthly.has('Bonus')).toBeFalse();
       expect(yearly.get('Bonus')).toBe(800);
+    });
+
+    it('adds annual-only extras with addToSalary to the yearly net only', () => {
+      const proposal = makeProposal({
+        salary: {
+          id: 1,
+          base: 1000,
+          taxConfigurationId: null,
+          extras: [
+            makeExtra({
+              name: 'Bonus',
+              amount: 1000,
+              multiplyMonthly: -1,
+              multiplyYearly: 1,
+              addToSalary: true,
+              taxIds: [20],
+            }),
+          ],
+        },
+      });
+
+      const [m, y] = service.setExtraSalaryComponents(
+        proposal,
+        monthly,
+        yearly,
+        500,
+        7000,
+        1000,
+        payments,
+        config,
+      );
+
+      // 1000 minus 20% IRS
+      expect(m).toBe(500);
+      expect(y).toBeCloseTo(7800, 6);
+    });
+
+    it('treats exempt extras as untaxed', () => {
+      const proposal = makeProposal({
+        salary: {
+          id: 1,
+          base: 1000,
+          taxConfigurationId: null,
+          extras: [makeExtra({ exempt: true, taxIds: [] })],
+        },
+      });
+
+      service.setExtraSalaryComponents(proposal, monthly, yearly, 0, 0, 1000, payments, config);
+
+      expect(monthly.get('Meal allowance')).toBe(100);
     });
   });
 
   it('sets estimated net salary after SS and IRS withholding', () => {
     const proposal = makeProposal();
 
-    service.setNetSalary(proposal, monthly, yearly, 1000, { ss: 11, irs: 20 }, 0, 0);
+    service.setNetSalary(proposal, monthly, yearly, 1000, { ss: 11, irs: 20 }, 0, 0, payments);
 
     expect(monthly.get('Estimated Net Salary')).toBeCloseTo(690, 6);
     expect(yearly.get('Estimated Net Salary')).toBeCloseTo(9660, 6);

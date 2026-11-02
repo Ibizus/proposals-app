@@ -3,12 +3,22 @@ package org.propflow.back.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -26,9 +36,14 @@ public class Salary {
 
   @NotNull @Positive private Double base;
 
+  @Schema(
+      description =
+          "Tax configuration used for this salary. When null the active configuration is used.")
+  private Long taxConfigurationId;
+
   @JsonBackReference
-  @OneToOne(mappedBy = "salary", cascade = CascadeType.PERSIST)
-  @JoinColumn(name = "proposal_id")
+  @OneToOne(mappedBy = "salary", cascade = jakarta.persistence.CascadeType.PERSIST)
+  @jakarta.persistence.JoinColumn(name = "proposal_id")
   private Proposal proposal;
 
   @JsonManagedReference

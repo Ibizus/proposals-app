@@ -2,6 +2,8 @@ package org.propflow.back.repository;
 
 import java.util.List;
 import org.propflow.back.model.ExtraTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface ExtraTemplateRepository extends JpaRepository<ExtraTemplate, Long> {
 
   public List<ExtraTemplate> findExtraTemplatesByNameContainingIgnoreCase(String name);
+
+  public List<ExtraTemplate> findByTaxConfigurationId(Long taxConfigurationId);
+
+  public Page<ExtraTemplate> findByTaxConfigurationId(Long taxConfigurationId, Pageable pageable);
 }

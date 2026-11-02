@@ -1,4 +1,15 @@
-import { Candidate, Extra, Office, Taxes } from './types';
+import { Candidate, Extra, Office, Tax, Taxes } from './types';
+
+const INCOME_TAX_NAMES = ['IRS', 'IRPF', 'Income Tax'];
+const SOCIAL_SECURITY_TAX_NAME = 'Social Security';
+
+function isIncomeTax(tax: Tax): boolean {
+  return INCOME_TAX_NAMES.includes(tax.name);
+}
+
+function isSocialSecurityTax(tax: Tax): boolean {
+  return tax.name === SOCIAL_SECURITY_TAX_NAME;
+}
 
 async function getCandidates(url: string): Promise<Candidate[]> {
   try {
@@ -60,4 +71,4 @@ function sleep(ms: number | undefined) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export { getCandidates, getExtras, getOffices, getTaxes, sleep };
+export { getCandidates, getExtras, getOffices, getTaxes, isIncomeTax, isSocialSecurityTax, sleep };

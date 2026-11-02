@@ -12,8 +12,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import org.propflow.back.migration.TaxDataMigration;
 import org.propflow.back.model.AuditableSuperclass;
 import org.propflow.back.model.Candidate;
 import org.propflow.back.model.Extra;
@@ -24,7 +27,9 @@ import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
 import org.propflow.back.model.Salary;
 import org.propflow.back.model.Status;
-import org.propflow.back.model.Taxes;
+import org.propflow.back.model.Tax;
+import org.propflow.back.model.TaxBracket;
+import org.propflow.back.model.TaxConfiguration;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ExtraRepository;
 import org.propflow.back.repository.ExtraTemplateRepository;
@@ -33,9 +38,10 @@ import org.propflow.back.repository.ParameterRepository;
 import org.propflow.back.repository.PositionRepository;
 import org.propflow.back.repository.ProposalRepository;
 import org.propflow.back.repository.StatusRepository;
-import org.propflow.back.repository.TaxesRepository;
+import org.propflow.back.repository.TaxConfigurationRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
@@ -50,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Component
+@Order(2)
 @ConditionalOnProperty(name = "app.seed-demo-data", havingValue = "true")
 public class DemoDataSeeder implements CommandLineRunner {
 
@@ -124,8 +131,15 @@ public class DemoDataSeeder implements CommandLineRunner {
   private final StatusRepository statusRepository;
   private final ExtraRepository extraRepository;
   private final ExtraTemplateRepository extraTemplateRepository;
-  private final TaxesRepository taxesRepository;
+  private final TaxConfigurationRepository taxConfigurationRepository;
   private final ParameterRepository parameterRepository;
+
+  private TaxConfiguration spainConfiguration;
+  private TaxConfiguration portugalConfiguration;
+  private long spainSocialSecurityId;
+  private long spainIncomeTaxId;
+  private long portugalSocialSecurityId;
+  private long portugalIncomeTaxId;
 
   public DemoDataSeeder(
       OfficeRepository officeRepository,
@@ -135,7 +149,7 @@ public class DemoDataSeeder implements CommandLineRunner {
       StatusRepository statusRepository,
       ExtraRepository extraRepository,
       ExtraTemplateRepository extraTemplateRepository,
-      TaxesRepository taxesRepository,
+      TaxConfigurationRepository taxConfigurationRepository,
       ParameterRepository parameterRepository) {
     this.officeRepository = officeRepository;
     this.candidateRepository = candidateRepository;
@@ -144,7 +158,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     this.statusRepository = statusRepository;
     this.extraRepository = extraRepository;
     this.extraTemplateRepository = extraTemplateRepository;
-    this.taxesRepository = taxesRepository;
+    this.taxConfigurationRepository = taxConfigurationRepository;
     this.parameterRepository = parameterRepository;
   }
 
@@ -156,8 +170,8 @@ public class DemoDataSeeder implements CommandLineRunner {
 
   /** Seeds every group of tables that is still empty. */
   public void seed() {
+    seedTaxConfigurations();
     seedIfEmpty("extra templates", extraTemplateRepository, this::seedExtraTemplates);
-    seedIfEmpty("tax brackets", taxesRepository, this::seedTaxes);
     seedIfEmpty("salary parameters", parameterRepository, this::seedParameters);
     if (officeRepository.count() == 0
         && positionRepository.count() == 0
@@ -185,31 +199,46 @@ public class DemoDataSeeder implements CommandLineRunner {
     }
   }
 
-  private void seedExtraTemplates() {
-    extraTemplateRepository.saveAll(
-        List.of(
-            new ExtraTemplate(0, "Flex", 4d, 11d, 21d, true, false, false, false, false, 12, -1),
-            new ExtraTemplate(
-                0, "Car Allowance", 250d, 11d, 21d, false, true, true, false, true, 12, 1),
-            new ExtraTemplate(0, "Car", 350d, 11d, 21d, false, false, false, false, false, 12, 1),
-            new ExtraTemplate(
-                0, "Fuel Allowance", 100d, 11d, 21d, false, false, false, false, true, 12, 1),
-            // Amount per working day
-            new ExtraTemplate(
-                0, "Food Allowance", 15d, 11d, 21d, false, false, false, false, true, 11, 21),
-            new ExtraTemplate(0, "Phone", 0d, 11d, 21d, false, false, false, true, false, 12, 1),
-            new ExtraTemplate(0, "Computer", 0d, 11d, 21d, false, false, false, true, false, 12, 1),
-            new ExtraTemplate(
-                0, "Health Insurance", 0d, 11d, 21d, false, true, false, false, false, 12, 1),
-            new ExtraTemplate(
-                0, "Life Insurance", 0d, 11d, 21d, false, true, false, false, false, 12, 1)));
+  private void seedTaxConfigurations() {
+    spainConfiguration =
+        taxConfigurationRepository
+            .findByCountryCode("es")
+            .orElseGet(
+                () -> taxConfigurationRepository.save(TaxDataMigration.buildSpainConfiguration()));
+    portugalConfiguration =
+        taxConfigurationRepository
+            .findByCountryCode("pt")
+            .orElseGet(
+                () ->
+                    taxConfigurationRepository.save(
+                        TaxDataMigration.buildPortugalConfiguration(this::portugalIrsBrackets)));
+
+    // Ensure exactly one configuration is active: Spain by default.
+    if (taxConfigurationRepository.findByActiveTrue().isEmpty()) {
+      spainConfiguration.setActive(true);
+      portugalConfiguration.setActive(false);
+      taxConfigurationRepository.saveAll(List.of(spainConfiguration, portugalConfiguration));
+    }
+
+    spainSocialSecurityId = taxId(spainConfiguration, "Social Security");
+    spainIncomeTaxId = taxId(spainConfiguration, "IRPF");
+    portugalSocialSecurityId = taxId(portugalConfiguration, "Social Security");
+    portugalIncomeTaxId = taxId(portugalConfiguration, "IRS");
   }
 
-  /** Loads the illustrative withholding tables from {@code seed/taxes.csv}. */
-  private void seedTaxes() {
-    LocalDate validFrom = LocalDate.of(2024, 1, 1);
-    LocalDate validUntil = LocalDate.of(2024, 12, 31);
-    List<Taxes> taxes = new ArrayList<>();
+  private long taxId(TaxConfiguration configuration, String name) {
+    return configuration.getTaxes().stream()
+        .filter(t -> name.equals(t.getName()))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    name + " tax not found in " + configuration.getCountryCode()))
+        .getId();
+  }
+
+  private List<TaxBracket> portugalIrsBrackets(Tax irs) {
+    List<TaxBracket> brackets = new ArrayList<>();
     try (BufferedReader reader =
         new BufferedReader(
             new InputStreamReader(
@@ -219,27 +248,163 @@ public class DemoDataSeeder implements CommandLineRunner {
           .lines()
           .filter(line -> !line.isBlank() && !line.startsWith("#") && !line.startsWith("marital"))
           .map(line -> line.split(","))
+          .filter(c -> "0".equals(c[0]))
           .forEach(
               c ->
-                  taxes.add(
-                      new Taxes(
-                          0,
-                          Double.valueOf(c[1]),
-                          11d,
-                          23.75,
-                          validFrom,
-                          validUntil,
-                          Integer.valueOf(c[0]),
-                          Double.valueOf(c[2]),
-                          Double.valueOf(c[3]),
-                          Double.valueOf(c[4]),
-                          Double.valueOf(c[5]),
-                          Double.valueOf(c[6]),
-                          Double.valueOf(c[7]))));
+                  brackets.add(
+                      TaxDataMigration.bracket(irs, Double.valueOf(c[1]), Double.valueOf(c[2]))));
     } catch (IOException e) {
       throw new UncheckedIOException("Could not read seed/taxes.csv", e);
     }
-    taxesRepository.saveAll(taxes);
+    return brackets;
+  }
+
+  private void seedExtraTemplates() {
+    extraTemplateRepository.saveAll(
+        Stream.concat(spainTemplates().stream(), portugalTemplates().stream()).toList());
+  }
+
+  private List<ExtraTemplate> spainTemplates() {
+    return List.of(
+        template("Flex", 4d, true, false, false, 12, -1, spainConfiguration.getId(), Set.of()),
+        template(
+            "Car Allowance",
+            250d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId, spainIncomeTaxId)),
+        template("Car", 350d, false, false, false, 12, 1, spainConfiguration.getId(), Set.of()),
+        template(
+            "Fuel Allowance",
+            100d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of()),
+        // Amount per working day
+        template(
+            "Food Allowance",
+            15d,
+            false,
+            false,
+            true,
+            11,
+            21,
+            spainConfiguration.getId(),
+            Set.of()),
+        template("Phone", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
+        template("Computer", 0d, false, true, false, 12, 1, spainConfiguration.getId(), Set.of()),
+        template(
+            "Health Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId)),
+        template(
+            "Life Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            spainConfiguration.getId(),
+            Set.of(spainSocialSecurityId)));
+  }
+
+  private List<ExtraTemplate> portugalTemplates() {
+    return List.of(
+        template("Flex", 4d, true, false, false, 12, -1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Car Allowance",
+            250d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId, portugalIncomeTaxId)),
+        template("Car", 350d, false, false, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Fuel Allowance",
+            100d,
+            false,
+            false,
+            true,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of()),
+        // Amount per working day
+        template(
+            "Food Allowance",
+            15d,
+            false,
+            false,
+            true,
+            11,
+            21,
+            portugalConfiguration.getId(),
+            Set.of()),
+        template("Phone", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Computer", 0d, false, true, false, 12, 1, portugalConfiguration.getId(), Set.of()),
+        template(
+            "Health Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId)),
+        template(
+            "Life Insurance",
+            0d,
+            false,
+            false,
+            false,
+            12,
+            1,
+            portugalConfiguration.getId(),
+            Set.of(portugalSocialSecurityId)));
+  }
+
+  private ExtraTemplate template(
+      String name,
+      double amount,
+      boolean isPercentage,
+      boolean isDefault,
+      boolean addToSalary,
+      int multiplyYearly,
+      int multiplyMonthly,
+      Long taxConfigurationId,
+      Set<Long> taxIds) {
+    ExtraTemplate template = new ExtraTemplate();
+    template.setName(name);
+    template.setAmount(amount);
+    template.setIsPercentage(isPercentage);
+    template.setIsDefault(isDefault);
+    template.setAddToSalary(addToSalary);
+    template.setMultiplyYearly(multiplyYearly);
+    template.setMultiplyMonthly(multiplyMonthly);
+    template.setTaxConfigurationId(taxConfigurationId);
+    template.setTaxIds(new HashSet<>(taxIds));
+    template.setExempt(taxIds.isEmpty());
+    return template;
   }
 
   private void seedParameters() {
@@ -342,8 +507,13 @@ public class DemoDataSeeder implements CommandLineRunner {
     LocalDate dueDate =
         indefinite ? null : startDate.plusMonths(faker.options().option(6, 12, 24)).minusDays(1);
 
-    Salary salary = new Salary(0, 1000d + level * 350 + faker.random().nextInt(7) * 50, null, null);
-    salary.setExtras(new HashSet<>());
+    Salary salary =
+        new Salary(
+            0,
+            1000d + level * 350 + faker.random().nextInt(7) * 50,
+            portugalConfiguration.getId(),
+            null,
+            new HashSet<>());
     Proposal proposal =
         new Proposal(
             0,
@@ -384,7 +554,11 @@ public class DemoDataSeeder implements CommandLineRunner {
 
   /** Food allowance is always included; other benefits are picked at random. */
   private void addExtras(Faker faker, Salary salary, List<ExtraTemplate> templates, String njoyn) {
+    Long configurationId = salary.getTaxConfigurationId();
     for (ExtraTemplate template : templates) {
+      if (!configurationId.equals(template.getTaxConfigurationId())) {
+        continue;
+      }
       if (!"Food Allowance".equals(template.getName()) && faker.random().nextInt(100) >= 35) {
         continue;
       }
@@ -392,6 +566,8 @@ public class DemoDataSeeder implements CommandLineRunner {
       extra.setDescription(template.getName() + " included in proposal " + njoyn);
       extra.setIsDefault(template.getIsDefault());
       extra.setAddToSalary(template.getAddToSalary());
+      extra.setExempt(template.getExempt());
+      extra.setTaxIds(new HashSet<>(template.getTaxIds()));
       extra.setTemplateId(template.getId());
       extra.setSalary(salary);
       salary.getExtras().add(extraRepository.save(extra));

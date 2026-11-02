@@ -17,9 +17,19 @@ export class ExtrasService {
    * Method that retrieves Extras from API
    * @returns Extras[] (data)
    */
-  getExtras(page: number, size: number): Observable<any> {
+  getExtras(page: number, size: number, taxConfigurationId?: number | null): Observable<any> {
+    const configurationParam = taxConfigurationId
+      ? '&taxConfigurationId=' + taxConfigurationId
+      : '';
     return this.http
-      .get<any>(EXTRASURL + 'extratemplates/?page=' + page + '&size=' + Math.ceil(size))
+      .get<any>(
+        EXTRASURL +
+          'extratemplates/?page=' +
+          page +
+          '&size=' +
+          Math.ceil(size) +
+          configurationParam,
+      )
       .pipe(
         map((data) => {
           console.log(data);

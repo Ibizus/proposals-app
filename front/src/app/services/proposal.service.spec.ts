@@ -3,16 +3,62 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ProposalService } from './proposal.service';
 import { environment } from '../../environments/environment';
-import { makeProposal, makeTaxes } from '../../testing/fixtures';
+import { makeProposal, makeTaxConfiguration } from '../../testing/fixtures';
+import { Tax, TaxBracket, TaxConfiguration } from '../utils/types';
 
 const API = environment.API_ENDPOINT;
-const TAXES_URL = 'http://localhost:8080/v1/api/taxes/';
+const TAX_CONFIG_URL = `${API}tax-configurations/`;
 const PARAMETERS = [
   { name: 'iht', value: 10 },
   { name: 'spp', value: 5 },
   { name: 'scr', value: 1.5 },
   { name: 'unrelated', value: 99 },
 ];
+
+const now = new Date();
+
+function taxBracket(overrides: Partial<TaxBracket> = {}): TaxBracket {
+  return {
+    id: 1,
+    threshold: 2000,
+    rate: 20,
+    createdAt: now,
+    createdBy: '',
+    modifiedAt: now,
+    modifiedBy: '',
+    ...overrides,
+  };
+}
+
+function tax(overrides: Partial<Tax> = {}): Tax {
+  return {
+    id: 1,
+    name: 'IRS',
+    type: 'BRACKETED',
+    fixedRate: null,
+    brackets: [taxBracket()],
+    createdAt: now,
+    createdBy: '',
+    modifiedAt: now,
+    modifiedBy: '',
+    ...overrides,
+  };
+}
+
+function activeConfiguration(): TaxConfiguration {
+  return {
+    ...makeTaxConfiguration(),
+    taxes: [
+      tax({ id: 10, name: 'Social Security', type: 'FIXED', fixedRate: 11, brackets: [] }),
+      tax({
+        id: 20,
+        name: 'IRS',
+        type: 'BRACKETED',
+        brackets: [taxBracket({ threshold: 2000, rate: 20 })],
+      }),
+    ],
+  };
+}
 
 describe('ProposalService', () => {
   let service: ProposalService;
@@ -64,8 +110,8 @@ describe('ProposalService', () => {
       let result = new Map<string, Map<string, number>>();
       service.salaryCalculations(makeProposal(), irs, ss).subscribe((r) => (result = r));
 
-      // Tax bracket first, then parameters.
-      http.expectOne(TAXES_URL + '?salary=1000&maritalStatus=0').flush(makeTaxes());
+      // Active configuration for the proposal, then parameters.
+      expectGet(`${TAX_CONFIG_URL}active`).flush(activeConfiguration());
       expectGet(API + 'parameters').flush(PARAMETERS);
 
       return result;
@@ -78,7 +124,7 @@ describe('ProposalService', () => {
       expect(monthly.get('Base Salary')).toBeCloseTo(1350, 6);
       expect(monthly.get('IHT')).toBe(100);
       expect(monthly.get('Share Purchase Plan')).toBe(50);
-      // 1000 - (11% SS + 20% IRS for 0 dependents)
+      // 1000 - (11% SS + 20% IRS)
       expect(monthly.get('Estimated Net Salary')).toBeCloseTo(690, 6);
       expect(service.getScrValue()).toBeCloseTo(18, 6);
     });

@@ -5,12 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.propflow.back.model.Candidate;
+import org.propflow.back.model.ExtraTemplate;
 import org.propflow.back.model.Position;
 import org.propflow.back.model.Proposal;
+import org.propflow.back.model.Tax;
+import org.propflow.back.model.TaxConfiguration;
 import org.propflow.back.repository.CandidateRepository;
 import org.propflow.back.repository.ExtraRepository;
 import org.propflow.back.repository.ExtraTemplateRepository;
@@ -20,7 +24,7 @@ import org.propflow.back.repository.PositionRepository;
 import org.propflow.back.repository.ProposalRepository;
 import org.propflow.back.repository.SalaryRepository;
 import org.propflow.back.repository.StatusRepository;
-import org.propflow.back.repository.TaxesRepository;
+import org.propflow.back.repository.TaxConfigurationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -40,7 +44,7 @@ class DemoDataSeederTest {
   @Autowired private StatusRepository statusRepository;
   @Autowired private ExtraRepository extraRepository;
   @Autowired private ExtraTemplateRepository extraTemplateRepository;
-  @Autowired private TaxesRepository taxesRepository;
+  @Autowired private TaxConfigurationRepository taxConfigurationRepository;
   @Autowired private ParameterRepository parameterRepository;
 
   private DemoDataSeeder seeder;
@@ -57,7 +61,7 @@ class DemoDataSeederTest {
             statusRepository,
             extraRepository,
             extraTemplateRepository,
-            taxesRepository,
+            taxConfigurationRepository,
             parameterRepository);
   }
 
@@ -72,7 +76,7 @@ class DemoDataSeederTest {
             "statuses", statusRepository,
             "extras", extraRepository,
             "extraTemplates", extraTemplateRepository,
-            "taxes", taxesRepository,
+            "taxConfigurations", taxConfigurationRepository,
             "parameters", parameterRepository);
     return repositories.entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().count()));
@@ -91,9 +95,13 @@ class DemoDataSeederTest {
         .containsEntry("candidates", (long) DemoDataSeeder.CANDIDATE_COUNT)
         .containsEntry("positions", (long) DemoDataSeeder.POSITION_COUNT)
         .containsEntry("salaries", (long) DemoDataSeeder.PROPOSAL_COUNT)
-        .containsEntry("taxes", 105L)
+        .containsEntry("taxConfigurations", 2L)
         .containsEntry("parameters", 3L)
-        .containsEntry("extraTemplates", 9L);
+        .containsEntry("extraTemplates", 18L);
+
+    TaxConfiguration active = taxConfigurationRepository.findByActiveTrue().orElseThrow();
+    assertThat(active.getCountryCode()).isEqualTo("es");
+    assertThat(active.getYearlyPayments()).isEqualTo(12);
   }
 
   @Test
@@ -110,6 +118,7 @@ class DemoDataSeederTest {
               assertThat(p.getPosition().getId()).isEqualTo(p.getCandidate().getPosition().getId());
               assertThat(p.getSalary().getBase()).isPositive();
               assertThat(p.getSalary().getExtras()).isNotEmpty();
+              assertThat(p.getSalary().getTaxConfigurationId()).isNotNull();
               assertThat(p.getStatuses()).isNotEmpty();
               assertThat(p.getDueDate() == null).isEqualTo(p.getIndefinite());
             });
@@ -153,6 +162,51 @@ class DemoDataSeederTest {
     assertThat(positionRepository.findAll()).extracting(Position::getNjoyn).doesNotHaveDuplicates();
   }
 
+  /**
+   * Same flags as the pre-configurable seed: {@code ExtraTemplate(.., isPercentage, isSSTaxable,
+   * isIRSTaxable, isDefault, addToSalary, ..)}, with the SS/IRS flags mapped to the configuration's
+   * social security and income tax.
+   */
+  @Test
+  void seedsExtraTemplatesWithThePreviousTaxDefaultAndAddToSalaryFlags() {
+    seeder.seed();
+
+    for (TaxConfiguration configuration : taxConfigurationRepository.findAll()) {
+      Map<String, Long> taxIdsByName =
+          configuration.getTaxes().stream().collect(Collectors.toMap(Tax::getName, Tax::getId));
+      long ss = taxIdsByName.get("Social Security");
+      long irs = taxIdsByName.get("es".equals(configuration.getCountryCode()) ? "IRPF" : "IRS");
+      Map<String, ExtraTemplate> templates =
+          extraTemplateRepository.findAll().stream()
+              .filter(t -> configuration.getId() == t.getTaxConfigurationId())
+              .collect(Collectors.toMap(ExtraTemplate::getName, t -> t));
+
+      assertThat(templates).hasSize(9);
+      assertTemplate(templates.get("Flex"), true, Set.of(), false, false);
+      assertTemplate(templates.get("Car Allowance"), false, Set.of(ss, irs), false, true);
+      assertTemplate(templates.get("Car"), false, Set.of(), false, false);
+      assertTemplate(templates.get("Fuel Allowance"), false, Set.of(), false, true);
+      assertTemplate(templates.get("Food Allowance"), false, Set.of(), false, true);
+      assertTemplate(templates.get("Phone"), false, Set.of(), true, false);
+      assertTemplate(templates.get("Computer"), false, Set.of(), true, false);
+      assertTemplate(templates.get("Health Insurance"), false, Set.of(ss), false, false);
+      assertTemplate(templates.get("Life Insurance"), false, Set.of(ss), false, false);
+    }
+  }
+
+  private static void assertTemplate(
+      ExtraTemplate template,
+      boolean isPercentage,
+      Set<Long> taxIds,
+      boolean isDefault,
+      boolean addToSalary) {
+    assertThat(template.getIsPercentage()).as(template.getName()).isEqualTo(isPercentage);
+    assertThat(template.getTaxIds()).as(template.getName()).isEqualTo(taxIds);
+    assertThat(template.getExempt()).as(template.getName()).isEqualTo(taxIds.isEmpty());
+    assertThat(template.getIsDefault()).as(template.getName()).isEqualTo(isDefault);
+    assertThat(template.getAddToSalary()).as(template.getName()).isEqualTo(addToSalary);
+  }
+
   @Test
   void skipsDemoProposalsWhenTheDatabaseAlreadyHasData() {
     candidateRepository.save(
@@ -176,6 +230,6 @@ class DemoDataSeederTest {
     assertThat(proposalRepository.count()).isZero();
     assertThat(candidateRepository.count()).isEqualTo(1);
     assertThat(positionRepository.count()).isZero();
-    assertThat(taxesRepository.count()).isEqualTo(105);
+    assertThat(taxConfigurationRepository.count()).isEqualTo(2);
   }
 }

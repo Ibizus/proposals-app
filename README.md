@@ -32,7 +32,7 @@ Real keys belong only in the gitignored `.env` file (see `.env.example`) or in d
 
 ### Demo data
 
-`DemoDataSeeder` (`back/src/main/java/org/propflow/back/seed/`) fills an empty database with fictitious demo data: 5 positions, 24 candidates spread across them, and 16 proposals (only for the candidates that reached the final stage), each with their office, salary, extras and status histories, plus the extra templates, tax brackets (`back/src/main/resources/seed/taxes.csv`) and salary parameters the app needs. The data is generated with Datafaker from a fixed seed, so every fresh database gets the same rows.
+`DemoDataSeeder` (`back/src/main/java/org/propflow/back/seed/`) fills an empty database with fictitious demo data: 5 positions, 24 candidates spread across them, and 16 proposals (only for the candidates that reached the final stage), each with their office, salary, extras and status histories, plus the extra templates, the Spain (active by default) and Portugal tax configurations (Portugal's IRS brackets come from `back/src/main/resources/seed/taxes.csv`) and the salary parameters the app needs. The data is generated with Datafaker from a fixed seed, so every fresh database gets the same rows.
 
 - The switch is the `app.seed-demo-data` property. It defaults to `false`; the `dev` profile (`application-dev.properties`, activated by `./dev.sh`) sets it to `true`. The `backend` service in `docker-compose.yml` also activates the `dev` profile, so `docker-compose up` seeds the same data.
 - The seeder only fills tables that are still empty, so restarting the app never duplicates rows. Use `./dev.sh --reset` to start over.

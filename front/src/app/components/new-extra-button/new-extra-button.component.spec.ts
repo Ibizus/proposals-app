@@ -24,7 +24,7 @@ describe('NewExtraButtonComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('creates and resets a new extra without default tax rates or addToSalary', () => {
+  it('creates and resets a new extra without tax ids and not exempt by default', () => {
     const extrasService = TestBed.inject(ExtrasService);
     const createExtraSpy = spyOn(extrasService, 'createExtra').and.returnValue(of({}));
 
@@ -36,21 +36,18 @@ describe('NewExtraButtonComponent', () => {
         name: '',
         amount: 0,
         isPercentage: false,
-        isSSTaxable: false,
-        isIRSTaxable: false,
+        exempt: false,
         multiplyYearly: 0,
         multiplyMonthly: 0,
+        addToSalary: false,
       }),
     );
-    expect(sentExtra.ssTaxrate).toBeUndefined();
-    expect(sentExtra.irsTaxrate).toBeUndefined();
-    expect(sentExtra.addToSalary).toBeUndefined();
+    expect(sentExtra.taxIds).toEqual([]);
 
     component.onSaveExtra();
     expect(createExtraSpy).toHaveBeenCalledTimes(2);
     sentExtra = createExtraSpy.calls.argsFor(1)[0];
-    expect(sentExtra.ssTaxrate).toBeUndefined();
-    expect(sentExtra.irsTaxrate).toBeUndefined();
-    expect(sentExtra.addToSalary).toBeUndefined();
+    expect(sentExtra.taxIds).toEqual([]);
+    expect(sentExtra.exempt).toBeFalse();
   });
 });

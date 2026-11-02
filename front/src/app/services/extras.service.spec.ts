@@ -31,6 +31,12 @@ describe('ExtrasService', () => {
     expect(data).toEqual({ content: [] });
   });
 
+  it('scopes extra templates to the given tax configuration', () => {
+    service.getExtras(0, 100, 2).subscribe();
+
+    http.expectOne(API + 'extratemplates/?page=0&size=100&taxConfigurationId=2').flush({});
+  });
+
   it('duplicates an extra as a new one (id 0) without mutating the original', () => {
     const extra = makeExtra({ id: 42 });
     service.duplicateExtra(extra).subscribe();

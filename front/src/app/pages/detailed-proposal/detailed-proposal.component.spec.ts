@@ -3,13 +3,13 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
-import { makeProposal, makeTaxes } from '../../../testing/fixtures';
+import { makeProposal, makeTaxConfiguration } from '../../../testing/fixtures';
 import { environment } from '../../../environments/environment';
 
 import { DetailedProposalComponent } from './detailed-proposal.component';
 
 const API = environment.API_ENDPOINT;
-const TAXES_URL = 'http://localhost:8080/v1/api/taxes/';
+const TAX_CONFIG_URL = `${API}tax-configurations/`;
 const PARAMETERS = [
   { name: 'iht', value: 10 },
   { name: 'spp', value: 5 },
@@ -62,8 +62,8 @@ describe('DetailedProposalComponent', () => {
         ],
       }),
     );
-    http.expectOne(TAXES_URL).flush([makeTaxes()]);
-    http.expectOne(TAXES_URL + '?salary=1000&maritalStatus=0').flush(makeTaxes());
+    http.expectOne(`${TAX_CONFIG_URL}active`).flush(makeTaxConfiguration());
+    http.expectOne(`${TAX_CONFIG_URL}active`).flush(makeTaxConfiguration());
     http.expectOne(API + 'parameters').flush(PARAMETERS);
 
     fixture.detectChanges();
