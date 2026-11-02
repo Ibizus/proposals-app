@@ -64,7 +64,7 @@ describe('HTTP services', () => {
   });
 
   describe('OfficeService', () => {
-    it('passes the autocomplete query as a filter and sorts results', () => {
+    it('passes the autocomplete query as a filter and keeps server order', () => {
       const service = TestBed.inject(OfficeService);
       let offices: unknown;
       service
@@ -82,8 +82,8 @@ describe('HTTP services', () => {
       ]);
 
       expect(offices).toEqual([
-        { id: 2, name: 'Lisbon', code: 'LIS' },
         { id: 1, name: 'Porto', code: 'OPO' },
+        { id: 2, name: 'Lisbon', code: 'LIS' },
       ]);
     });
   });
