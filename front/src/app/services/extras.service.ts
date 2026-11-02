@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Extra } from '../utils/types';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 const EXTRASURL = environment.API_ENDPOINT;
@@ -21,21 +21,9 @@ export class ExtrasService {
     const configurationParam = taxConfigurationId
       ? '&taxConfigurationId=' + taxConfigurationId
       : '';
-    return this.http
-      .get<any>(
-        EXTRASURL +
-          'extratemplates/?page=' +
-          page +
-          '&size=' +
-          Math.ceil(size) +
-          configurationParam,
-      )
-      .pipe(
-        map((data) => {
-          console.log(data);
-          return data;
-        }),
-      );
+    return this.http.get<any>(
+      EXTRASURL + 'extratemplates/?page=' + page + '&size=' + Math.ceil(size) + configurationParam,
+    );
   }
 
   duplicateExtra(extra: Extra): Observable<any> {

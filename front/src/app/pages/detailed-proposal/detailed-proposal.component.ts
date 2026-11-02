@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ProposalService } from '../../services/proposal.service';
 import { environment } from '../../../environments/environment';
 import { TaxesService } from '../../services/taxes.service';
@@ -31,7 +31,6 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
   styleUrl: './detailed-proposal.component.scss',
 })
 export class DetailedProposalComponent {
-  proposals!: Proposal[];
   proposalId: number;
   proposal!: Proposal;
   visible = false;
@@ -47,7 +46,6 @@ export class DetailedProposalComponent {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private proposalService: ProposalService,
     private taxesService: TaxesService,
     private mailService: MailService,
@@ -98,19 +96,6 @@ export class DetailedProposalComponent {
       },
       error: (error) => {
         console.error('Error while fetching parameters: ', error);
-      },
-    });
-  }
-
-  onClickDelete(): void {
-    this.proposalService.deleteProposal(this.proposalId).subscribe({
-      next: () => {
-        // Remove the deleted proposal from the local array
-        this.proposals.splice(this.proposalId, 1);
-        // Update the proposals in localStorage
-        localStorage.setItem('proposals', JSON.stringify(this.proposals));
-        // Redirect to the proposals route
-        this.router.navigate(['/proposals']);
       },
     });
   }

@@ -21,12 +21,7 @@ export class MailService {
           proposal,
         )
         .subscribe({
-          next: () => {
-            console.log('Posting email to backend');
-          },
-          error: () => {
-            console.log('Could not POST mail');
-          },
+          error: () => undefined,
         });
       observer.next();
       observer.complete();
@@ -49,12 +44,7 @@ export class MailService {
           message,
         )
         .subscribe({
-          next: () => {
-            console.log('Posting email to backend');
-          },
-          error: () => {
-            console.log('Could not POST mail');
-          },
+          error: () => undefined,
         });
       observer.next();
       observer.complete();

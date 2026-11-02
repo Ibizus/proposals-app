@@ -102,7 +102,6 @@ public class ProposalController {
   @GetMapping("/{id}")
   public ProposalDTO one(@PathVariable("id") Long id) {
     Proposal p = proposalService.one(id);
-    System.out.println(p.getRole());
     return proposalMapper.toDTO(p);
   }
 
@@ -114,7 +113,6 @@ public class ProposalController {
   @PostMapping({"", "/"})
   public Proposal newProposal(@Valid @RequestBody Proposal proposal) {
     // log.info("Creating new proposal = " + proposal);
-    System.out.println(proposal.getNjoyn());
     return this.proposalService.save(proposal, false);
   }
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Candidate, Proposal } from '../utils/types';
 
@@ -30,7 +30,6 @@ export class CandidateService {
   }
 
   getFilteredCandidates(filter: string) {
-    console.log(filter);
     return this.http.get<any>(environment.API_ENDPOINT + 'candidates/?filter=' + filter);
   }
 
@@ -39,14 +38,7 @@ export class CandidateService {
   }
 
   newProposalCandidate(id: number, context?: HttpContext): Observable<Candidate> {
-    return this.http
-      .get<Candidate>(environment.API_ENDPOINT + 'candidates/' + id, { context })
-      .pipe(
-        map((data: Candidate) => {
-          console.log(data);
-          return data;
-        }),
-      );
+    return this.http.get<Candidate>(environment.API_ENDPOINT + 'candidates/' + id, { context });
   }
 
   modifyCandidate(candidate: Candidate): Observable<unknown> {
@@ -64,7 +56,6 @@ export class CandidateService {
   }
 
   getProposalsByCandidateId(candidateId: number): Observable<any> {
-    console.log('Dentro de getPRoposalsByCandidateById Service');
     return this.http.get<Proposal[]>(
       environment.API_ENDPOINT + 'proposals?candidate=' + candidateId,
     );
