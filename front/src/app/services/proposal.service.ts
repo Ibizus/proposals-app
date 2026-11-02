@@ -177,15 +177,4 @@ export class ProposalService {
   createProposal(proposal: Proposal, context?: HttpContext): Observable<any> {
     return this.http.post(environment.API_ENDPOINT + 'proposals/', proposal, { context });
   }
-
-  // duplicateProposal(newProposal: Proposal): Observable<any>{
-  //   // let newProposal = {...proposal};
-  //   // newProposal.id=0;
-  //   console.log(`Dentro de duplicateProposal Service, vamos a copiar el objet0 ${JSON.stringify(newProposal)}`);
-  //   return this.http.post<Proposal>(environment.API_ENDPOINT + 'proposals/', newProposal);
-  // }
-
-  getProposalsByCandidateId(candidateId: number): Observable<any> {
-    return this.http.get<Proposal[]>(environment.API_ENDPOINT + 'proposals/' + candidateId);
-  }
 }

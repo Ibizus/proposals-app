@@ -41,8 +41,7 @@ public class Candidate extends AuditableSuperclass {
 
   @Schema(
       description =
-          "Marital status used to pick the tax bracket: 0 = single, 1 = married with one income, 2"
-              + " = married with two incomes.",
+          "Marital status: 0 = single, 1 = married with one income, 2 = married with two incomes.",
       allowableValues = {"0", "1", "2"},
       example = "0")
   @NotNull

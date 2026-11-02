@@ -80,15 +80,6 @@
             },
             "development": {
               "buildTarget": "front:build:development"
-            },
-            "pt": {
-              "buildTarget": "front:build:pt"
-            },
-            "de": {
-              "buildTarget": "front:build:de"
-            },
-            "es": {
-              "buildTarget": "front:build:es"
             }
           }
         },

@@ -246,13 +246,13 @@ public class DemoDataSeeder implements CommandLineRunner {
                 StandardCharsets.UTF_8))) {
       reader
           .lines()
-          .filter(line -> !line.isBlank() && !line.startsWith("#") && !line.startsWith("marital"))
+          .filter(
+              line -> !line.isBlank() && !line.startsWith("#") && !line.startsWith("salary_max"))
           .map(line -> line.split(","))
-          .filter(c -> "0".equals(c[0]))
           .forEach(
               c ->
                   brackets.add(
-                      TaxDataMigration.bracket(irs, Double.valueOf(c[1]), Double.valueOf(c[2]))));
+                      TaxDataMigration.bracket(irs, Double.valueOf(c[0]), Double.valueOf(c[1]))));
     } catch (IOException e) {
       throw new UncheckedIOException("Could not read seed/taxes.csv", e);
     }

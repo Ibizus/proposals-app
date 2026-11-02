@@ -22,7 +22,7 @@ export class OfficeService {
       .get<Office[]>(OFFICEURL + 'offices/', { params: { filter: event.query } })
       .pipe(
         map((data) => {
-          data.sort();
+          data.sort((a, b) => a.name.localeCompare(b.name));
           return data;
         }),
       );

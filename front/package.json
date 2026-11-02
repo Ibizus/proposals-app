@@ -11,12 +11,6 @@
     "lint": "ng lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "start:es": "ng serve --configuration=es",
-    "start:de": "ng serve --configuration=de",
-    "start:pt": "ng serve --configuration=pt",
-    "build:es": "ng build --configuration=es",
-    "build:de": "ng build --configuration=de",
-    "build:pt": "ng build --configuration=pt",
     "serve:ssr:front": "node dist/front/server/server.mjs"
   },
   "private": true,

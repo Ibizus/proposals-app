@@ -76,9 +76,15 @@ describe('HTTP services', () => {
 
       const req = http.expectOne((r) => r.url === API + 'offices/');
       expect(req.request.params.get('filter')).toBe('lis');
-      req.flush(['Porto', 'Lisbon']);
+      req.flush([
+        { id: 1, name: 'Porto', code: 'OPO' },
+        { id: 2, name: 'Lisbon', code: 'LIS' },
+      ]);
 
-      expect(offices).toEqual(['Lisbon', 'Porto']);
+      expect(offices).toEqual([
+        { id: 2, name: 'Lisbon', code: 'LIS' },
+        { id: 1, name: 'Porto', code: 'OPO' },
+      ]);
     });
   });
 
