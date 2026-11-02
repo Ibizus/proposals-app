@@ -2,11 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { provideTestDefaults } from '../../../testing/test-providers';
 import { makeProposal, makeTaxConfiguration } from '../../../testing/fixtures';
 import { environment } from '../../../environments/environment';
-
 import { DetailedProposalComponent } from './detailed-proposal.component';
+import { ToastService } from '../../services/toast.service';
 
 const API = environment.API_ENDPOINT;
 const TAX_CONFIG_URL = `${API}tax-configurations/`;
@@ -20,6 +21,7 @@ describe('DetailedProposalComponent', () => {
   let component: DetailedProposalComponent;
   let fixture: ComponentFixture<DetailedProposalComponent>;
   let http: HttpTestingController;
+  let toast: ToastService;
 
   beforeEach(async () => {
     spyOn(console, 'log');
@@ -32,6 +34,15 @@ describe('DetailedProposalComponent', () => {
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
+    toast = TestBed.inject(ToastService);
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en', {
+      'EMAIL SENT SUCCESS': 'Email sent.',
+      'EMAIL SEND ERROR MESSAGE': 'Failed to send email.',
+    });
+    translate.use('en');
+
     fixture = TestBed.createComponent(DetailedProposalComponent);
     component = fixture.componentInstance;
 
@@ -95,5 +106,36 @@ describe('DetailedProposalComponent', () => {
     expect(text).toContain('Developer');
     expect(text).toContain('Lisbon');
     expect(text).toContain('Ana Silva');
+  });
+
+  describe('notify candidate', () => {
+    beforeEach(() => {
+      component.visible = true;
+    });
+
+    it('closes the dialog and shows a success toast after sending', () => {
+      const successSpy = spyOn(toast, 'success');
+      component.notifyCandidate(7);
+
+      http.expectOne(API + 'proposals/7').flush(makeProposal());
+      http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush({});
+
+      expect(component.visible).toBeFalse();
+      expect(successSpy).toHaveBeenCalledWith('Email sent.');
+    });
+
+    it('closes the dialog and shows an error toast when sending fails', () => {
+      const errorSpy = spyOn(toast, 'error');
+      component.notifyCandidate(7);
+
+      http.expectOne(API + 'proposals/7').flush(makeProposal());
+      http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush('Mail server error', {
+        status: 500,
+        statusText: 'Server Error',
+      });
+
+      expect(component.visible).toBeFalse();
+      expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+    });
   });
 });

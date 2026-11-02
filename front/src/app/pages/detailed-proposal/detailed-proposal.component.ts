@@ -12,7 +12,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { StepperModule } from 'primeng/stepper';
 import { NewMailComponent } from '../../components/new-mail/new-mail.component';
 import { MailService } from '../../services/mail.service';
-import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-detailed-proposal',
   standalone: true,
@@ -26,7 +27,6 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
     TooltipModule,
     StepperModule,
   ],
-  providers: [TranslateService, TranslateStore],
   templateUrl: './detailed-proposal.component.html',
   styleUrl: './detailed-proposal.component.scss',
 })
@@ -49,6 +49,7 @@ export class DetailedProposalComponent {
     private proposalService: ProposalService,
     private taxesService: TaxesService,
     private mailService: MailService,
+    private toastService: ToastService,
     private t: TranslateService,
   ) {
     this.t.use(localStorage.getItem('lang') || 'en');
@@ -100,35 +101,6 @@ export class DetailedProposalComponent {
     });
   }
 
-  // Listen to the event emitted by NewEmailComponent:
-  onSendEmailClicked(data: {
-    email: string;
-    subject: string;
-    message: string;
-    proposalId: number;
-  }) {
-    // console.log(
-    //   'Event received with all the information needed, proposalId: ' +
-    //     data.proposalId +
-    //     ' - ' +
-    //     data.email +
-    //     ' - ' +
-    //     data.subject +
-    //     ' - ' +
-    //     data.message +
-    //     ' - '
-    // );
-
-    this.mailService.newEmail(data.email, data.subject, data.message, data.proposalId).subscribe({
-      next: () => {
-        console.log('Posting email to backend inside new-email event listener');
-      },
-      error: (error) => {
-        console.log(error);
-      },
-    });
-  }
-
   numberToStatus(n: number): string {
     let res = '';
     switch (n) {
@@ -160,13 +132,18 @@ export class DetailedProposalComponent {
     this.proposalService.getProposal(proposalId).subscribe({
       next: (proposal) => {
         this.mailService.notifyByEmail(proposal).subscribe({
-          error: (error) => {
-            console.log(error);
+          next: () => {
+            this.visible = false;
+            this.toastService.success(this.t.instant('EMAIL SENT SUCCESS'));
+          },
+          error: () => {
+            this.visible = false;
+            this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
           },
         });
       },
-      error: (error) => {
-        console.log('Error finding proposal: ', error);
+      error: () => {
+        this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
       },
     });
   }

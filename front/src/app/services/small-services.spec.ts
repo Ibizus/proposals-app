@@ -101,6 +101,28 @@ describe('HTTP services', () => {
       req.flush({});
       expect(completed).toBeTrue();
     });
+
+    it('posts a custom email only after the backend responds', () => {
+      const service = TestBed.inject(MailService);
+      let notified = false;
+      service
+        .newEmail('to@example.com', 'Subject', 'Body', 7)
+        .subscribe({ next: () => (notified = true) });
+
+      expect(notified).toBeFalse();
+      const req = http.expectOne(
+        (r) =>
+          r.url.includes('send/to/') &&
+          r.url.includes('to=to%40example.com') &&
+          r.url.includes('subject=Subject') &&
+          r.url.includes('proposalId=7') &&
+          r.url.includes('language=en'),
+      );
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toBe('Body');
+      req.flush({});
+      expect(notified).toBeTrue();
+    });
   });
 });
 

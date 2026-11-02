@@ -1,65 +1,75 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, Input } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { MailService } from '../../services/mail.service';
+import { ToastService } from '../../services/toast.service';
+
 @Component({
   selector: 'app-new-mail',
   standalone: true,
-  imports: [FormsModule, DialogModule, TooltipModule, ButtonModule, TranslateModule],
-  providers: [TranslateService, TranslateStore],
+  imports: [
+    ReactiveFormsModule,
+    DialogModule,
+    InputTextModule,
+    InputTextareaModule,
+    TooltipModule,
+    ButtonModule,
+    TranslateModule,
+  ],
+  providers: [],
   templateUrl: './new-mail.component.html',
   styleUrl: './new-mail.component.scss',
 })
 export class NewMailComponent {
   @Input() proposalId!: number;
-  @Output() sendEmailClicked: EventEmitter<{
-    email: string;
-    subject: string;
-    message: string;
-    proposalId: number;
-  }> = new EventEmitter<{
-    email: string;
-    subject: string;
-    message: string;
-    proposalId: number;
-  }>();
 
   visible = false;
-  position = 'right';
   emailPlaceholder = '';
-  emailInput = '';
-  subjectInput = '';
-  messageInput = '';
+
+  emailForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    subject: ['', Validators.required],
+    message: ['', Validators.required],
+  });
+
+  constructor(
+    private fb: FormBuilder,
+    private mailService: MailService,
+    private toastService: ToastService,
+    private t: TranslateService,
+  ) {}
 
   showDialog() {
     this.visible = true;
   }
 
   sendEmail() {
-    this.visible = false;
-    // console.log(
-    //   'Returning event with all the information needed, proposalId: ' +
-    //     this.proposalId +
-    //     ' - ' +
-    //     this.emailInput +
-    //     ' - ' +
-    //     this.subjectInput +
-    //     ' - ' +
-    //     this.messageInput +
-    //     ' - '
-    // );
+    if (this.emailForm.invalid) {
+      this.emailForm.markAllAsTouched();
+      this.toastService.warn(this.t.instant('INVALID FORM'));
+      return;
+    }
 
-    this.sendEmailClicked.emit({
-      email: this.emailInput,
-      subject: this.subjectInput,
-      message: this.messageInput,
-      proposalId: this.proposalId,
-    });
+    const email = this.emailForm.value.email ?? '';
+    const subject = this.emailForm.value.subject ?? '';
+    const message = this.emailForm.value.message ?? '';
 
-    this.emailInput = '';
-    this.subjectInput = '';
-    this.messageInput = '';
+    this.mailService
+      .newEmail(email, subject, message, this.proposalId)
+      .subscribe({
+        next: () => {
+          this.toastService.success(this.t.instant('EMAIL SENT SUCCESS'));
+          this.visible = false;
+          this.emailForm.reset();
+        },
+        error: () => {
+          this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
+        },
+      });
   }
 }

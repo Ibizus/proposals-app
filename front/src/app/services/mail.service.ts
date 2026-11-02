@@ -12,42 +12,18 @@ export class MailService {
   constructor(private http: HttpClient) {}
 
   notifyByEmail(proposal: Proposal): Observable<any> {
-    return new Observable<any>((observer) => {
-      this.http
-        .post<any>(
-          environment.API_ENDPOINT +
-            'send/candidate/?language=' +
-            (localStorage.getItem('lang') || 'en'),
-          proposal,
-        )
-        .subscribe({
-          error: () => undefined,
-        });
-      observer.next();
-      observer.complete();
-    });
+    const language = localStorage.getItem('lang') || 'en';
+    return this.http.post<any>(
+      `${environment.API_ENDPOINT}send/candidate/?language=${language}`,
+      proposal,
+    );
   }
 
   newEmail(email: string, subject: string, message: string, proposalId: number): Observable<any> {
-    return new Observable<any>((observer) => {
-      this.http
-        .post<any>(
-          environment.API_ENDPOINT +
-            'send/to/?to=' +
-            email +
-            '&subject=' +
-            subject +
-            '&proposalId=' +
-            proposalId +
-            '&language=' +
-            (localStorage.getItem('lang') || 'en'),
-          message,
-        )
-        .subscribe({
-          error: () => undefined,
-        });
-      observer.next();
-      observer.complete();
-    });
+    const language = localStorage.getItem('lang') || 'en';
+    return this.http.post<any>(
+      `${environment.API_ENDPOINT}send/to/?to=${encodeURIComponent(email)}&subject=${encodeURIComponent(subject)}&proposalId=${proposalId}&language=${language}`,
+      message,
+    );
   }
 }
