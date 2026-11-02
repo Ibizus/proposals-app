@@ -221,8 +221,8 @@ export class NewProposalComponent implements OnInit, OnDestroy {
     });
 
     // Get current proposal from service and set it in temporalProposal
-    this.proposalService.currentProposal.subscribe((proposal: any) => {
-      if (Object.keys(proposal).length !== 0) {
+    this.subscription = this.proposalService.currentProposal.subscribe((proposal: any) => {
+      if (proposal && Object.keys(proposal).length !== 0) {
         this.temporalProposal = proposal;
         const statuses = proposal.statuses.sort(
           (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -308,6 +308,7 @@ export class NewProposalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.subscription.unsubscribe();
     this.routerSubscription.unsubscribe();
   }
 

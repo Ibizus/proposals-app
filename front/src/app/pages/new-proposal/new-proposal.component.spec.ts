@@ -215,6 +215,32 @@ describe('NewProposalComponent', () => {
     );
   });
 
+  it('loads the extras and preselects defaults when no proposal was ever chosen', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const requests = http.match((req) => req.url.includes('extratemplates/'));
+    expect(requests.length).toBe(1);
+    requests[0].flush({
+      extras: [
+        { id: 1, name: 'Meal', amount: 7, isDefault: true },
+        { id: 2, name: 'Phone', amount: 20, isDefault: false },
+      ],
+    });
+
+    expect(component.temporalProposal).toBeNull();
+    expect(component.extras().map((extra) => extra.name)).toEqual(['Meal', 'Phone']);
+    expect(component.selectedExtras.map((extra) => extra.name)).toEqual(['Meal']);
+  });
+
+  it('stops reacting to proposal changes once destroyed', () => {
+    const http = TestBed.inject(HttpTestingController);
+    http.match((req) => req.url.includes('extratemplates/'));
+    fixture.destroy();
+
+    proposalService.changeProposal({});
+
+    expect(http.match((req) => req.url.includes('extratemplates/')).length).toBe(0);
+  });
+
   it('fills the proposal form with the current proposal when editing', () => {
     const existing = makeProposal({
       role: 'Senior Developer',

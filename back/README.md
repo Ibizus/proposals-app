@@ -22,7 +22,7 @@ To reset the database and reseed the demo data:
 ./dev.sh --reset
 ```
 
-Demo seeding is controlled by `app.seed-demo-data=true` (set in `application.properties` and enabled by default in the local profile). Seeding is idempotent and covered by `DemoDataSeederTest`.
+Demo seeding is controlled by `app.seed-demo-data`: it is off by default in `application.properties` and enabled by the `dev` profile (`application-dev.properties`) that `dev.sh` starts the backend with. Seeding is idempotent and covered by `DemoDataSeederTest`.
 
 ## Stack
 
