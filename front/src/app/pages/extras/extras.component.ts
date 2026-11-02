@@ -193,10 +193,7 @@ export class ExtrasComponent implements OnInit {
           this.toastService.error('The extra could not be deleted');
         },
       });
-    } else {
-      this.toastService.error('extrasId is not set');
     }
-
     this.extrasId = -1;
     this.visible.set(false);
   }

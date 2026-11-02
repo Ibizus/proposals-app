@@ -87,12 +87,14 @@ export class TaxesComponent implements OnInit {
     this.loadConfigurations();
   }
 
-  loadConfigurations(): void {
+  loadConfigurations(selectId?: number): void {
     this.isLoading.set(true);
     this.taxesService.getTaxConfigurations().subscribe({
       next: (data) => {
         this.configurations.set(data);
-        this.selectedConfiguration.set(data.find((c) => c.active) ?? data[0] ?? null);
+        this.selectedConfiguration.set(
+          data.find((c) => c.id === selectId) ?? data.find((c) => c.active) ?? data[0] ?? null,
+        );
         this.isLoading.set(false);
       },
       error: () => {
@@ -163,10 +165,10 @@ export class TaxesComponent implements OnInit {
     };
 
     this.taxesService.createTaxConfiguration(payload).subscribe({
-      next: () => {
+      next: (created) => {
         this.submitting.set(false);
         this.closeCreateDialog();
-        this.loadConfigurations();
+        this.loadConfigurations(created.id);
         sleep(250).then(() => this.toastService.success('Tax configuration created'));
       },
       error: () => {

@@ -70,7 +70,7 @@ describe('TaxesComponent', () => {
     expect(component.configurations().some((c) => c.id === inactive.id && c.active)).toBeTrue();
   });
 
-  it('creates a configuration and reloads the list', () => {
+  it('creates a configuration, reloads the list and selects the created one', () => {
     fixture.detectChanges();
     flushConfigurations();
 
@@ -98,6 +98,7 @@ describe('TaxesComponent', () => {
     fixture.detectChanges();
 
     expect(component.configurations().length).toBe(3);
+    expect(component.selectedConfiguration()?.id).toBe(3);
     expect(component.visibleCreate()).toBeFalse();
   });
 
