@@ -4,9 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm config set strict-ssl false
-RUN npm cache clean --force
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -15,9 +13,11 @@ RUN npx ng build
 FROM node:20-alpine
 
 WORKDIR /app
-RUN npm install -g http-server
+RUN npm install -g serve@14.2.6
 
 COPY --from=builder /app/dist/front/browser ./browser
 
 EXPOSE 4200
-CMD ["http-server", "./browser", "-p", "4200", "-a", "0.0.0.0"]
+# -s is the single-page-app mode: unknown paths fall back to index.html, so
+# refreshing or deep-linking an Angular route works in the Docker demo.
+CMD ["serve", "-s", "./browser", "-l", "tcp://0.0.0.0:4200"]
