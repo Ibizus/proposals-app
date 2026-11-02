@@ -64,6 +64,40 @@ describe('NewMailComponent', () => {
     http.expectNone((req) => req.url.includes('send/to/'));
   });
 
+  it('rejects a subject or message made only of whitespace', () => {
+    const toastSpy = spyOn(toast, 'warn');
+    component.emailForm.setValue({
+      email: 'recruiter@example.com',
+      subject: '   ',
+      message: '\n\t ',
+    });
+
+    component.sendEmail();
+
+    expect(toastSpy).toHaveBeenCalledWith('Invalid form.');
+    expect(component.emailForm.controls.subject.invalid).toBeTrue();
+    expect(component.emailForm.controls.message.invalid).toBeTrue();
+    http.expectNone((req) => req.url.includes('send/to/'));
+  });
+
+  it('ignores a second click while a send is pending and allows a retry after a failure', () => {
+    component.emailForm.setValue({
+      email: 'recruiter@example.com',
+      subject: 'Offer',
+      message: 'Please review.',
+    });
+
+    component.sendEmail();
+    component.sendEmail();
+
+    http
+      .expectOne((r) => r.url.includes('send/to/'))
+      .flush('Mail server error', { status: 500, statusText: 'Server Error' });
+
+    component.sendEmail();
+    http.expectOne((r) => r.url.includes('send/to/')).flush({});
+  });
+
   it('sends the email when the form is valid', () => {
     const successSpy = spyOn(toast, 'success');
     component.emailForm.setValue({

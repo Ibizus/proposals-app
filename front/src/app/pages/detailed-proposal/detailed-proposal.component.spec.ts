@@ -129,13 +129,40 @@ describe('DetailedProposalComponent', () => {
       component.notifyCandidate(7);
 
       http.expectOne(API + 'proposals/7').flush(makeProposal());
-      http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush('Mail server error', {
-        status: 500,
-        statusText: 'Server Error',
-      });
+      http
+        .expectOne((r) => r.url.startsWith(API + 'send/candidate/'))
+        .flush('Mail server error', {
+          status: 500,
+          statusText: 'Server Error',
+        });
 
       expect(component.visible).toBeFalse();
       expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+    });
+
+    it('closes the dialog and shows an error toast when the proposal lookup fails', () => {
+      const errorSpy = spyOn(toast, 'error');
+      component.notifyCandidate(7);
+
+      http
+        .expectOne(API + 'proposals/7')
+        .flush('Not found', { status: 404, statusText: 'Not Found' });
+
+      expect(component.visible).toBeFalse();
+      expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+      http.expectNone((r) => r.url.startsWith(API + 'send/candidate/'));
+    });
+
+    it('ignores a second click while a notification is pending', () => {
+      component.notifyCandidate(7);
+      component.notifyCandidate(7);
+
+      http.expectOne(API + 'proposals/7').flush(makeProposal());
+      http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush({});
+
+      component.notifyCandidate(7);
+      http.expectOne(API + 'proposals/7').flush(makeProposal());
+      http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush({});
     });
   });
 });

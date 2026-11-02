@@ -14,6 +14,7 @@ import { NewMailComponent } from '../../components/new-mail/new-mail.component';
 import { MailService } from '../../services/mail.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast.service';
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-detailed-proposal',
   standalone: true,
@@ -34,6 +35,7 @@ export class DetailedProposalComponent {
   proposalId: number;
   proposal!: Proposal;
   visible = false;
+  sending = false;
   monthlySalaryCalculations = new Map<string, number>();
   yaearlySalaryCalculations = new Map<string, number>();
   calculations = new Map<string, Map<string, number>>();
@@ -129,20 +131,29 @@ export class DetailedProposalComponent {
   }
 
   notifyCandidate(proposalId: number) {
+    if (this.sending) {
+      return;
+    }
+    this.sending = true;
     this.proposalService.getProposal(proposalId).subscribe({
       next: (proposal) => {
-        this.mailService.notifyByEmail(proposal).subscribe({
-          next: () => {
-            this.visible = false;
-            this.toastService.success(this.t.instant('EMAIL SENT SUCCESS'));
-          },
-          error: () => {
-            this.visible = false;
-            this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
-          },
-        });
+        this.mailService
+          .notifyByEmail(proposal)
+          .pipe(finalize(() => (this.sending = false)))
+          .subscribe({
+            next: () => {
+              this.visible = false;
+              this.toastService.success(this.t.instant('EMAIL SENT SUCCESS'));
+            },
+            error: () => {
+              this.visible = false;
+              this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
+            },
+          });
       },
       error: () => {
+        this.sending = false;
+        this.visible = false;
         this.toastService.error(this.t.instant('EMAIL SEND ERROR MESSAGE'));
       },
     });
