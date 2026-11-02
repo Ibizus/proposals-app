@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { makeTaxConfiguration } from '../../../testing/fixtures';
 import { TaxesComponent } from './taxes.component';
 import { ToastService } from '../../services/toast.service';
+import { TranslateService } from '@ngx-translate/core';
 
 const API = environment.API_ENDPOINT;
 
@@ -61,10 +62,12 @@ describe('TaxesComponent', () => {
     component.onActivate(inactive.id);
     http.expectOne(API + 'tax-configurations/2/activate').flush({ ...inactive, active: true });
 
-    http.expectOne(API + 'tax-configurations/').flush([
-      { ...inactive, active: true },
-      makeTaxConfiguration({ id: 1, countryCode: 'es', active: false }),
-    ]);
+    http
+      .expectOne(API + 'tax-configurations/')
+      .flush([
+        { ...inactive, active: true },
+        makeTaxConfiguration({ id: 1, countryCode: 'es', active: false }),
+      ]);
     fixture.detectChanges();
 
     expect(component.configurations().some((c) => c.id === inactive.id && c.active)).toBeTrue();
@@ -113,5 +116,43 @@ describe('TaxesComponent', () => {
     component.onCreate();
 
     expect(error).toHaveBeenCalledWith('Please fill in all required fields');
+  });
+
+  it('shows translated tax type labels in the TYPE column', () => {
+    const translate = fixture.debugElement.injector.get(TranslateService);
+    translate.setTranslation('en', {
+      'FIXED RATE': 'Fixed rate',
+      'BRACKETED RATE': 'Bracketed rate',
+    });
+    translate.use('en');
+    fixture.detectChanges();
+    flushConfigurations();
+
+    const cells = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td')).map(
+      (td) => td.textContent?.trim(),
+    );
+    expect(cells).toContain('Fixed rate');
+    expect(cells).toContain('Bracketed rate');
+    expect(cells).not.toContain('FIXED');
+    expect(cells).not.toContain('BRACKETED');
+  });
+
+  it('shows only the specific error toast when creating a configuration fails', () => {
+    fixture.detectChanges();
+    flushConfigurations();
+    const error = spyOn(TestBed.inject(ToastService), 'error');
+
+    component.openCreateDialog();
+    component.newConfiguration.countryCode = 'fr';
+    component.newConfiguration.label = 'France (illustrative example data)';
+    component.newConfiguration.taxes = [
+      { name: 'Social Security', type: 'FIXED', fixedRate: 10, extrasOnly: false, brackets: [] },
+    ];
+    component.onCreate();
+    http
+      .expectOne(API + 'tax-configurations/')
+      .flush('bad', { status: 400, statusText: 'Bad Request' });
+
+    expect(error).toHaveBeenCalledOnceWith('The tax configuration could not be created');
   });
 });

@@ -13,6 +13,7 @@ import { TaxesService } from '../../services/taxes.service';
 import { ToastService } from '../../services/toast.service';
 import { Tax, TaxConfiguration } from '../../utils/types';
 import { sleep } from '../../utils/functions';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 interface EditableTaxBracket {
   threshold: number;
@@ -70,9 +71,14 @@ export class TaxesComponent implements OnInit {
   submitting = signal(false);
 
   newConfiguration = emptyConfiguration();
+  taxTypeLabels: Record<Tax['type'], string> = {
+    FIXED: 'FIXED RATE',
+    BRACKETED: 'BRACKETED RATE',
+    WITHHOLDING: 'WITHHOLDING RATE',
+  };
   taxTypes = [
-    { label: 'FIXED RATE', value: 'FIXED' },
-    { label: 'BRACKETED RATE', value: 'BRACKETED' },
+    { label: this.taxTypeLabels.FIXED, value: 'FIXED' },
+    { label: this.taxTypeLabels.BRACKETED, value: 'BRACKETED' },
   ];
 
   constructor(
@@ -89,7 +95,7 @@ export class TaxesComponent implements OnInit {
 
   loadConfigurations(selectId?: number): void {
     this.isLoading.set(true);
-    this.taxesService.getTaxConfigurations().subscribe({
+    this.taxesService.getTaxConfigurations(callerHandlesErrors()).subscribe({
       next: (data) => {
         this.configurations.set(data);
         this.selectedConfiguration.set(
@@ -105,7 +111,7 @@ export class TaxesComponent implements OnInit {
   }
 
   onActivate(id: number): void {
-    this.taxesService.activateConfiguration(id).subscribe({
+    this.taxesService.activateConfiguration(id, callerHandlesErrors()).subscribe({
       next: () => {
         this.loadConfigurations();
         sleep(250).then(() => this.toastService.success('Tax configuration activated'));
@@ -164,7 +170,7 @@ export class TaxesComponent implements OnInit {
       modifiedBy: '',
     };
 
-    this.taxesService.createTaxConfiguration(payload).subscribe({
+    this.taxesService.createTaxConfiguration(payload, callerHandlesErrors()).subscribe({
       next: (created) => {
         this.submitting.set(false);
         this.closeCreateDialog();
@@ -183,7 +189,7 @@ export class TaxesComponent implements OnInit {
       id: 0,
       name: tax.name.trim(),
       type: tax.type,
-      fixedRate: tax.type === 'FIXED' ? tax.fixedRate ?? 0 : null,
+      fixedRate: tax.type === 'FIXED' ? (tax.fixedRate ?? 0) : null,
       extrasOnly: tax.extrasOnly,
       brackets:
         tax.type === 'BRACKETED'

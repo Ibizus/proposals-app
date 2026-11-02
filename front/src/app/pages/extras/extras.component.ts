@@ -99,7 +99,7 @@ export class ExtrasComponent implements OnInit {
   }
 
   private loadConfigurations(): void {
-    this.taxesService.getTaxConfigurations().subscribe({
+    this.taxesService.getTaxConfigurations(callerHandlesErrors()).subscribe({
       next: (data) => this.configurations.set(data),
       error: () => this.toastService.error('The tax configurations could not be loaded'),
     });
@@ -122,9 +122,10 @@ export class ExtrasComponent implements OnInit {
       return this.no ?? 'No';
     }
     const options = this.taxOptionsFor(extra);
-    return extra.taxIds
-      .map((id) => options.find((o) => o.value === id)?.label ?? `#${id}`)
-      .join(', ') || (this.no ?? 'No');
+    return (
+      extra.taxIds.map((id) => options.find((o) => o.value === id)?.label ?? `#${id}`).join(', ') ||
+      (this.no ?? 'No')
+    );
   }
 
   onExemptChange(extra: Extra): void {

@@ -30,11 +30,17 @@
         <div class="flex justify-between items-start mb-4">
           <div>
             <h2 class="text-2xl font-bold">{{ config.label }}</h2>
-            <p class="text-gray-600">{{ config.countryCode | uppercase }} · {{ 'YEARLY PAYMENTS' | translate }}: {{ config.yearlyPayments }}</p>
+            <p class="text-gray-600">
+              {{ config.countryCode | uppercase }} · {{ 'YEARLY PAYMENTS' | translate }}:
+              {{ config.yearlyPayments }}
+            </p>
           </div>
           <div class="flex items-center gap-3">
             @if (config.active) {
-              <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">{{ 'ACTIVE' | translate }}</span>
+              <span
+                class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"
+                >{{ 'ACTIVE' | translate }}</span
+              >
             } @else {
               <button
                 pButton
@@ -59,14 +65,16 @@
           <ng-template pTemplate="body" let-tax>
             <tr>
               <td>{{ tax.name }}</td>
-              <td>{{ tax.type }}</td>
+              <td>{{ taxTypeLabels[tax.type] | translate }}</td>
               <td>
                 @if (tax.type === 'FIXED') {
                   {{ tax.fixedRate }} %
                 } @else {
                   <ul class="list-disc pl-5">
                     @for (bracket of tax.brackets; track bracket.id) {
-                      <li>{{ 'UP TO' | translate }} {{ bracket.threshold }} · {{ bracket.rate }} %</li>
+                      <li>
+                        {{ 'UP TO' | translate }} {{ bracket.threshold }} · {{ bracket.rate }} %
+                      </li>
                     }
                   </ul>
                 }
@@ -106,7 +114,9 @@
     <div class="mt-6">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-lg font-semibold">{{ 'TAXES' | translate }}</h3>
-        <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addTax()">{{ 'ADD TAX' | translate }}</button>
+        <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addTax()">
+          {{ 'ADD TAX' | translate }}
+        </button>
       </div>
 
       @for (tax of newConfiguration.taxes; track $index) {
@@ -118,20 +128,38 @@
             </div>
             <div class="flex flex-col">
               <label class="text-gray-700 font-semibold">{{ 'TYPE' | translate }}</label>
-              <p-dropdown [options]="taxTypes" [(ngModel)]="tax.type" [style]="{ width: '100%' }"></p-dropdown>
+              <p-dropdown [options]="taxTypes" [(ngModel)]="tax.type" [style]="{ width: '100%' }">
+                <ng-template pTemplate="selectedItem" let-option>{{
+                  option.label | translate
+                }}</ng-template>
+                <ng-template pTemplate="item" let-option>{{
+                  option.label | translate
+                }}</ng-template>
+              </p-dropdown>
             </div>
             @if (tax.type === 'FIXED') {
               <div class="flex flex-col">
-                <label class="text-gray-700 font-semibold">{{ 'FIXED RATE' | translate }} (%)</label>
+                <label class="text-gray-700 font-semibold"
+                  >{{ 'FIXED RATE' | translate }} (%)</label
+                >
                 <input pInputText type="number" [(ngModel)]="tax.fixedRate" min="0" />
               </div>
             }
             <div class="flex items-center gap-2 pb-2">
               <p-checkbox [(ngModel)]="tax.extrasOnly" [binary]="true" />
-              <label class="text-gray-700 font-semibold mb-0">{{ 'EXTRAS ONLY' | translate }}</label>
+              <label class="text-gray-700 font-semibold mb-0">{{
+                'EXTRAS ONLY' | translate
+              }}</label>
             </div>
             <div class="sm:col-start-4 flex justify-end">
-              <button pButton class="p-button-danger p-button-sm" icon="pi pi-trash" (click)="removeTax($index)">{{ 'REMOVE TAX' | translate }}</button>
+              <button
+                pButton
+                class="p-button-danger p-button-sm"
+                icon="pi pi-trash"
+                (click)="removeTax($index)"
+              >
+                {{ 'REMOVE TAX' | translate }}
+              </button>
             </div>
           </div>
 
@@ -139,7 +167,9 @@
             <div class="mt-4">
               <div class="flex justify-between items-center mb-2">
                 <h4 class="font-semibold">{{ 'BRACKETS' | translate }}</h4>
-                <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addBracket(tax)">{{ 'ADD BRACKET' | translate }}</button>
+                <button pButton class="p-button-sm" icon="pi pi-plus" (click)="addBracket(tax)">
+                  {{ 'ADD BRACKET' | translate }}
+                </button>
               </div>
               @for (bracket of tax.brackets; track $index) {
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-2">
@@ -152,7 +182,14 @@
                     <input pInputText type="number" [(ngModel)]="bracket.rate" min="0" />
                   </div>
                   <div>
-                    <button pButton class="p-button-danger p-button-sm" icon="pi pi-trash" (click)="removeBracket(tax, $index)">{{ 'REMOVE BRACKET' | translate }}</button>
+                    <button
+                      pButton
+                      class="p-button-danger p-button-sm"
+                      icon="pi pi-trash"
+                      (click)="removeBracket(tax, $index)"
+                    >
+                      {{ 'REMOVE BRACKET' | translate }}
+                    </button>
                   </div>
                 </div>
               }
