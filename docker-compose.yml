@@ -45,14 +45,27 @@ services:
       # name rather than localhost. No SMTP credentials are needed.
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
 
   frontend:
     build: ./front
     container_name: proposals_frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy # Evita que el frontend arranque antes de que la API responda
     ports:
       - "4200:4200"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4200/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   mysql_data:
