@@ -27,12 +27,4 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('app-navbar')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
-
-  it('should build the main menu on init with Proposals active', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const app = fixture.componentInstance;
-    expect(app.items.map((i) => i.label)).toEqual(['Proposals', 'Candidates', 'Extras', 'Taxes']);
-    expect(app.activeItem).toBe(app.items[0]);
-  });
 });

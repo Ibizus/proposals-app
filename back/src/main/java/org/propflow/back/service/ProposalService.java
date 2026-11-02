@@ -102,14 +102,7 @@ public class ProposalService {
 
   // Find proposals by Candidate Id:
   public List<ProposalDTO> findProposalsByCandidateId(Long id) {
-    System.out.println("WE ARE NOW INSIDE PROPOSAL SERVICE");
     Candidate candidate = this.candidateService.one(id);
-    System.out.println(
-        "Candidate found: "
-            + candidate.getName()
-            + " has "
-            + candidate.getProposalsCount()
-            + " proposals.");
 
     // Map Proposals to ProposalsDTO before returning:
     List<ProposalDTO> resultList =
@@ -156,7 +149,6 @@ public class ProposalService {
     proposal.setCandidate(persistedCandidate);
     proposal.setSalary(salary);
     office.getProposals().add(proposal);
-    System.out.println(proposal.getNjoyn());
 
     return this.proposalRepository.save(proposal);
   }
