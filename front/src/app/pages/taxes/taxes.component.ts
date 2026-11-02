@@ -81,6 +81,10 @@ export class TaxesComponent implements OnInit {
     { label: this.taxTypeLabels.BRACKETED, value: 'BRACKETED' },
   ];
 
+  taxTypeLabel(type: Tax['type']): string {
+    return this.taxTypeLabels[type];
+  }
+
   constructor(
     private taxesService: TaxesService,
     private toastService: ToastService,

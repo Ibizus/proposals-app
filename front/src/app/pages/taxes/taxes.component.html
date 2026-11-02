@@ -65,7 +65,7 @@
           <ng-template pTemplate="body" let-tax>
             <tr>
               <td>{{ tax.name }}</td>
-              <td>{{ taxTypeLabels[tax.type] | translate }}</td>
+              <td>{{ taxTypeLabel(tax.type) | translate }}</td>
               <td>
                 @if (tax.type === 'FIXED') {
                   {{ tax.fixedRate }} %
