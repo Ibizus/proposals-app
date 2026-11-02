@@ -1,13 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
+import { environment } from '../../../environments/environment';
+import { makeTaxConfiguration } from '../../../testing/fixtures';
 import { ExtrasService } from '../../services/extras.service';
-
 import { NewExtraButtonComponent } from './new-extra-button.component';
+
+const API = environment.API_ENDPOINT;
 
 describe('NewExtraButtonComponent', () => {
   let component: NewExtraButtonComponent;
   let fixture: ComponentFixture<NewExtraButtonComponent>;
+  let http: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -15,13 +20,31 @@ describe('NewExtraButtonComponent', () => {
       providers: provideTestDefaults(),
     }).compileComponents();
 
+    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(NewExtraButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+
+    http
+      .expectOne(API + 'tax-configurations/active')
+      .flush(makeTaxConfiguration({ id: 1, active: true }));
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => http.verify());
+
+  it('loads the active configuration taxes as options', () => {
+    expect(component.taxOptions().length).toBe(2);
+    expect(component.taxOptions().map((o) => o.value)).toEqual([10, 20]);
+  });
+
+  it('clears selected taxes when the extra is marked exempt', () => {
+    component.extra.taxIds = [10];
+    component.extra.exempt = true;
+
+    component.onExemptChange();
+
+    expect(component.extra.taxIds).toEqual([]);
   });
 
   it('creates and resets a new extra without tax ids and not exempt by default', () => {
@@ -40,6 +63,7 @@ describe('NewExtraButtonComponent', () => {
         multiplyYearly: 0,
         multiplyMonthly: 0,
         addToSalary: false,
+        taxConfigurationId: 1,
       }),
     );
     expect(sentExtra.taxIds).toEqual([]);
@@ -49,5 +73,6 @@ describe('NewExtraButtonComponent', () => {
     sentExtra = createExtraSpy.calls.argsFor(1)[0];
     expect(sentExtra.taxIds).toEqual([]);
     expect(sentExtra.exempt).toBeFalse();
+    expect(sentExtra.taxConfigurationId).toBe(1);
   });
 });

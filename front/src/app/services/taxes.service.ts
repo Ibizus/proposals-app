@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped API payloads */
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Tax, TaxConfiguration, Taxes } from '../utils/types';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -67,8 +67,8 @@ export class TaxesService {
     );
   }
 
-  getTaxConfigurations(): Observable<TaxConfiguration[]> {
-    return this.http.get<TaxConfiguration[]>(TAX_CONFIG_URL).pipe(
+  getTaxConfigurations(context?: HttpContext): Observable<TaxConfiguration[]> {
+    return this.http.get<TaxConfiguration[]>(TAX_CONFIG_URL, { context }).pipe(
       map((data) => {
         data.sort((a, b) => a.countryCode.localeCompare(b.countryCode));
         return data;
@@ -84,8 +84,15 @@ export class TaxesService {
     return this.http.get<TaxConfiguration>(`${TAX_CONFIG_URL}${id}`);
   }
 
-  activateConfiguration(id: number): Observable<TaxConfiguration> {
-    return this.http.post<TaxConfiguration>(`${TAX_CONFIG_URL}${id}/activate`, {});
+  activateConfiguration(id: number, context?: HttpContext): Observable<TaxConfiguration> {
+    return this.http.post<TaxConfiguration>(`${TAX_CONFIG_URL}${id}/activate`, {}, { context });
+  }
+
+  createTaxConfiguration(
+    configuration: TaxConfiguration,
+    context?: HttpContext,
+  ): Observable<TaxConfiguration> {
+    return this.http.post<TaxConfiguration>(TAX_CONFIG_URL, configuration, { context });
   }
 
   getTaxBracket(

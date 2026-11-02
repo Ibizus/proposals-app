@@ -49,7 +49,7 @@ export const routes: Routes = [
   {
     path: 'taxes',
     component: TaxesComponent,
-    title: 'Portugal Taxes | PropFlow',
+    title: 'Taxes | PropFlow',
   },
   {
     path: 'extras',

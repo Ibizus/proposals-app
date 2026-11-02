@@ -1,19 +1,21 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, signal } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { matAddCircleOutline } from '@ng-icons/material-icons/outline';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { ExtrasService } from '../../services/extras.service';
-import { Extra } from '../../utils/types';
+import { TaxesService } from '../../services/taxes.service';
+import { Extra, TaxConfiguration } from '../../utils/types';
 
 type NewExtraForm = Omit<
   Extra,
   'id' | 'createdAt' | 'createdBy' | 'modifiedAt' | 'modifiedBy' | 'isDefault' | 'taxIds'
 > &
-  Partial<Pick<Extra, 'taxIds' | 'addToSalary'>>;
+  Partial<Pick<Extra, 'taxIds' | 'addToSalary' | 'taxConfigurationId'>>;
 
 @Component({
   selector: 'app-new-extra-button',
@@ -24,6 +26,7 @@ type NewExtraForm = Omit<
     DialogModule,
     FormsModule,
     ButtonModule,
+    MultiSelectModule,
     TranslateModule,
   ],
   viewProviders: [provideIcons({ matAddCircleOutline }), TranslateService, TranslateStore],
@@ -62,7 +65,20 @@ type NewExtraForm = Omit<
         <!-- exempt -->
         <div class="flex flex-col">
           <label class="text-gray-700 font-semibold">{{ 'EXEMPT' | translate }}</label>
-          <p-checkbox [(ngModel)]="extra.exempt" [binary]="true" />
+          <p-checkbox [(ngModel)]="extra.exempt" [binary]="true" (onChange)="onExemptChange()" />
+        </div>
+        <!-- Taxes -->
+        <div class="flex flex-col sm:col-span-2">
+          <label class="text-gray-700 font-semibold">{{ 'APPLIED TAXES' | translate }}</label>
+          <p-multiSelect
+            [options]="taxOptions()"
+            [(ngModel)]="extra.taxIds"
+            optionLabel="label"
+            optionValue="value"
+            [disabled]="extra.exempt"
+            display="chip"
+            [style]="{ width: '100%' }"
+          ></p-multiSelect>
         </div>
         <!-- Multiply Monthly -->
         <div class="flex flex-col">
@@ -172,16 +188,19 @@ type NewExtraForm = Omit<
     }
   `,
 })
-export class NewExtraButtonComponent {
+export class NewExtraButtonComponent implements OnInit {
   @Output() extraSaved: EventEmitter<void> = new EventEmitter<void>();
   visible = false;
   extra!: NewExtraForm;
+  activeConfiguration = signal<TaxConfiguration | null>(null);
+  taxOptions = signal<{ label: string; value: number }[]>([]);
 
   newExtraLabel!: string;
 
   constructor(
     private t: TranslateService,
     private extrasService: ExtrasService,
+    private taxesService: TaxesService,
   ) {
     this.extra = {
       name: '',
@@ -199,8 +218,34 @@ export class NewExtraButtonComponent {
     this.t.get('NEW EXTRA').subscribe((newExtraLabel) => (this.newExtraLabel = newExtraLabel));
   }
 
+  ngOnInit(): void {
+    this.taxesService.getActiveConfiguration().subscribe({
+      next: (configuration) => {
+        this.activeConfiguration.set(configuration);
+        this.taxOptions.set(this.buildTaxOptions(configuration));
+        this.extra.taxConfigurationId = configuration.id;
+      },
+      error: () => {
+        this.taxOptions.set([]);
+      },
+    });
+  }
+
+  private buildTaxOptions(configuration: TaxConfiguration): { label: string; value: number }[] {
+    return configuration.taxes.map((tax) => ({
+      label: `${configuration.label} — ${tax.name}`,
+      value: tax.id,
+    }));
+  }
+
   newExtra() {
     this.visible = true;
+  }
+
+  onExemptChange(): void {
+    if (this.extra.exempt) {
+      this.extra.taxIds = [];
+    }
   }
 
   onSaveExtra() {
@@ -214,6 +259,7 @@ export class NewExtraButtonComponent {
           isPercentage: false,
           exempt: false,
           taxIds: [],
+          taxConfigurationId: this.activeConfiguration()?.id,
           multiplyYearly: 0,
           multiplyMonthly: 0,
           addToSalary: false,

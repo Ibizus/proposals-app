@@ -1,22 +1,48 @@
 :host ::ng-deep {
-    .p-datatable .p-datatable-tbody > tr:nth-child(even) {
-        background-color: #F0F9FF;
-    }
-
-  .tableGradient {
-    background: #0056D2;
-    background: linear-gradient(90deg, #0056D2 0%, #45C5C7 50%, #AEEBCC 100%);
+  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background-color: #f0f9ff;
   }
 
-    .p-datatable .p-datatable-tbody>tr>td{ // Experiment to make the rows a bit thinner to fit more information
-        @apply py-0
-    }
+  .tableGradient {
+    background: #0056d2;
+    background: linear-gradient(90deg, #0056d2 0%, #45c5c7 50%, #aeebcc 100%);
+  }
 
-    .p-dropdown {
-      @apply w-64
-    }
-}
+  .p-datatable .p-datatable-tbody > tr > td {
+    @apply py-2;
+  }
 
-.p-datatable-tbody{
-    max-height: 5px;
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+    border: 2px solid #f0f9ff;
+    border-radius: 0.375rem;
+    transition:
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.5);
+  }
+
+  .p-dropdown,
+  .p-multiselect {
+    width: 100%;
+  }
+
+  .p-button {
+    background-color: #0056d2;
+    color: white;
+    border: none;
+  }
+
+  .p-button-danger {
+    background-color: #ef4444;
+  }
 }
