@@ -95,7 +95,13 @@
           <p-cellEditor>
             <ng-template pTemplate="input">
               <span>{{ 'EXEMPT' | translate }}</span> <br />
-              <input pInputText type="checkbox" checked="true" [(ngModel)]="extra.exempt" (change)="onExemptChange(extra)" />
+              <input
+                pInputText
+                type="checkbox"
+                checked="true"
+                [(ngModel)]="extra.exempt"
+                (change)="onExemptChange(extra)"
+              />
             </ng-template>
             <ng-template pTemplate="output">
               {{ extra.exempt ? yes : no }}
