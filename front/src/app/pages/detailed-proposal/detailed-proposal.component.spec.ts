@@ -51,6 +51,7 @@ describe('DetailedProposalComponent', () => {
     http.expectOne(API + 'parameters').flush(PARAMETERS);
     http.expectOne(API + 'proposals/7').flush(
       makeProposal({
+        indefinite: false,
         statuses: [
           {
             id: 2,
@@ -164,5 +165,10 @@ describe('DetailedProposalComponent', () => {
       http.expectOne(API + 'proposals/7').flush(makeProposal());
       http.expectOne((r) => r.url.startsWith(API + 'send/candidate/')).flush({});
     });
+  });
+
+  it('renders the due date for a fixed-term proposal', () => {
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('2024-12-31');
   });
 });

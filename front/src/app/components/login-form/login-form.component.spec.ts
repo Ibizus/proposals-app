@@ -29,11 +29,10 @@ describe('LoginFormComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['/dashboard']);
   });
 
-  it('alerts and stays put when the form is invalid', () => {
+  it('shows an in-app error and stays put when the form is invalid', () => {
     const navigate = spyOn(component.router, 'navigate');
-    const alert = spyOn(window, 'alert');
     component.onSubmit({ valid: false } as NgForm);
-    expect(alert).toHaveBeenCalled();
+    expect(component.loginError()).toBe('Please fill out all the necessary fields.');
     expect(navigate).not.toHaveBeenCalled();
   });
 

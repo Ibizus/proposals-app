@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
@@ -44,6 +44,10 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
           <label class="flex justify-center text-lg font-semibold text-[#0056D2] ml-auto pb-5">
             {{ 'WELCOME' | translate }}
           </label>
+        </div>
+        <div class="mb-4 rounded bg-blue-50 p-3 text-center text-sm text-[#0056D2]">
+          <p class="font-semibold">{{ 'DEMO ACCESS' | translate }}</p>
+          <p>{{ 'DEMO ACCESS MESSAGE' | translate }}</p>
         </div>
         <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
           <div class="mb-4">
@@ -92,16 +96,11 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
             </p-button>
           </div>
         </form>
-        <div class="flex justify-center mt-3">
-          <p>
-            {{ 'CANT LOGIN' | translate }}
-            <a
-              class="size-[14px] text-[#0056D2] font-semibold"
-              href="https://intranet.ent.propflow.com/Pages/default.aspx"
-              >Click here</a
-            >
-          </p>
-        </div>
+        @if (loginError()) {
+          <div class="mt-3 text-center text-sm text-red-600">
+            {{ loginError() }}
+          </div>
+        }
       </div>
       <small id="small" class="absolute bottom-5 left-1/2 transform -translate-x-1/2"
         >&copy; {{ 'RIGHTS' | translate }}</small
@@ -221,18 +220,21 @@ export class LoginFormComponent {
   password = '';
 
   showPassword = false;
+  loginError = signal('');
 
-  router: Router = new Router();
-
-  constructor(private t: TranslateService) {
+  constructor(
+    readonly router: Router,
+    private t: TranslateService,
+  ) {
     this.t.use(localStorage.getItem('lang') || 'en');
   }
 
   onSubmit(loginForm: NgForm) {
     if (loginForm.valid) {
+      this.loginError.set('');
       this.router.navigate(['/dashboard']);
     } else {
-      alert('Please, fill out all the necessary fields.');
+      this.loginError.set('Please fill out all the necessary fields.');
     }
   }
 

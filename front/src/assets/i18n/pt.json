@@ -1,7 +1,8 @@
 {
   "PROPOSAL ADMIN": "Administrador do Propostas",
   "WELCOME": "Bem-vindo ao Administrador de Propostas",
-  "CANT LOGIN": "Esqueceu-se da sua palavra-passe?",
+  "DEMO ACCESS": "Acesso de demonstração",
+  "DEMO ACCESS MESSAGE": "Qualquer nome de utilizador e palavra-passe permitem iniciar sessão."
   "LOGIN": "Iniciar sessão",
   "ENTERUSER": "Nome de utilizador",
   "ENTERPASSWORD": "Palavra-passe",

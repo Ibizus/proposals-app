@@ -230,76 +230,70 @@ export class NewProposalComponent implements OnInit, OnDestroy {
         this.latestStatus = statuses[statuses.length - 1];
         this.latestStatusNumber = this.latestStatus.status;
         this.latestStatusMessage = this.latestStatus.message;
+
+        // This function sets the id to the field attribute extra.templateId and adds 3 more fields to be properly shown on the
+        // dropdown menu of the multiselect component
+        const mapInputToOutput = (input: any): any => {
+          return {
+            amount: input.amount,
+            createdAt: null, // Set createdAt to null
+            id: input.templateId,
+            isPercentage: input.isPercentage,
+            exempt: input.exempt,
+            taxIds: input.taxIds,
+            modifiedAt: null, // Set modifiedAt to null
+            modifiedBy: null, // Set modifiedBy to null
+            multiplyMonthly: input.multiplyMonthly,
+            multiplyYearly: input.multiplyYearly,
+            name: input.name,
+          };
+        };
+
+        this.proposalForm = this.temporalProposal;
+        this.proposalForm.startDate = new Date(this.temporalProposal.startDate);
+        this.proposalForm.dueDate = new Date(this.temporalProposal.dueDate);
+
+        this.selectedCandidate.set(this.temporalProposal.candidate);
+        this.selectedPosition = this.temporalProposal.position ?? null;
+
+        const extras: any[] = this.proposalForm.salary.extras.map((e: any) => mapInputToOutput(e));
+        this.selectedExtras = extras;
       } else {
         this.temporalProposal = null;
-        this.proposalForm = null;
+        this.proposalForm = EmptyProposalForm();
       }
-    });
 
-    // TODO: The proposal Form needs to be filled properly before submitting
-    // The proposal form should be filled with the current proposal from the service
-    if (this.temporalProposal) {
-      // This function sets the id to the field attribute extra.templateId and adds 3 more fields to be properly shown on the
-      // dropdown menu of the multiselect component
-      const mapInputToOutput = (input: any): any => {
-        return {
-          amount: input.amount,
-          createdAt: null, // Set createdAt to null
-          id: input.templateId,
-          isPercentage: input.isPercentage,
-          exempt: input.exempt,
-          taxIds: input.taxIds,
-          modifiedAt: null, // Set modifiedAt to null
-          modifiedBy: null, // Set modifiedBy to null
-          multiplyMonthly: input.multiplyMonthly,
-          multiplyYearly: input.multiplyYearly,
-          name: input.name,
-        };
-      };
+      if (this.selectedCandidate()) {
+        this.proposalForm.candidate = this.selectedCandidate();
+      }
 
-      this.proposalForm = this.temporalProposal;
-      this.proposalForm.startDate = new Date(this.temporalProposal.startDate);
-      this.proposalForm.dueDate = new Date(this.temporalProposal.dueDate);
+      // Fetch extras into this.extras mapped by the method mapJsonToExtra
+      this.extrasService.getExtras(0, 100, this.proposalForm.salary.taxConfigurationId).subscribe({
+        next: (data) => {
+          const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
 
-      this.selectedCandidate.set(this.temporalProposal.candidate);
-      this.selectedPosition = this.temporalProposal.position ?? null;
+          // If it's a new proposal, add the default extras to it
+          if (this.selectedExtras.length === 0) {
+            extras.forEach((ex) => {
+              if (ex.isDefault) {
+                this.selectedExtras.push(ex);
+              }
+            });
+          }
 
-      const extras: any[] = this.proposalForm.salary.extras.map((e: any) => mapInputToOutput(e));
-      this.selectedExtras = extras;
-    } else {
-      this.proposalForm = EmptyProposalForm();
-    }
-
-    if (this.selectedCandidate()) {
-      this.proposalForm.candidate = this.selectedCandidate();
-    }
-
-    // Fetch extras into this.extras mapped by the method mapJsonToExtra
-    this.extrasService.getExtras(0, 100, this.proposalForm.salary.taxConfigurationId).subscribe({
-      next: (data) => {
-        const extras: Extra[] = data.extras.map(this.mapJsonToExtra);
-
-        // If it's a new proposal, add the default extras to it
-        if (this.selectedExtras.length === 0) {
-          extras.forEach((ex) => {
-            if (ex.isDefault) {
-              this.selectedExtras.push(ex);
+          // Find matching extras and update the selectedExtras.
+          this.selectedExtras.forEach((ex) => {
+            const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
+            if (matchingExtraIndex !== -1) {
+              extras[matchingExtraIndex] = ex;
             }
           });
-        }
-
-        // Find matching extras and update the selectedExtras.
-        this.selectedExtras.forEach((ex) => {
-          const matchingExtraIndex = extras.findIndex((extra) => extra.name === ex.name);
-          if (matchingExtraIndex !== -1) {
-            extras[matchingExtraIndex] = ex;
-          }
-        });
-        this.extras.set(extras);
-      },
-      error: (error) => {
-        console.error('Error while fetching extras:', error);
-      },
+          this.extras.set(extras);
+        },
+        error: (error) => {
+          console.error('Error while fetching extras:', error);
+        },
+      });
     });
   }
 

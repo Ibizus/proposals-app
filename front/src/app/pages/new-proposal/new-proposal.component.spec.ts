@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
-import { makeCandidate, makePosition } from '../../../testing/fixtures';
+import { makeCandidate, makePosition, makeProposal } from '../../../testing/fixtures';
 import { environment } from '../../../environments/environment';
 import { Candidate } from '../../utils/types';
 import { CandidateService } from '../../services/candidate.service';
@@ -213,5 +213,30 @@ describe('NewProposalComponent', () => {
     expect(error).toHaveBeenCalledOnceWith(
       "The proposal couldn't be created, please check the form for errors or missing fields!",
     );
+  });
+
+  it('fills the proposal form with the current proposal when editing', () => {
+    const existing = makeProposal({
+      role: 'Senior Developer',
+      njoyn: 'NJ-EDIT',
+      startDate: '2024-06-01',
+      dueDate: '2024-09-30',
+      indefinite: false,
+      salary: { id: 5, base: 2500, taxConfigurationId: 2, extras: [] },
+      position: makePosition({ id: 3, title: 'Frontend' }),
+      statuses: [
+        { id: 1, status: 0, message: 'Draft', createdAt: new Date(), createdBy: '', modifiedAt: new Date(), modifiedBy: '' },
+      ],
+    });
+
+    proposalService.changeProposal(existing);
+    fixture.detectChanges();
+
+    expect(component.proposalForm.role).toBe('Senior Developer');
+    expect(component.proposalForm.njoyn).toBe('NJ-EDIT');
+    expect(component.proposalForm.startDate).toEqual(new Date('2024-06-01'));
+    expect(component.proposalForm.dueDate).toEqual(new Date('2024-09-30'));
+    expect(component.selectedCandidate()).toEqual(existing.candidate);
+    expect(component.selectedPosition).toEqual(existing.position ?? null);
   });
 });
