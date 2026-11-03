@@ -1,29 +1,39 @@
-# Front
+# PropFlow frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.1.
+Angular 17 single-page application for the PropFlow (Proposal Admin) demo: proposals, candidates, positions, offices, taxes, extras, parameters and a dashboard. It is a standalone-component app using PrimeNG, Tailwind CSS and ngx-translate (English, Spanish, Portuguese and German), and it reads and writes through the backend REST API.
 
-## Development server
+## Requirements
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- Node.js 20 and npm
+- Google Chrome, for the Karma tests
+- A running backend on <http://localhost:8080> (the API base URL is set in `src/environments/`)
 
-## Code scaffolding
+## Run
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+```bash
+npm ci
+npm start
+```
 
-## Build
+The dev server is at <http://localhost:4200>. From the repository root, `./dev.sh` starts the backend, the frontend and the supporting Docker services together. The login form accepts any non-empty username and password.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+## Test, lint and build
 
-## Running unit tests
+```bash
+npm test              # Karma/Jasmine in a visible Chrome, watch mode
+npm run test:ci       # headless Chrome with coverage, as CI runs it
+npm run lint          # ESLint for TypeScript and templates
+npm run format:check  # Prettier check
+npm run format        # Prettier write
+npm run build         # production build in dist/front/browser
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io) in watch mode.
+## Folder overview
 
-Run `npm run test:ci` for a single headless run (Chrome required, no backend needed), which is how CI should invoke it.
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+- `src/app/pages/` — routed screens: dashboard, proposals, new and detailed proposal, candidates, positions, taxes, extras and parameters.
+- `src/app/components/` — reusable UI pieces such as the navbar, login form and new/duplicate dialogs and buttons.
+- `src/app/services/` — HTTP services for each API area, plus the error toast interceptor and toast service.
+- `src/app/utils/` — shared TypeScript types and helper functions.
+- `src/assets/i18n/` — translation files (`en.json`, `es.json`, `pt.json`, `de.json`).
+- `src/environments/` — API endpoint for the development and production builds.
+- `src/testing/` — shared Jasmine fixtures and test providers.

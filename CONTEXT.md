@@ -6,17 +6,26 @@ A job proposal for a candidate at an office, containing role, description, contr
 ## Candidate
 A person the proposal is made to (name, surname, id number, phone, email, worker id, marital status, dependents).
 
+## Position
+A job opening candidates are considered for, with title, description, nJoyn posting reference and a link to more details. Candidates are linked to a position, and a proposal may reference the position of its candidate.
+
 ## Proposal letter
 The generated PDF document for a proposal, produced in-JVM from the proposal id, in one of es, pt, de, en.
 
 ## Extra
 A salary component (bonus/allowance) attached to a proposal salary, with amount, applicable taxes and multipliers.
 
+## Extra template
+A reusable definition for a salary extra: name, amount (fixed or percentage), monthly and yearly multipliers, whether it adds to salary, whether it is tax exempt, and the taxes that apply. Templates belong to a tax configuration, and extras created from a template use that configuration's taxes.
+
 ## Office
 The office/branch where the candidate will work.
 
 ## Salary breakdown
 The computed monthly and yearly salary component amounts derived from a proposal.
+
+## Parameter
+A named salary calculation constant (for example `iht`, `spp` or `scr`) with a value and an optional validity period, read by the salary breakdown calculation.
 
 ## Status
 The lifecycle state of a proposal (draft, confirmed, sent, declined, cancelled, approved).
