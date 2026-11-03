@@ -13,16 +13,15 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
   imports: [FormsModule, InputTextModule, PasswordModule, ButtonModule, TranslateModule],
   providers: [TranslateService, TranslateStore],
   template: `
-    <div class="grid h-screen place-items-center relative">
-      <img src="assets/login-pattern.png" class="w-screen h-screen" />
+    <div class="grid h-screen place-items-center relative bg-gray-200">
       <div class="my-auto max-w-md bg-white border shadow-md p-8 mx-auto absolute">
-        <header id="ui-navbar-top" class="navbar ui-navbar-top justify-center p-10 mx-auto">
+        <header id="ui-navbar-top" class="navbar ui-navbar-top justify-center p-4 mx-auto">
           <span id="siteIcon" class="navbar-brand mr-auto mr-lg-0">
             <div id="DeltaSiteLogo">
               <a id="ctl00_onetidProjectPropertyTitleGraphic" href="/">
                 <img
                   id="ctl00_onetidHeadbnnr2"
-                  class="ms-siteicon-img"
+                  class="ms-siteicon-img h-12 w-auto"
                   name="onetidHeadbnnr0"
                   src="/assets/logo.png"
                   alt="Logo"
@@ -31,7 +30,7 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
             </div>
             <a
               id="ctl00_PlaceHolderSiteName_ProjectPropertyTitle"
-              class="justify-self-center font-bold"
+              class="justify-self-center font-bold whitespace-normal"
               href="/"
             >
               <!-- Proposal Admin -->
@@ -109,7 +108,7 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
     </div>
   `,
   styles: `
-    * {
+    :host {
       overflow: hidden;
     }
 
@@ -152,12 +151,13 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
     .ui-navbar-top #siteIcon #ctl00_PlaceHolderSiteName_ProjectPropertyTitle {
       display: block;
       font-size: 16px;
-      line-height: 16px;
+      line-height: 1.2;
       border-left: 1px solid #d2d2d2;
       padding: 0px 0px 0px 20px;
       margin: 0px 0px 0px 20px;
       color: #151515;
       font-weight: 600;
+      white-space: normal;
     }
 
     :host ::ng-deep {
