@@ -251,7 +251,15 @@ describe('NewProposalComponent', () => {
       salary: { id: 5, base: 2500, taxConfigurationId: 2, extras: [] },
       position: makePosition({ id: 3, title: 'Frontend' }),
       statuses: [
-        { id: 1, status: 0, message: 'Draft', createdAt: new Date(), createdBy: '', modifiedAt: new Date(), modifiedBy: '' },
+        {
+          id: 1,
+          status: 0,
+          message: 'Draft',
+          createdAt: new Date(),
+          createdBy: '',
+          modifiedAt: new Date(),
+          modifiedBy: '',
+        },
       ],
     });
 
