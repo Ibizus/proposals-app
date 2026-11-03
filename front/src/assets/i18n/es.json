@@ -1,7 +1,9 @@
 {
   "PROPOSAL ADMIN": "Administrador de Propuestas",
   "WELCOME": "Bienvenido al Administrador de Propuestas",
-  "CANT LOGIN": "¿No puedes iniciar sesión?",
+  "DEMO ACCESS": "Acceso de demostración",
+  "DEMO ACCESS MESSAGE": "Cualquier usuario y contraseña permiten el acceso.",
+  "LOGIN REQUIRED FIELDS": "Por favor, rellene todos los campos obligatorios.",
   "LOGIN": "Iniciar sesión",
   "ENTERUSER": "Introduce tu nombre de usuario",
   "ENTERPASSWORD": "Introduce tu contraseña",

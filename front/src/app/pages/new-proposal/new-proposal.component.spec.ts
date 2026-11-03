@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { provideTestDefaults } from '../../../testing/test-providers';
-import { makeCandidate, makePosition } from '../../../testing/fixtures';
+import { makeCandidate, makePosition, makeProposal } from '../../../testing/fixtures';
 import { environment } from '../../../environments/environment';
 import { Candidate } from '../../utils/types';
 import { CandidateService } from '../../services/candidate.service';
@@ -213,5 +213,64 @@ describe('NewProposalComponent', () => {
     expect(error).toHaveBeenCalledOnceWith(
       "The proposal couldn't be created, please check the form for errors or missing fields!",
     );
+  });
+
+  it('loads the extras and preselects defaults when no proposal was ever chosen', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const requests = http.match((req) => req.url.includes('extratemplates/'));
+    expect(requests.length).toBe(1);
+    requests[0].flush({
+      extras: [
+        { id: 1, name: 'Meal', amount: 7, isDefault: true },
+        { id: 2, name: 'Phone', amount: 20, isDefault: false },
+      ],
+    });
+
+    expect(component.temporalProposal).toBeNull();
+    expect(component.extras().map((extra) => extra.name)).toEqual(['Meal', 'Phone']);
+    expect(component.selectedExtras.map((extra) => extra.name)).toEqual(['Meal']);
+  });
+
+  it('stops reacting to proposal changes once destroyed', () => {
+    const http = TestBed.inject(HttpTestingController);
+    http.match((req) => req.url.includes('extratemplates/'));
+    fixture.destroy();
+
+    proposalService.changeProposal({});
+
+    expect(http.match((req) => req.url.includes('extratemplates/')).length).toBe(0);
+  });
+
+  it('fills the proposal form with the current proposal when editing', () => {
+    const existing = makeProposal({
+      role: 'Senior Developer',
+      njoyn: 'NJ-EDIT',
+      startDate: '2024-06-01',
+      dueDate: '2024-09-30',
+      indefinite: false,
+      salary: { id: 5, base: 2500, taxConfigurationId: 2, extras: [] },
+      position: makePosition({ id: 3, title: 'Frontend' }),
+      statuses: [
+        {
+          id: 1,
+          status: 0,
+          message: 'Draft',
+          createdAt: new Date(),
+          createdBy: '',
+          modifiedAt: new Date(),
+          modifiedBy: '',
+        },
+      ],
+    });
+
+    proposalService.changeProposal(existing);
+    fixture.detectChanges();
+
+    expect(component.proposalForm.role).toBe('Senior Developer');
+    expect(component.proposalForm.njoyn).toBe('NJ-EDIT');
+    expect(component.proposalForm.startDate).toEqual(new Date('2024-06-01'));
+    expect(component.proposalForm.dueDate).toEqual(new Date('2024-09-30'));
+    expect(component.selectedCandidate()).toEqual(existing.candidate);
+    expect(component.selectedPosition).toEqual(existing.position ?? null);
   });
 });

@@ -45,6 +45,7 @@ interface Extra {
   exempt: boolean;
   taxIds: number[];
   taxConfigurationId?: number | null;
+  templateId?: number;
   createdAt: Date;
   createdBy: string;
   modifiedAt: Date;
