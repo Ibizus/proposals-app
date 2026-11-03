@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgForm } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 import { provideTestDefaults } from '../../../testing/test-providers';
 
 import { LoginFormComponent } from './login-form.component';
@@ -30,9 +31,17 @@ describe('LoginFormComponent', () => {
   });
 
   it('shows an in-app error and stays put when the form is invalid', () => {
+    const translate = fixture.debugElement.injector.get(TranslateService);
+    translate.setTranslation('en', {
+      'LOGIN REQUIRED FIELDS': 'Please fill out all the necessary fields.',
+    });
+    translate.use('en');
     const navigate = spyOn(component.router, 'navigate');
     component.onSubmit({ valid: false } as NgForm);
-    expect(component.loginError()).toBe('Please fill out all the necessary fields.');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Please fill out all the necessary fields.',
+    );
     expect(navigate).not.toHaveBeenCalled();
   });
 

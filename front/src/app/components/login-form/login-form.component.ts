@@ -98,7 +98,7 @@ import { TranslateModule, TranslateService, TranslateStore } from '@ngx-translat
         </form>
         @if (loginError()) {
           <div class="mt-3 text-center text-sm text-red-600">
-            {{ loginError() }}
+            {{ loginError() | translate }}
           </div>
         }
       </div>
@@ -234,7 +234,7 @@ export class LoginFormComponent {
       this.loginError.set('');
       this.router.navigate(['/dashboard']);
     } else {
-      this.loginError.set('Please fill out all the necessary fields.');
+      this.loginError.set('LOGIN REQUIRED FIELDS');
     }
   }
 

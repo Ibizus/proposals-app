@@ -252,6 +252,7 @@ export class ProposalsComponent implements OnInit {
       contractLevel: existingProposal.contractLevel,
       knowMore: existingProposal.knowMore,
       indefinite: existingProposal.indefinite,
+      position: existingProposal.position ?? null,
       office: {
         ...existingProposal.office,
         proposals: [],
@@ -260,7 +261,7 @@ export class ProposalsComponent implements OnInit {
         id: 0,
         base: existingProposal.salary.base,
         taxConfigurationId: existingProposal.salary.taxConfigurationId,
-        extras: existingProposal.salary.extras,
+        extras: existingProposal.salary.extras.map((extra) => ({ ...extra, id: extra.templateId })),
       },
       candidate: {
         ...existingProposal.candidate,
