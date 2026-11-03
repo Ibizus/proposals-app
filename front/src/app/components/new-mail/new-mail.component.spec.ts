@@ -141,6 +141,6 @@ describe('NewMailComponent', () => {
     );
     req.flush('Mail server error', { status: 500, statusText: 'Server Error' });
 
-    expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+    expect(errorSpy).toHaveBeenCalledOnceWith('Failed to send email.');
   });
 });

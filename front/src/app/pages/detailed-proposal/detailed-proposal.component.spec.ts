@@ -137,7 +137,7 @@ describe('DetailedProposalComponent', () => {
         });
 
       expect(component.visible).toBeFalse();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+      expect(errorSpy).toHaveBeenCalledOnceWith('Failed to send email.');
     });
 
     it('closes the dialog and shows an error toast when the proposal lookup fails', () => {
@@ -149,7 +149,7 @@ describe('DetailedProposalComponent', () => {
         .flush('Not found', { status: 404, statusText: 'Not Found' });
 
       expect(component.visible).toBeFalse();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to send email.');
+      expect(errorSpy).toHaveBeenCalledOnceWith('Failed to send email.');
       http.expectNone((r) => r.url.startsWith(API + 'send/candidate/'));
     });
 

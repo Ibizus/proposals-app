@@ -15,6 +15,7 @@ import { MailService } from '../../services/mail.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast.service';
 import { finalize } from 'rxjs';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 @Component({
   selector: 'app-detailed-proposal',
   standalone: true,
@@ -135,10 +136,10 @@ export class DetailedProposalComponent {
       return;
     }
     this.sending = true;
-    this.proposalService.getProposal(proposalId).subscribe({
+    this.proposalService.getProposal(proposalId, callerHandlesErrors()).subscribe({
       next: (proposal) => {
         this.mailService
-          .notifyByEmail(proposal)
+          .notifyByEmail(proposal, callerHandlesErrors())
           .pipe(finalize(() => (this.sending = false)))
           .subscribe({
             next: () => {

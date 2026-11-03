@@ -15,6 +15,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MailService } from '../../services/mail.service';
 import { ToastService } from '../../services/toast.service';
+import { callerHandlesErrors } from '../../services/error-toast.interceptor';
 
 function notBlank(control: AbstractControl): ValidationErrors | null {
   return (control.value ?? '').trim() ? null : { required: true };
@@ -76,7 +77,7 @@ export class NewMailComponent {
 
     this.sending = true;
     this.mailService
-      .newEmail(email, subject, message, this.proposalId)
+      .newEmail(email, subject, message, this.proposalId, callerHandlesErrors())
       .pipe(finalize(() => (this.sending = false)))
       .subscribe({
         next: () => {
