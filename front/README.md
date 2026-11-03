@@ -31,7 +31,7 @@ npm run build         # production build in dist/front/browser
 ## Folder overview
 
 - `src/app/pages/` — routed screens: dashboard, proposals, new and detailed proposal, candidates, positions, taxes, extras and parameters.
-- `src/app/components/` — reusable UI pieces such as the navbar, login form and new/duplicate dialogs and buttons.
+- `src/app/components/` — reusable UI pieces such as the navbar, login form, candidate card, the "new" buttons with their dialogs and the email composer.
 - `src/app/services/` — HTTP services for each API area, plus the error toast interceptor and toast service.
 - `src/app/utils/` — shared TypeScript types and helper functions.
 - `src/assets/i18n/` — translation files (`en.json`, `es.json`, `pt.json`, `de.json`).
