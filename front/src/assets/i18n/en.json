@@ -1,7 +1,9 @@
 {
   "PROPOSAL ADMIN": "Proposal Admin",
   "WELCOME": "Welcome to the Proposal Admin",
-  "CANT LOGIN": "Can't login?",
+  "DEMO ACCESS": "Demo access",
+  "DEMO ACCESS MESSAGE": "Any username and password will log you in.",
+  "LOGIN REQUIRED FIELDS": "Please fill out all the necessary fields.",
   "LOGIN": "Login",
   "ENTERUSER": "Enter your username",
   "ENTERPASSWORD": "Enter your password",

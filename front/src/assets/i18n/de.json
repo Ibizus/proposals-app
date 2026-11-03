@@ -1,7 +1,9 @@
 {
   "PROPOSAL ADMIN": "Proposal Admin",
   "WELCOME": "Willkommen beim Proposal Admin",
-  "CANT LOGIN": "Passwort vergessen?",
+  "DEMO ACCESS": "Demo-Zugang",
+  "DEMO ACCESS MESSAGE": "Jeder Benutzername und jedes Passwort ermöglichen die Anmeldung.",
+  "LOGIN REQUIRED FIELDS": "Bitte füllen Sie alle erforderlichen Felder aus.",
   "LOGIN": "Anmelden",
   "ENTERUSER": "Benutzername",
   "ENTERPASSWORD": "Passwort",

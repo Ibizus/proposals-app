@@ -1,21 +1,32 @@
-# SpringBoot App with Dockerized PostgresSQL
+# proposals-app backend
+
+Java 21 / Spring Boot backend for the Proposal Admin demo.
 
 ## Requirements
-- JDK 17+
+
+- JDK 21+
 - Maven
 - Docker
-- Postgres Docker Official Image
 
-## Connecting to Dockerized PostgresSQL
+## Local development
 
-1. Run the `docker run` comand for the postgres image
-  ```
-docker run --env=POSTGRES_USER=postgres --env=POSTGRES_PASSWORD=postgres --env=POSTGRES_DB=db --env=PGDATA=/var/lib/postgresql/data -p 5432:5432 -d postgres:latest
-  ```
+Use the root `dev.sh` script, which starts MySQL 8 and Mailpit via `docker-compose.yml` and then the Spring Boot application:
 
-2. Configure Spring Boot Application
-   Update the application.properties file to specify the Postgres database connection details
-   (host, port, username, password, database name)
+```bash
+./dev.sh
+```
 
-3. Run Spring Boot Application inside vscode
-  
+To reset the database and reseed the demo data:
+
+```bash
+./dev.sh --reset
+```
+
+Demo seeding is controlled by `app.seed-demo-data`: it is off by default in `application.properties` and enabled by the `dev` profile (`application-dev.properties`) that `dev.sh` starts the backend with. Seeding is idempotent and covered by `DemoDataSeederTest`.
+
+## Stack
+
+- Java 21
+- Spring Boot 3
+- MySQL 8
+- Mailpit for local email capture

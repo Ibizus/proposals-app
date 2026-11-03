@@ -118,9 +118,6 @@ jobs:
           npx eslint --max-warnings=0 "${files[@]}"
 
       - name: Test (headless Chrome, coverage)
-        # Non-blocking until the frontend test suite lands: the existing
-        # scaffolded specs fail for missing providers. Remove this line then.
-        continue-on-error: true
         run: npm run test:ci
 
       - name: Coverage report (warn below 60% lines)
