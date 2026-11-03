@@ -216,5 +216,9 @@
   "RATE": "Rate",
   "SAVE TAX CONFIGURATION": "Save tax configuration",
   "APPLIED TAXES": "Applied taxes",
-  "TAX CONFIGURATION": "Tax configuration"
+  "TAX CONFIGURATION": "Tax configuration",
+  "EMAIL SENT SUCCESS": "El correo electrónico se ha enviado correctamente.",
+  "EMAIL SEND ERROR MESSAGE": "No se ha podido enviar el correo electrónico. Inténtelo de nuevo más tarde.",
+  "SUBJECT REQUIRED": "El asunto es obligatorio.",
+  "MESSAGE REQUIRED": "El mensaje es obligatorio."
 }

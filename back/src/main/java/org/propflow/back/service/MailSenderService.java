@@ -14,7 +14,6 @@ import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -107,7 +106,6 @@ public class MailSenderService {
   }
 
   // SEND PROPOSAL BUILDING EMAIL FROM A FRONTEND FORM:
-  @Async
   public void sendProposalTo(
       String to, String subject, String body, Long proposalId, String language) {
 
@@ -138,7 +136,6 @@ public class MailSenderService {
   }
 
   // USES CANDIDATE-OFFER TEMPLATE:
-  @Async
   public void notifyCandidateByEmail(Proposal proposal, String language) {
 
     Proposal resolved = proposalService.one(proposal.getId());
