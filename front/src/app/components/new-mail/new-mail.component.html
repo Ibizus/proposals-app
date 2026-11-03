@@ -1,8 +1,10 @@
-<button pButton icon="pi pi-envelope"
+<button
+  pButton
+  icon="pi pi-envelope"
   pTooltip="{{ 'SEND PROPOSAL' | translate }}"
   class="bg-[#0056D2] py-2 px-4 text-white hover:bg-[#200A58]"
-  (click)="showDialog()">
-</button>
+  (click)="showDialog()"
+></button>
 
 <div class="card flex flex-column align-items-center gap-2">
   <p-dialog
@@ -29,23 +31,14 @@
       </div>
       <div class="flex flex-col">
         <label class="text-gray-700 font-semibold text-left">Subject</label>
-        <input
-          pInputText
-          formControlName="subject"
-          class="input-field"
-          type="text"
-        />
+        <input pInputText formControlName="subject" class="input-field" type="text" />
         @if (emailForm.controls.subject.invalid && emailForm.controls.subject.touched) {
           <small class="text-red-500">{{ 'SUBJECT REQUIRED' | translate }}</small>
         }
       </div>
       <div class="flex flex-col">
         <label class="text-gray-700 font-semibold text-left">Message</label>
-        <textarea
-          pInputTextarea
-          formControlName="message"
-          class="input-field"
-        ></textarea>
+        <textarea pInputTextarea formControlName="message" class="input-field"></textarea>
         @if (emailForm.controls.message.invalid && emailForm.controls.message.touched) {
           <small class="text-red-500">{{ 'MESSAGE REQUIRED' | translate }}</small>
         }
