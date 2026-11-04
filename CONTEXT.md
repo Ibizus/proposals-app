@@ -25,7 +25,7 @@ The office/branch where the candidate will work.
 The computed monthly and yearly salary component amounts derived from a proposal.
 
 ## Parameter
-A named salary calculation constant (for example `iht`, `spp` or `scr`) with a value and an optional validity period, read by the salary breakdown calculation.
+A named salary calculation constant with a value and an optional validity period, read by the salary breakdown calculation.
 
 ## Status
 The lifecycle state of a proposal (draft, confirmed, sent, declined, cancelled, approved).
